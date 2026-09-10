@@ -3,15 +3,16 @@
 Osobna aplikacja (nie część LMS+).  
 Na razie tylko **plan i architektura** — bez kodu.
 
-LMS+ później dostanie mały plugin tylko do pokazywania raportów.
+LMS+ później dostanie mały plugin (badge → MCS).  
+**Planować można; realizacja pluginu dopiero po uruchomieniu MCS.**
 
 ## Dokumenty
 
 | Plik | Co to jest |
 |------|------------|
 | [docs/01-ustalenia.md](docs/01-ustalenia.md) | Krok 1 — co już ustaliliśmy |
-| (później) docs/02-wyglad-raportu.md | Krok 2 — jak wygląda jeden raport |
-| (później) docs/03-przeplyw-danych.md | Krok 3 — jak LMS dostaje dane |
+| [docs/02-wyglad-raportu.md](docs/02-wyglad-raportu.md) | Krok 2 — zgłoszenie, indeks, badge, moduły |
+| (później) docs/03-przeplyw-danych.md | Krok 3 — jak dane płyną |
 | (później) docs/04-czesci-systemu.md | Krok 4 — z jakich części składa się MCS |
 
 ## Lokalizacja
