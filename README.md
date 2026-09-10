@@ -15,6 +15,7 @@ LMS+ później dostanie mały plugin (badge → MCS).
 | [docs/03-przeplyw-danych.md](docs/03-przeplyw-danych.md) | Krok 3 — jak dane płyną |
 | [docs/04-czesci-systemu.md](docs/04-czesci-systemu.md) | Krok 4 — części MCS, pluginy, fazy |
 | [docs/05-stack.md](docs/05-stack.md) | Stack: PHP, CodeIgniter 4, PostgreSQL, osobny LXC/VM |
+| [docs/06-poprawki-po-krytyce.md](docs/06-poprawki-po-krytyce.md) | Decyzje po krytyce planu |
 
 ## Lokalizacja
 
