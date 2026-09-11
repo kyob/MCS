@@ -2,23 +2,45 @@
 
 namespace App\Controllers;
 
+use App\Models\IncydentModel;
+
 /**
- * Placeholder Task 5 — pełna strona IP w Task 6.
- * Chronione filtrem mcsAuth (obie role widzą wszystkie IP w v1).
+ * Strona podmiotu IP — lista skrótów z indeksu mcs_incydenty (Task 6).
  */
 class Ip extends BaseController
 {
-    public function show(string $ip): string
+    public function show(string $ip)
     {
-        $email = (string) session()->get('mcs_user_email');
-        $rola  = (string) session()->get('mcs_user_rola');
+        $ip = trim($ip);
+        if ($ip === '' || ! filter_var($ip, FILTER_VALIDATE_IP)) {
+            return $this->response->setStatusCode(400)->setBody(
+                view('ip/show', [
+                    'ip'           => $ip,
+                    'blad'         => 'Nieprawidłowy adres IP.',
+                    'incydenty'    => [],
+                    'zrodla'       => [],
+                    'filtrZrodlo'  => null,
+                    'email'        => (string) session()->get('mcs_user_email'),
+                    'rola'         => (string) session()->get('mcs_user_rola'),
+                ]),
+            );
+        }
 
-        return '<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">'
-            . '<title>IP — MCS</title></head><body>'
-            . '<p>Sesja OK (Task 5). Lista incydentów dla <strong>'
-            . esc($ip) . '</strong> powstanie w Task 6.</p>'
-            . '<p>Użytkownik: ' . esc($email) . ' · rola: ' . esc($rola) . '</p>'
-            . '<p><a href="' . site_url('logout') . '">Wyloguj</a></p>'
-            . '</body></html>';
+        $filtrZrodlo = $this->request->getGet('zrodlo');
+        $filtrZrodlo = is_string($filtrZrodlo) && $filtrZrodlo !== '' ? $filtrZrodlo : null;
+
+        $model     = model(IncydentModel::class);
+        $incydenty = $model->dlaPodmiotuIp($ip, $filtrZrodlo);
+        $zrodla    = $model->zrodlaDlaPodmiotuIp($ip);
+
+        return view('ip/show', [
+            'ip'          => $ip,
+            'blad'        => null,
+            'incydenty'   => $incydenty,
+            'zrodla'      => $zrodla,
+            'filtrZrodlo' => $filtrZrodlo,
+            'email'       => (string) session()->get('mcs_user_email'),
+            'rola'        => (string) session()->get('mcs_user_rola'),
+        ]);
     }
 }
