@@ -18,6 +18,7 @@ class PluginSeeder
         ['zrodlo' => 'snds', 'nazwa' => 'SNDS'],
         ['zrodlo' => 'mojecert', 'nazwa' => 'MojeCert'],
         ['zrodlo' => 'cert_n6', 'nazwa' => 'CERT N6'],
+        ['zrodlo' => 'wanguard', 'nazwa' => 'Wanguard'],
     ];
 
     public function __construct(private readonly ?BaseConnection $db = null)

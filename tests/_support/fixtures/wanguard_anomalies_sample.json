@@ -1,0 +1,68 @@
+[
+  {
+    "href": "https://wanguard.example/wanguard-api/v1/anomalies/900001",
+    "anomaly_id": 900001,
+    "status": "Finished",
+    "anomaly": "UDP pkts/s > 75.0 k",
+    "direction": "Incoming",
+    "prefix": "198.51.100.10/32",
+    "severity": "102.1",
+    "link_severity": "23",
+    "mitigated": "-",
+    "duration": "0",
+    "pkts/s": "76560",
+    "bits/s": "886202922",
+    "from": {
+      "iso_8601": "2026-08-12 09:08:47",
+      "unixtime": "1786525727"
+    },
+    "until": {
+      "iso_8601": "2026-08-12 09:08:47",
+      "unixtime": "1786525727"
+    }
+  },
+  {
+    "href": "https://wanguard.example/wanguard-api/v1/anomalies/900002",
+    "anomaly_id": 900002,
+    "status": "Finished",
+    "anomaly": "UDP pkts/s > 75.0 k",
+    "direction": "Incoming",
+    "prefix": "198.51.100.11/32",
+    "severity": "102.1",
+    "link_severity": "23",
+    "mitigated": "-",
+    "duration": "0",
+    "pkts/s": "76560",
+    "bits/s": "886202922",
+    "from": {
+      "iso_8601": "2026-08-12 09:08:47",
+      "unixtime": "1786525727"
+    },
+    "until": {
+      "iso_8601": "2026-08-12 09:08:47",
+      "unixtime": "1786525727"
+    }
+  },
+  {
+    "href": "https://wanguard.example/wanguard-api/v1/anomalies/900003",
+    "anomaly_id": 900003,
+    "status": "Finished",
+    "anomaly": "UDP pkts/s > 75.0 k",
+    "direction": "Incoming",
+    "prefix": "",
+    "severity": "102.1",
+    "link_severity": "23",
+    "mitigated": "-",
+    "duration": "0",
+    "pkts/s": "76560",
+    "bits/s": "886202922",
+    "from": {
+      "iso_8601": "2026-08-12 09:08:47",
+      "unixtime": "1786525727"
+    },
+    "until": {
+      "iso_8601": "2026-08-12 09:08:47",
+      "unixtime": "1786525727"
+    }
+  }
+]
