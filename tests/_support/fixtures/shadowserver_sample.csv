@@ -1,0 +1,5 @@
+timestamp,severity,ip,protocol,port,hostname,tag,asn,geo
+2026-09-10 08:00:00,high,198.51.100.10,tcp,22,host1.example,open-ssh,64512,PL
+2026-09-10 09:15:00,critical,198.51.100.20,udp,123,host2.example,ntp-amplification,64512,PL
+2026-09-10 10:30:00,medium,203.0.113.5,tcp,445,host3.example,accessible-smb,64512,PL
+2026-09-10 11:00:00,low,not-an-ip,tcp,80,bad.example,open-http,64512,PL

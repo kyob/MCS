@@ -39,8 +39,10 @@ class PluginRegistry
             }
 
             $klasa = 'McsPluginy\\' . $zrodlo . '\\Plugin';
-            if (! class_exists($klasa, false)) {
-                require_once $plik;
+            if (! class_exists($klasa, true)) {
+                if (is_file($plik)) {
+                    require_once $plik;
+                }
             }
             if (! class_exists($klasa, false)) {
                 continue;
