@@ -2,17 +2,38 @@
 
 namespace McsPluginy\snds;
 
+use RuntimeException;
+
 /**
  * Parser CSV SNDS (Microsoft Smart Network Data Services).
  *
- * Mapowanie po nazwach nagłówków (eksport IP Status / data.aspx).
- * Fixture w tests/_support/fixtures/ jest syntetyczna — kolumny wg publicznej
- * dokumentacji SNDS; brak prawdziwej próbki z Waszego konta.
+ * Tryby:
+ * 1) DataKey / LMS — CSV **bez nagłówka**, 13 lub 14 kolumn pozycyjnych
+ *    (jak `lms-snds.php` / portal Automated Data Access).
+ * 2) Eksport z nagłówkami — mapowanie po nazwach (stara fixture / IP Status).
  *
- * klucz_dedupu: ip|filtr|data_aktywnosci (dzień UTC).
+ * klucz_dedupu: ip|filtr|data_aktywnosci (dzień UTC) — semantyka MCS.
  */
 final class Parser
 {
+    /** Nazwy pól raw dla układu pozycyjnego (zgodnie z LMS alfa_snds). */
+    public const KOLUMNY_POZYCYJNE = [
+        'ip_address',
+        'activity_period_start',
+        'activity_period_end',
+        'rcpt_commands',
+        'data_commands',
+        'message_recipients',
+        'filter_result',
+        'complaint_rate',
+        'trap_message_period_start',
+        'trap_message_period_end',
+        'trap_hits',
+        'sample_helo',
+        'jmr_p1_sender',
+        'comments',
+    ];
+
     /**
      * @return list<array{
      *   ip: string,
@@ -32,6 +53,97 @@ final class Parser
             return [];
         }
 
+        $pierwsza = $this->pierwszaNiepusta($linie);
+        if ($pierwsza === null) {
+            return [];
+        }
+
+        if ($this->liniaWygladaNaWierszDataKey($pierwsza)) {
+            return $this->parsujPozycyjnie($linie);
+        }
+
+        return $this->parsujPoNaglowkach($linie);
+    }
+
+    /**
+     * SNDS = reputacja nadawcy u Microsoftu.
+     *
+     * @param array<string, mixed> $wiersz
+     */
+    public function kategoriaDlaWiersza(array $wiersz): string
+    {
+        return 'reputation';
+    }
+
+    public function liniaWygladaNaWierszDataKey(string $linia): bool
+    {
+        return (bool) preg_match('/^\d+\.\d+\.\d+\.\d+,/', $linia);
+    }
+
+    /**
+     * @param list<string> $linie
+     *
+     * @return list<array{
+     *   ip: string,
+     *   filtr: ?string,
+     *   timestamp: string,
+     *   klucz_dedupu: string,
+     *   complaint_rate: ?string,
+     *   trap_hits: ?int,
+     *   raw: array<string, string>
+     * }>
+     */
+    private function parsujPozycyjnie(array $linie): array
+    {
+        $wynik = [];
+        foreach ($linie as $linia) {
+            if (trim($linia) === '') {
+                continue;
+            }
+            $data = str_getcsv($linia);
+            if ($data === false) {
+                continue;
+            }
+            $liczba = count($data);
+            if ($liczba !== 13 && $liczba !== 14) {
+                throw new RuntimeException(
+                    'SNDS: nieprawidlowa liczba kolumn (oczekiwano 13 lub 14, jest '
+                    . $liczba . ').',
+                );
+            }
+            if ($liczba === 13) {
+                $data[] = '';
+            }
+
+            $raw = [];
+            foreach (self::KOLUMNY_POZYCYJNE as $i => $nazwa) {
+                $raw[$nazwa] = trim((string) ($data[$i] ?? ''));
+            }
+
+            $wiersz = $this->zlozWierszZRaw($raw, $raw['ip_address'], $raw['filter_result'], $raw['activity_period_start'], $raw['complaint_rate'], $raw['trap_hits']);
+            if ($wiersz !== null) {
+                $wynik[] = $wiersz;
+            }
+        }
+
+        return $wynik;
+    }
+
+    /**
+     * @param list<string> $linie
+     *
+     * @return list<array{
+     *   ip: string,
+     *   filtr: ?string,
+     *   timestamp: string,
+     *   klucz_dedupu: string,
+     *   complaint_rate: ?string,
+     *   trap_hits: ?int,
+     *   raw: array<string, string>
+     * }>
+     */
+    private function parsujPoNaglowkach(array $linie): array
+    {
         $naglowki = str_getcsv(array_shift($linie));
         if ($naglowki === false || $naglowki === [null] || $naglowki === []) {
             return [];
@@ -58,22 +170,12 @@ final class Parser
                 'ip_address',
                 'ipaddress',
             ]);
-            if ($ip === '' || filter_var($ip, FILTER_VALIDATE_IP) === false) {
-                continue;
-            }
-
             $filtr = $this->wartosc($raw, [
                 'filter result',
                 'filter_result',
                 'filterresult',
                 'filtr',
             ]);
-            $filtr = $filtr !== '' ? strtoupper($filtr) : null;
-            if ($filtr !== null && ! in_array($filtr, ['GREEN', 'YELLOW', 'RED'], true)) {
-                // Zachowaj nieznaną etykietę (uppercase), WagaV0 zignoruje poza G/Y/R
-                $filtr = strtoupper($filtr);
-            }
-
             $timestamp = $this->wartosc($raw, [
                 'activity period start',
                 'activity start',
@@ -81,52 +183,88 @@ final class Parser
                 'date',
                 'timestamp',
             ]);
-            if ($timestamp === '') {
-                $timestamp = gmdate('Y-m-d H:i:s');
-            }
-
             $complaint = $this->wartosc($raw, [
                 'complaint rate',
                 'complaint_rate',
                 'complaintrate',
             ]);
-            $complaint = $complaint !== '' ? $complaint : null;
-
             $trapRaw = $this->wartosc($raw, [
                 'trap hits',
                 'trap_hits',
                 'traphits',
             ]);
-            $trapHits = null;
-            if ($trapRaw !== '' && ctype_digit($trapRaw)) {
-                $trapHits = (int) $trapRaw;
+
+            $wiersz = $this->zlozWierszZRaw($raw, $ip, $filtr, $timestamp, $complaint, $trapRaw);
+            if ($wiersz !== null) {
+                $wynik[] = $wiersz;
             }
-
-            $dzien = $this->dzienZTimestamp($timestamp);
-            $klucz = strtolower($ip) . '|' . strtolower((string) ($filtr ?? '')) . '|' . $dzien;
-
-            $wynik[] = [
-                'ip'             => $ip,
-                'filtr'          => $filtr,
-                'timestamp'      => $timestamp,
-                'klucz_dedupu'   => $klucz,
-                'complaint_rate' => $complaint,
-                'trap_hits'      => $trapHits,
-                'raw'            => $raw,
-            ];
         }
 
         return $wynik;
     }
 
     /**
-     * SNDS = reputacja nadawcy u Microsoftu.
+     * @param array<string, string> $raw
      *
-     * @param array<string, mixed> $wiersz
+     * @return array{
+     *   ip: string,
+     *   filtr: ?string,
+     *   timestamp: string,
+     *   klucz_dedupu: string,
+     *   complaint_rate: ?string,
+     *   trap_hits: ?int,
+     *   raw: array<string, string>
+     * }|null
      */
-    public function kategoriaDlaWiersza(array $wiersz): string
+    private function zlozWierszZRaw(
+        array $raw,
+        string $ip,
+        string $filtr,
+        string $timestamp,
+        string $complaint,
+        string $trapRaw,
+    ): ?array {
+        if ($ip === '' || filter_var($ip, FILTER_VALIDATE_IP) === false) {
+            return null;
+        }
+
+        $filtrNorm = $filtr !== '' ? strtoupper($filtr) : null;
+        if ($timestamp === '') {
+            $timestamp = gmdate('Y-m-d H:i:s');
+        }
+
+        $complaintNorm = $complaint !== '' ? $complaint : null;
+        $trapHits      = null;
+        if ($trapRaw !== '' && ctype_digit($trapRaw)) {
+            $trapHits = (int) $trapRaw;
+        }
+
+        $dzien = $this->dzienZTimestamp($timestamp);
+        $klucz = strtolower($ip) . '|' . strtolower((string) ($filtrNorm ?? '')) . '|' . $dzien;
+
+        return [
+            'ip'             => $ip,
+            'filtr'          => $filtrNorm,
+            'timestamp'      => $timestamp,
+            'klucz_dedupu'   => $klucz,
+            'complaint_rate' => $complaintNorm,
+            'trap_hits'      => $trapHits,
+            'raw'            => $raw,
+        ];
+    }
+
+    /**
+     * @param list<string> $linie
+     */
+    private function pierwszaNiepusta(array $linie): ?string
     {
-        return 'reputation';
+        foreach ($linie as $linia) {
+            if (trim($linia) !== '') {
+                return $linia;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -146,16 +284,43 @@ final class Parser
 
     private function dzienZTimestamp(string $timestamp): string
     {
-        try {
-            $dt = new \DateTimeImmutable($timestamp, new \DateTimeZone('UTC'));
-
+        $dt = $this->parsujCzas($timestamp);
+        if ($dt !== null) {
             return $dt->format('Y-m-d');
-        } catch (\Exception) {
-            if (preg_match('/^(\d{4}-\d{2}-\d{2})/', $timestamp, $m) === 1) {
-                return $m[1];
-            }
+        }
+        if (preg_match('/^(\d{4}-\d{2}-\d{2})/', $timestamp, $m) === 1) {
+            return $m[1];
+        }
 
-            return gmdate('Y-m-d');
+        return gmdate('Y-m-d');
+    }
+
+    public function parsujCzas(string $timestamp): ?\DateTimeImmutable
+    {
+        $formaty = [
+            'm/d/Y g:i A',
+            'm/d/Y h:i A',
+            'm/d/Y G:i',
+            'Y-m-d H:i:s',
+            'Y-m-d\TH:i:sP',
+            'Y-m-d\TH:i:s',
+        ];
+        foreach ($formaty as $fmt) {
+            $dt = \DateTimeImmutable::createFromFormat($fmt, $timestamp, new \DateTimeZone('UTC'));
+            if ($dt instanceof \DateTimeImmutable) {
+                $bledy = \DateTimeImmutable::getLastErrors();
+                if (is_array($bledy) && (($bledy['warning_count'] ?? 0) > 0 || ($bledy['error_count'] ?? 0) > 0)) {
+                    continue;
+                }
+
+                return $dt;
+            }
+        }
+
+        try {
+            return new \DateTimeImmutable($timestamp, new \DateTimeZone('UTC'));
+        } catch (\Exception) {
+            return null;
         }
     }
 }
