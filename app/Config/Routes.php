@@ -12,6 +12,7 @@ $routes->get('logout', 'Auth::logout');
 // Chronione sesją (filtr mcsAuth w Config\Filters). Treść IP/admin: Task 6 i 8.
 $routes->get('ip/(:segment)', 'Ip::show/$1');
 $routes->get('admin/pluginy', 'Admin\Pluginy::index');
+$routes->post('admin/pluginy', 'Admin\Pluginy::zapisz');
 $routes->get('admin', 'Admin\Pluginy::index');
 
 // API badge — token serwerowy (filtr mcsBadgeToken); CSRF wyłączone dla api/* .

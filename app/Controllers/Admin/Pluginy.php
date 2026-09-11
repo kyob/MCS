@@ -3,23 +3,47 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Models\PluginModel;
 
 /**
- * Placeholder Task 5 — panel wtyczek w Task 8.
- * Chronione filtrem mcsAuth.
+ * Panel stanów wtyczek źródeł (Task 8).
+ * Chronione filtrem mcsAuth. v1: admin i operator widzą i zapisują to samo.
  */
 class Pluginy extends BaseController
 {
-    public function index(): string
+    public function index()
     {
-        $email = (string) session()->get('mcs_user_email');
-        $rola  = (string) session()->get('mcs_user_rola');
+        return view('admin/pluginy/index', [
+            'pluginy'   => model(PluginModel::class)->wszystkie(),
+            'email'     => (string) session()->get('mcs_user_email'),
+            'rola'      => (string) session()->get('mcs_user_rola'),
+            'komunikat' => session()->getFlashdata('komunikat'),
+            'blad'      => session()->getFlashdata('blad'),
+        ]);
+    }
 
-        return '<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">'
-            . '<title>Admin pluginy — MCS</title></head><body>'
-            . '<p>Sesja OK (Task 5). Panel stanów wtyczek powstanie w Task 8.</p>'
-            . '<p>Użytkownik: ' . esc($email) . ' · rola: ' . esc($rola) . '</p>'
-            . '<p><a href="' . site_url('logout') . '">Wyloguj</a></p>'
-            . '</body></html>';
+    public function zapisz()
+    {
+        $zrodlo = trim((string) $this->request->getPost('zrodlo'));
+        $importWstrzymany = $this->request->getPost('import_wstrzymany') === '1';
+        $ukrytyWUi        = $this->request->getPost('ukryty_w_ui') === '1';
+
+        if ($zrodlo === '') {
+            return redirect()->to('/admin/pluginy')->with('blad', 'Brak identyfikatora źródła.');
+        }
+
+        $ok = model(PluginModel::class)->ustawStany($zrodlo, $importWstrzymany, $ukrytyWUi);
+
+        if (! $ok) {
+            return redirect()->to('/admin/pluginy')->with(
+                'blad',
+                'Nie udało się zapisać stanów dla źródła: ' . $zrodlo,
+            );
+        }
+
+        return redirect()->to('/admin/pluginy')->with(
+            'komunikat',
+            'Zapisano stany wtyczki: ' . $zrodlo,
+        );
     }
 }
