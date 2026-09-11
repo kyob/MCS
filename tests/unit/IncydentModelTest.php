@@ -135,6 +135,39 @@ final class IncydentModelTest extends CIUnitTestCase
         $this->assertSame(['critical', 'high-new', 'high-old', 'low-old'], $klucze);
     }
 
+    public function testAgregatBadgePustyDlaNieznanegoIp(): void
+    {
+        $agregat = model(IncydentModel::class)->agregatBadgeDlaIp('198.51.100.10');
+
+        $this->assertSame(0, $agregat['liczba']);
+        $this->assertNull($agregat['max_waga']);
+        $this->assertSame(0, $agregat['liczba_zrodel']);
+        $this->assertSame(7, $agregat['okno_dni']);
+    }
+
+    public function testAgregatBadgeLiczyOknoIUkrycia(): void
+    {
+        $ip     = '198.51.100.10';
+        $teraz  = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $wOknie = $teraz->modify('-2 days')->format('Y-m-d H:i:s');
+        $poza   = $teraz->modify('-10 days')->format('Y-m-d H:i:s');
+
+        $this->wstawIncydent('shadowserver', 'a1', $ip, 'high', $wOknie);
+        $this->wstawIncydent('play', 'b1', $ip, 'low', $wOknie);
+        $this->wstawIncydent('play', 'b2', $ip, 'critical', $wOknie); // druga w tym samym źródle
+        $this->wstawIncydent('snds', 'c1', $ip, 'critical', $wOknie); // plugin ukryty
+        $this->wstawIncydent('shadowserver', 'd1', $ip, 'medium', $poza); // poza oknem 7 dni
+        $this->wstawIncydent('play', 'e1', $ip, 'medium', $wOknie, true); // ukryty_w_ui
+        $this->wstawIncydent('shadowserver', 'f1', '203.0.113.1', 'critical', $wOknie);
+
+        $agregat = model(IncydentModel::class)->agregatBadgeDlaIp($ip);
+
+        $this->assertSame(3, $agregat['liczba']);
+        $this->assertSame('critical', $agregat['max_waga']);
+        $this->assertSame(2, $agregat['liczba_zrodel']);
+        $this->assertSame(7, $agregat['okno_dni']);
+    }
+
     /**
      * @param bool $ukrytyWUi
      */

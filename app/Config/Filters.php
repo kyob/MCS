@@ -3,6 +3,7 @@
 namespace Config;
 
 use App\Filters\McsAuthFilter;
+use App\Filters\McsBadgeTokenFilter;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
 use CodeIgniter\Filters\CSRF;
@@ -35,7 +36,8 @@ class Filters extends BaseFilters
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
-        'mcsAuth'       => McsAuthFilter::class,
+        'mcsAuth'        => McsAuthFilter::class,
+        'mcsBadgeToken'  => McsBadgeTokenFilter::class,
     ];
 
     /**
@@ -115,6 +117,11 @@ class Filters extends BaseFilters
                 'ip/*',
                 'admin',
                 'admin/*',
+            ],
+        ],
+        'mcsBadgeToken' => [
+            'before' => [
+                'api/badge',
             ],
         ],
     ];

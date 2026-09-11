@@ -13,3 +13,7 @@ $routes->get('logout', 'Auth::logout');
 $routes->get('ip/(:segment)', 'Ip::show/$1');
 $routes->get('admin/pluginy', 'Admin\Pluginy::index');
 $routes->get('admin', 'Admin\Pluginy::index');
+
+// API badge — token serwerowy (filtr mcsBadgeToken); CSRF wyłączone dla api/* .
+$routes->get('api/badge', 'Api\Badge::index');
+
