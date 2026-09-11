@@ -2,10 +2,10 @@
 
 Każde źródło zgłoszeń to osobna wtyczka w katalogu `plugins/{zrodlo}/`.
 
-W Fazie 1a ten katalog jest **pusty** (brak importerów). Rdzeń zna tylko kontrakt
-i wiersze w tabeli `mcs_pluginy` (placeholdery: `shadowserver`, `play`, `snds`).
+W Fazie 1a katalog był pusty (placeholdery w `mcs_pluginy`).  
+Faza **1b** dokłada importery (Shadowserver / Play / SNDS) — patrz [docs/09-plan-faza-1b-importery.md](../docs/09-plan-faza-1b-importery.md).
 
-## Kontrakt (Faza 1a)
+## Kontrakt
 
 Plik: `plugins/{zrodlo}/Plugin.php`  
 Przestrzeń nazw: `McsPluginy\{zrodlo}\Plugin`  
@@ -14,11 +14,13 @@ Interfejs: `App\Libraries\SourcePluginInterface`
 Metody:
 
 - `zrodlo()` — stabilny identyfikator (np. `shadowserver`)
-- `pobierz()` — Faza 1b; w 1a może rzucać `RuntimeException('not implemented')`
+- `pobierz()` — import (IMAP / API / plik) → koperta → tabela źródła → `IncydentZapis`
 - `health()` — tablica `['ok' => bool, 'msg' => string]`
 
-Rdzeń ładuje wtyczki przez `App\Libraries\PluginRegistry`. Brak pliku `Plugin.php`
-oznacza: źródło jest w rejestrze bazy, ale nie ma jeszcze kodu importera.
+Rdzeń ładuje wtyczki przez `App\Libraries\PluginRegistry`.
+
+Biblioteki wspólne (nie wtyczki): `ImportKoperta`, `WagaV0`, `IncydentZapis`, `App\Libraries\Imap\*`.  
+Klucze skrzynek: [docs/09-imap-konfiguracja-env.md](../docs/09-imap-konfiguracja-env.md).
 
 ## Rejestr w bazie
 
