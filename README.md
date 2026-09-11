@@ -31,6 +31,7 @@ LMS+ później dostanie mały plugin (badge → MCS).
 | [docs/07-zlecenie-agent-lxc.md](docs/07-zlecenie-agent-lxc.md) | Polecenie dla agenta: Task 1 LXC |
 | [docs/07-zlecenie-agent-ci4.md](docs/07-zlecenie-agent-ci4.md) | Polecenie dla agenta: Task 2 CI4 |
 | [docs/07-zlecenie-agent-migracje.md](docs/07-zlecenie-agent-migracje.md) | Polecenie dla agenta: Task 3 migracje |
+| [docs/07-zlecenie-agent-przenies-repo.md](docs/07-zlecenie-agent-przenies-repo.md) | Polecenie: przenieś repo na serwer MCS |
 
 ## Lokalizacja
 
