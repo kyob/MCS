@@ -101,10 +101,36 @@ class Plugin implements SourcePluginInterface
             return ['ok' => false, 'msg' => 'brak w rejestrze mcs_pluginy'];
         }
 
+        $ok  = array_key_exists('health_ok', $wiersz) ? $wiersz['health_ok'] : null;
+        $msg = (string) ($wiersz['health_msg'] ?? '');
+
+        if ($msg === '' && $ok === null) {
+            $msg = $this->opisKonfiguracji();
+        }
+
         return [
-            'ok'  => (bool) ($wiersz['health_ok'] ?? false),
-            'msg' => (string) ($wiersz['health_msg'] ?? ''),
+            'ok'  => (bool) ($ok ?? false),
+            'msg' => $msg !== '' ? $msg : 'brak przebiegu',
         ];
+    }
+
+    /**
+     * Opis gotowości .env gdy jeszcze nie było przebiegu importu.
+     */
+    private function opisKonfiguracji(): string
+    {
+        if (trim((string) env('mcs.shadowserver.fixturePath', '')) !== '') {
+            return 'konfiguracja: tryb fixturePath (jeszcze bez przebiegu)';
+        }
+        $host = trim((string) env('mcs.shadowserver.imapHost', ''));
+        $user = trim((string) env('mcs.shadowserver.imapUser', ''));
+        if ($host !== '' && $user !== '') {
+            $limit = max(1, (int) env('mcs.shadowserver.imapRecentLimit', 40));
+
+            return "konfiguracja: IMAP gotowy (imapRecentLimit={$limit}, jeszcze bez przebiegu)";
+        }
+
+        return 'brak fixturePath i IMAP (uzupelnij .env)';
     }
 
     /**

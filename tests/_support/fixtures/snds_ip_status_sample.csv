@@ -1,0 +1,5 @@
+IP Address,Activity Period Start,Activity Period End,RCPT Commands,DATA Commands,Message Recipients,Filter Result,Complaint Rate,Trap Hits,Sample HELO,Comments
+198.51.100.10,2026-09-09 00:00:00,2026-09-09 23:59:59,1200,1100,1000,GREEN,< 0.1%,0,mail.example.net,
+198.51.100.20,2026-09-09 00:00:00,2026-09-09 23:59:59,5000,4800,4500,YELLOW,0.3%,2,smtp.example.net,elevated complaints
+203.0.113.5,2026-09-10 00:00:00,2026-09-10 23:59:59,800,750,700,RED,1.2%,12,bad.example.net,trap hits
+not-an-ip,2026-09-10 00:00:00,2026-09-10 23:59:59,1,1,1,GREEN,< 0.1%,0,,
