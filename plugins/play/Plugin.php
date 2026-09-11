@@ -2,18 +2,28 @@
 
 namespace McsPluginy\play;
 
+use App\Libraries\Imap\ImapKlientFabryka;
+use App\Libraries\Imap\ImapKlientInterface;
 use App\Libraries\SourcePluginInterface;
 use App\Models\PluginModel;
 use RuntimeException;
 
 /**
- * Plugin Play scrubbing — szkielet.
+ * Plugin Play scrubbing.
  *
- * Wymaga: osobna skrzynka IMAP (mcs.play.imap*) oraz próbka formatu maila/CSV
- * do domknięcia parsera. Do czasu próbek pobierz() kończy się czytelnym błędem.
+ * IMAP (mcs.play.imap*) jest gotowy. Parser formatu raportu wymaga prawdziwej
+ * probki CSV/maila od Play — skrzynka testowa miala tylko maile „Witamy”/„test”
+ * bez zalacznikow (stan 2026-09-11).
  */
 class Plugin implements SourcePluginInterface
 {
+    private ?ImapKlientFabryka $imapFabryka;
+
+    public function __construct(?ImapKlientFabryka $imapFabryka = null)
+    {
+        $this->imapFabryka = $imapFabryka;
+    }
+
     public function zrodlo(): string
     {
         return 'play';
@@ -23,15 +33,45 @@ class Plugin implements SourcePluginInterface
     {
         $fixture = trim((string) env('mcs.play.fixturePath', ''));
         if ($fixture !== '') {
-            throw new RuntimeException(
-                'Play: fixturePath ustawione, ale parser formatu Play jeszcze niezaimplementowany — potrzebna próbka maila/CSV.',
-            );
+            if (! is_readable($fixture)) {
+                throw new RuntimeException('Play: nie mozna odczytac fixturePath=' . $fixture);
+            }
+            $msg = 'Play: fixturePath ustawione, ale parser formatu Play jeszcze niezaimplementowany'
+                . ' — potrzebna prawdziwa probka raportu scrubbing (CSV/zalacznik).';
+            $this->aktualizujHealth(false, $msg);
+            throw new RuntimeException($msg);
         }
 
-        $msg = 'Play: brak credentials IMAP (mcs.play.imapHost/User/Pass) oraz brak próbki formatu. '
-            . 'Uzupełnij .env i dostarcz przykładowy raport — patrz docs/09-imap-konfiguracja-env.md';
-        $this->aktualizujHealth(false, $msg);
-        throw new RuntimeException($msg);
+        $fabryka = $this->imapFabryka ?? new ImapKlientFabryka();
+        try {
+            $klient = $fabryka->dlaZrodla('play');
+        } catch (RuntimeException $e) {
+            $this->aktualizujHealth(false, $e->getMessage());
+            throw $e;
+        }
+
+        try {
+            $raport = $this->zbadajSkrzynke($klient);
+            $msg    = sprintf(
+                'Play IMAP OK (wiadomosci=%d, z_csv_lub_zip=%d) — brak parsera: potrzebna prawdziwa'
+                . ' probka raportu scrubbing (obecnie brak uzytecznych zalacznikow CSV).',
+                $raport['wiadomosci'],
+                $raport['z_csv'],
+            );
+            if ($raport['wiadomosci'] === 0) {
+                $msg = 'Play IMAP OK — skrzynka pusta (0 wiadomosci). Czekam na raport scrubbing.';
+            } elseif ($raport['z_csv'] === 0) {
+                $msg = sprintf(
+                    'Play IMAP OK — %d wiadomosci, 0 zalacznikow CSV/ZIP z danymi.'
+                    . ' Skrzynka ma tylko maile testowe/powitalne; potrzebna probka raportu Play.',
+                    $raport['wiadomosci'],
+                );
+            }
+            $this->aktualizujHealth(false, $msg);
+            throw new RuntimeException($msg);
+        } finally {
+            $klient->zamknij();
+        }
     }
 
     public function health(): array
@@ -43,7 +83,32 @@ class Plugin implements SourcePluginInterface
 
         return [
             'ok'  => (bool) ($wiersz['health_ok'] ?? false),
-            'msg' => (string) ($wiersz['health_msg'] ?? 'szkielet — czekam na próbkę/IMAP'),
+            'msg' => (string) ($wiersz['health_msg'] ?? 'szkielet — czekam na probke/IMAP'),
+        ];
+    }
+
+    /**
+     * @return array{wiadomosci: int, z_csv: int}
+     */
+    private function zbadajSkrzynke(ImapKlientInterface $klient): array
+    {
+        $uidy = $klient->listujUid(false);
+        $zCsv = 0;
+        // Limit sondy — nie sciagamy calej historii przy kazdym health-checku.
+        $sonda = array_slice($uidy, 0, 50);
+        foreach ($sonda as $uid) {
+            $w = $klient->pobierzWiadomosc($uid);
+            foreach ($w['zalaczniki'] as $zal) {
+                $n = strtolower($zal['filename']);
+                if (str_ends_with($n, '.csv') || str_ends_with($n, '.zip')) {
+                    $zCsv++;
+                }
+            }
+        }
+
+        return [
+            'wiadomosci' => count($uidy),
+            'z_csv'      => $zCsv,
         ];
     }
 

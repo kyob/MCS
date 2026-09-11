@@ -72,8 +72,17 @@ class Plugin implements SourcePluginInterface
         }
 
         try {
-            $this->importujZImap($klient);
-            $this->aktualizujHealth(true, 'import IMAP OK');
+            $stats = $this->importujZImap($klient);
+            $this->aktualizujHealth(
+                true,
+                sprintf(
+                    'import IMAP OK (wiadomosci=%d, nowe_importy=%d, wiersze=%d%s)',
+                    $stats['wiadomosci'],
+                    $stats['importy'],
+                    $stats['wiersze'],
+                    $stats['fallback_ostatnie'] ? ', tryb=ostatnie_SEEN' : '',
+                ),
+            );
         } catch (\Throwable $e) {
             $this->aktualizujHealth(false, $e->getMessage());
             throw $e;
@@ -116,38 +125,133 @@ class Plugin implements SourcePluginInterface
         ]);
     }
 
-    private function importujZImap(ImapKlientInterface $klient): void
+    /**
+     * @return array{wiadomosci: int, importy: int, wiersze: int, fallback_ostatnie: bool}
+     */
+    private function importujZImap(ImapKlientInterface $klient): array
     {
-        $uidy = $klient->listujUid(true);
+        $fallback = false;
+        $uidy     = $klient->listujUid(true);
         if ($uidy === []) {
-            return;
+            // Skrzynka produkcyjna Shadowserver bywa cala SEEN; bierzemy ostatnie UID
+            // i polegamy na checksum/id_wiadomosci w kopercie (bez podwojnego importu).
+            $limit = max(1, (int) env('mcs.shadowserver.imapRecentLimit', 40));
+            $wszystkie = $klient->listujUid(false);
+            rsort($wszystkie, SORT_NUMERIC);
+            $uidy     = array_slice($wszystkie, 0, $limit);
+            $fallback = true;
         }
 
+        $sumaWierszy  = 0;
+        $sumaImportow = 0;
+
         foreach ($uidy as $uid) {
-            $wiadomosc = $klient->pobierzWiadomosc($uid);
+            $wiadomosc     = $klient->pobierzWiadomosc($uid);
             $zaimportowano = false;
             foreach ($wiadomosc['zalaczniki'] as $zal) {
-                $nazwa = strtolower($zal['filename']);
-                if (! str_ends_with($nazwa, '.csv')) {
+                $csv = $this->wyciagnijCsvZZalacznika($zal);
+                if ($csv === null) {
                     continue;
                 }
-                $checksum = hash('sha256', $zal['tresc']);
-                $this->importujTrescCsv(
-                    $zal['tresc'],
+                $checksum = hash('sha256', $csv['tresc']);
+                $liczba   = $this->importujTrescCsv(
+                    $csv['tresc'],
                     $checksum,
                     $wiadomosc['message_id'],
                     [
                         'tryb'     => 'imap',
                         'uid'      => $uid,
-                        'filename' => $zal['filename'],
+                        'filename' => $csv['filename'],
+                        'zip'      => $csv['z_zip'] ? $zal['filename'] : null,
                         'subject'  => $wiadomosc['subject'],
                     ],
                 );
+                if ($liczba > 0) {
+                    $sumaWierszy += $liczba;
+                    $sumaImportow++;
+                }
                 $zaimportowano = true;
             }
             if ($zaimportowano) {
                 $klient->oznaczPrzeczytane($uid);
             }
+        }
+
+        return [
+            'wiadomosci'         => count($uidy),
+            'importy'            => $sumaImportow,
+            'wiersze'            => $sumaWierszy,
+            'fallback_ostatnie'  => $fallback,
+        ];
+    }
+
+    /**
+     * Akceptuje .csv albo .zip/.csv.zip z jednym (lub pierwszym) plikiem CSV w srodku.
+     *
+     * @param array{filename: string, mime: string, tresc: string} $zal
+     *
+     * @return array{filename: string, tresc: string, z_zip: bool}|null
+     */
+    private function wyciagnijCsvZZalacznika(array $zal): ?array
+    {
+        $nazwa = strtolower($zal['filename']);
+        if (str_ends_with($nazwa, '.csv') && ! str_ends_with($nazwa, '.csv.zip')) {
+            return [
+                'filename' => $zal['filename'],
+                'tresc'    => $zal['tresc'],
+                'z_zip'    => false,
+            ];
+        }
+
+        if (! str_ends_with($nazwa, '.zip')) {
+            return null;
+        }
+
+        if (! class_exists(\ZipArchive::class)) {
+            throw new RuntimeException('Shadowserver: brak ZipArchive — apt install php-zip');
+        }
+
+        $tmp = tempnam(sys_get_temp_dir(), 'mcs_ss_');
+        if ($tmp === false) {
+            throw new RuntimeException('Shadowserver: nie mozna utworzyc pliku tymczasowego na ZIP');
+        }
+
+        try {
+            file_put_contents($tmp, $zal['tresc']);
+            $zip = new \ZipArchive();
+            if ($zip->open($tmp) !== true) {
+                return null;
+            }
+
+            $csvNazwa = null;
+            $csvTresc = null;
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $entry = $zip->getNameIndex($i);
+                if ($entry === false) {
+                    continue;
+                }
+                if (str_ends_with(strtolower($entry), '.csv') && ! str_contains($entry, '..')) {
+                    $body = $zip->getFromIndex($i);
+                    if ($body !== false) {
+                        $csvNazwa = basename($entry);
+                        $csvTresc = $body;
+                        break;
+                    }
+                }
+            }
+            $zip->close();
+
+            if ($csvNazwa === null || $csvTresc === null) {
+                return null;
+            }
+
+            return [
+                'filename' => $csvNazwa,
+                'tresc'    => $csvTresc,
+                'z_zip'    => true,
+            ];
+        } finally {
+            @unlink($tmp);
         }
     }
 
