@@ -1,0 +1,9 @@
+Subject: DDoS notification - Event finished: B2B_AS31242_SPM-1-4 - TID131197_ALFA-SYSTEM - 93570
+
+Message type Event finished
+Event 93570
+Event Status FINISHED
+Start 2026-09-07 20:24:40.000000 CEST
+End 2026-09-07 20:31:17.000000 CEST
+Policy B2B_AS31242_SPM-1-4
+Dimension Customer

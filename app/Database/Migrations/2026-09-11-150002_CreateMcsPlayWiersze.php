@@ -24,6 +24,7 @@ class CreateMcsPlayWiersze extends Migration
             'ip' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 45,
+                'null'       => true,
             ],
             'klucz_dedupu' => [
                 'type'       => 'VARCHAR',

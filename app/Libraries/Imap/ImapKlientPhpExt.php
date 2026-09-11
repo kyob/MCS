@@ -66,11 +66,19 @@ final class ImapKlientPhpExt implements ImapKlientInterface
             $date = $naglowek->date;
         }
 
+        $from = '';
+        if (! empty($naglowek->from[0])) {
+            $f0   = $naglowek->from[0];
+            $from = strtolower(trim(($f0->mailbox ?? '') . '@' . ($f0->host ?? '')));
+        }
+
         return [
             'uid'         => $uid,
             'message_id'  => $messageId,
             'subject'     => $subject,
             'date'        => $date,
+            'from'        => $from,
+            'tresc'       => $this->pobierzTrescTekstowa($uid),
             'zalaczniki'  => $this->pobierzZalaczniki($uid),
         ];
     }
@@ -131,6 +139,89 @@ final class ImapKlientPhpExt implements ImapKlientInterface
         }
 
         return $nr;
+    }
+
+    /**
+     * Preferuje text/plain; gdy brak — text/html bez tagów.
+     */
+    private function pobierzTrescTekstowa(int $uid): string
+    {
+        $mbox      = $this->polacz();
+        $struktura = imap_fetchstructure($mbox, $uid, FT_UID);
+        if ($struktura === false) {
+            $raw = imap_body($mbox, $uid, FT_UID);
+
+            return is_string($raw) ? $raw : '';
+        }
+
+        $plain = [];
+        $html  = [];
+        $this->zbierzTeksty($mbox, $uid, $struktura, '', $plain, $html);
+        if ($plain !== []) {
+            return implode("\n", $plain);
+        }
+        if ($html !== []) {
+            $joined = implode("\n", $html);
+
+            return trim(html_entity_decode(strip_tags($joined), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        }
+
+        $raw = imap_body($mbox, $uid, FT_UID);
+
+        return is_string($raw) ? $raw : '';
+    }
+
+    /**
+     * @param resource|\IMAP\Connection $mbox
+     * @param list<string>              $plain
+     * @param list<string>              $html
+     */
+    private function zbierzTeksty($mbox, int $uid, object $part, string $prefix, array &$plain, array &$html): void
+    {
+        $subtype = strtoupper((string) ($part->subtype ?? ''));
+        $type    = (int) ($part->type ?? 0);
+
+        if (empty($part->parts) && $type === 0) {
+            $section  = $prefix === '' ? '1' : $prefix;
+            $body     = imap_fetchbody($mbox, $uid, $section, FT_UID);
+            $encoding = (int) ($part->encoding ?? 0);
+            $tresc    = $this->dekodujCialo(is_string($body) ? $body : '', $encoding);
+            $charset  = $this->charsetZParametrow($part);
+            if ($charset !== '' && strcasecmp($charset, 'UTF-8') !== 0) {
+                $converted = @iconv($charset, 'UTF-8//IGNORE', $tresc);
+                if (is_string($converted) && $converted !== '') {
+                    $tresc = $converted;
+                }
+            }
+            if ($subtype === 'PLAIN') {
+                $plain[] = $tresc;
+            } elseif ($subtype === 'HTML') {
+                $html[] = $tresc;
+            }
+        }
+
+        if (! empty($part->parts) && is_array($part->parts)) {
+            foreach ($part->parts as $i => $child) {
+                $nr = $prefix === '' ? (string) ($i + 1) : $prefix . '.' . ($i + 1);
+                $this->zbierzTeksty($mbox, $uid, $child, $nr, $plain, $html);
+            }
+        }
+    }
+
+    private function charsetZParametrow(object $part): string
+    {
+        if (empty($part->parameters) || ! is_array($part->parameters)) {
+            return '';
+        }
+        foreach ($part->parameters as $param) {
+            if (isset($param->attribute, $param->value)
+                && strcasecmp((string) $param->attribute, 'charset') === 0
+            ) {
+                return (string) $param->value;
+            }
+        }
+
+        return '';
     }
 
     /**

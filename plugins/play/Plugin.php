@@ -2,25 +2,41 @@
 
 namespace McsPluginy\play;
 
+use App\Libraries\ImportKoperta;
+use App\Libraries\IncydentZapis;
 use App\Libraries\Imap\ImapKlientFabryka;
 use App\Libraries\Imap\ImapKlientInterface;
 use App\Libraries\SourcePluginInterface;
+use App\Libraries\WagaV0;
 use App\Models\PluginModel;
+use Config\Database;
 use RuntimeException;
 
 /**
- * Plugin Play scrubbing.
+ * Plugin źródła Play — powiadomienia DDoS w treści maila (antyddos@play.pl).
  *
- * IMAP (mcs.play.imap*) jest gotowy. Parser formatu raportu wymaga prawdziwej
- * probki CSV/maila od Play — skrzynka testowa miala tylko maile „Witamy”/„test”
- * bez zalacznikow (stan 2026-09-11).
+ * Uwaga operacyjna: FreeScout na tej samej skrzynce potrafi ściągnąć i usunąć
+ * maile z IMAP; MCS widzi wtedy tylko resztki (np. Witamy/test).
  */
 class Plugin implements SourcePluginInterface
 {
+    private Parser $parser;
+    private ImportKoperta $koperta;
+    private IncydentZapis $zapis;
+    private WagaV0 $waga;
     private ?ImapKlientFabryka $imapFabryka;
 
-    public function __construct(?ImapKlientFabryka $imapFabryka = null)
-    {
+    public function __construct(
+        ?Parser $parser = null,
+        ?ImportKoperta $koperta = null,
+        ?IncydentZapis $zapis = null,
+        ?WagaV0 $waga = null,
+        ?ImapKlientFabryka $imapFabryka = null,
+    ) {
+        $this->parser      = $parser ?? new Parser();
+        $this->koperta     = $koperta ?? new ImportKoperta();
+        $this->zapis       = $zapis ?? new IncydentZapis();
+        $this->waga        = $waga ?? new WagaV0();
         $this->imapFabryka = $imapFabryka;
     }
 
@@ -36,10 +52,28 @@ class Plugin implements SourcePluginInterface
             if (! is_readable($fixture)) {
                 throw new RuntimeException('Play: nie mozna odczytac fixturePath=' . $fixture);
             }
-            $msg = 'Play: fixturePath ustawione, ale parser formatu Play jeszcze niezaimplementowany'
-                . ' — potrzebna prawdziwa probka raportu scrubbing (CSV/zalacznik).';
-            $this->aktualizujHealth(false, $msg);
-            throw new RuntimeException($msg);
+            $tresc   = (string) file_get_contents($fixture);
+            $subject = 'DDoS notification - fixture';
+            if (preg_match('/^Subject:\s*(.+)$/mi', $tresc, $m) === 1) {
+                $subject = trim($m[1]);
+                $tresc   = (string) preg_replace('/^Subject:\s*.+$/mi', '', $tresc, 1);
+            }
+            $liczba = $this->importujPowiadomienie(
+                $subject,
+                $tresc,
+                null,
+                hash('sha256', $subject . "\n" . $tresc),
+                'fixture:' . basename($fixture),
+                ['tryb' => 'fixture', 'plik' => basename($fixture)],
+            );
+            $this->aktualizujHealth(
+                true,
+                $liczba > 0
+                    ? "import fixture OK ({$liczba} wierszy)"
+                    : 'fixture bez wierszy DDoS / duplikat',
+            );
+
+            return;
         }
 
         $fabryka = $this->imapFabryka ?? new ImapKlientFabryka();
@@ -51,24 +85,36 @@ class Plugin implements SourcePluginInterface
         }
 
         try {
-            $raport = $this->zbadajSkrzynke($klient);
-            $msg    = sprintf(
-                'Play IMAP OK (wiadomosci=%d, z_csv_lub_zip=%d) — brak parsera: potrzebna prawdziwa'
-                . ' probka raportu scrubbing (obecnie brak uzytecznych zalacznikow CSV).',
-                $raport['wiadomosci'],
-                $raport['z_csv'],
+            $stats = $this->importujZImap($klient);
+            $msg   = sprintf(
+                'import IMAP OK (wiadomosci=%d, ddos=%d, nowe_importy=%d, wiersze=%d%s)',
+                $stats['wiadomosci'],
+                $stats['ddos'],
+                $stats['importy'],
+                $stats['wiersze'],
+                $stats['fallback_ostatnie'] ? ', tryb=ostatnie_SEEN' : '',
             );
-            if ($raport['wiadomosci'] === 0) {
-                $msg = 'Play IMAP OK — skrzynka pusta (0 wiadomosci). Czekam na raport scrubbing.';
-            } elseif ($raport['z_csv'] === 0) {
+            if ($stats['wiadomosci'] > 0 && $stats['ddos'] === 0) {
                 $msg = sprintf(
-                    'Play IMAP OK — %d wiadomosci, 0 zalacznikow CSV/ZIP z danymi.'
-                    . ' Skrzynka ma tylko maile testowe/powitalne; potrzebna probka raportu Play.',
-                    $raport['wiadomosci'],
+                    'Play IMAP OK — %d wiadomości, 0 powiadomień DDoS od antyddos@play.pl.'
+                    . ' FreeScout (Play Anty-DDoS) prawdopodobnie ściągnął maile z IMAP'
+                    . ' (zostaw kopie / wyłącz usuwanie / osobna skrzynka dla MCS).',
+                    $stats['wiadomosci'],
                 );
+                $this->aktualizujHealth(false, $msg);
+                throw new RuntimeException($msg);
             }
-            $this->aktualizujHealth(false, $msg);
-            throw new RuntimeException($msg);
+            if ($stats['wiadomosci'] === 0) {
+                $msg = 'Play IMAP OK — skrzynka pusta. Czekam na powiadomienia DDoS (nie CSV).';
+                $this->aktualizujHealth(false, $msg);
+                throw new RuntimeException($msg);
+            }
+            $this->aktualizujHealth(true, $msg);
+        } catch (\Throwable $e) {
+            if (! str_contains($e->getMessage(), 'Play IMAP OK')) {
+                $this->aktualizujHealth(false, $e->getMessage());
+            }
+            throw $e;
         } finally {
             $klient->zamknij();
         }
@@ -83,33 +129,153 @@ class Plugin implements SourcePluginInterface
 
         return [
             'ok'  => (bool) ($wiersz['health_ok'] ?? false),
-            'msg' => (string) ($wiersz['health_msg'] ?? 'szkielet — czekam na probke/IMAP'),
+            'msg' => (string) ($wiersz['health_msg'] ?? ''),
         ];
     }
 
     /**
-     * @return array{wiadomosci: int, z_csv: int}
+     * @return array{wiadomosci: int, ddos: int, importy: int, wiersze: int, fallback_ostatnie: bool}
      */
-    private function zbadajSkrzynke(ImapKlientInterface $klient): array
+    private function importujZImap(ImapKlientInterface $klient): array
     {
-        $uidy = $klient->listujUid(false);
-        $zCsv = 0;
-        // Limit sondy — nie sciagamy calej historii przy kazdym health-checku.
-        $sonda = array_slice($uidy, 0, 50);
-        foreach ($sonda as $uid) {
-            $w = $klient->pobierzWiadomosc($uid);
-            foreach ($w['zalaczniki'] as $zal) {
-                $n = strtolower($zal['filename']);
-                if (str_ends_with($n, '.csv') || str_ends_with($n, '.zip')) {
-                    $zCsv++;
-                }
+        $fallback = false;
+        $uidy     = $klient->listujUid(true);
+        if ($uidy === []) {
+            $limit     = max(1, (int) env('mcs.play.imapRecentLimit', 100));
+            $wszystkie = $klient->listujUid(false);
+            rsort($wszystkie, SORT_NUMERIC);
+            $uidy     = array_slice($wszystkie, 0, $limit);
+            $fallback = true;
+        }
+
+        $sumaWierszy  = 0;
+        $sumaImportow = 0;
+        $sumaDdos     = 0;
+
+        foreach ($uidy as $uid) {
+            $wiadomosc = $klient->pobierzWiadomosc($uid);
+            $from      = strtolower((string) ($wiadomosc['from'] ?? ''));
+            $subject   = (string) ($wiadomosc['subject'] ?? '');
+            $tresc     = (string) ($wiadomosc['tresc'] ?? '');
+
+            $wygladaNaDdos = $this->parser->toPowiadomienieDdos($subject, $tresc)
+                || $from === Parser::FROM_PLAY
+                || str_contains($from, '@play.pl');
+
+            if (! $wygladaNaDdos) {
+                continue;
+            }
+
+            $sumaDdos++;
+            $checksum = hash('sha256', $subject . "\n" . $tresc);
+            $liczba   = $this->importujPowiadomienie(
+                $subject,
+                $tresc,
+                $wiadomosc['date'] ?? null,
+                $checksum,
+                $wiadomosc['message_id'],
+                [
+                    'tryb'    => 'imap',
+                    'uid'     => $uid,
+                    'from'    => $from,
+                    'subject' => $subject,
+                ],
+            );
+            if ($liczba > 0) {
+                $sumaWierszy += $liczba;
+                $sumaImportow++;
+                $klient->oznaczPrzeczytane($uid);
             }
         }
 
         return [
-            'wiadomosci' => count($uidy),
-            'z_csv'      => $zCsv,
+            'wiadomosci'        => count($uidy),
+            'ddos'              => $sumaDdos,
+            'importy'           => $sumaImportow,
+            'wiersze'           => $sumaWierszy,
+            'fallback_ostatnie' => $fallback,
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $meta
+     */
+    private function importujPowiadomienie(
+        string $subject,
+        string $tresc,
+        ?string $dateNaglowka,
+        string $checksum,
+        ?string $idWiadomosci,
+        array $meta,
+    ): int {
+        $importId = $this->koperta->rozpocznij($this->zrodlo(), $checksum, $idWiadomosci, $meta);
+        if ($importId === null) {
+            return 0;
+        }
+
+        $db = Database::connect();
+
+        try {
+            $wiersze = $this->parser->parsujPowiadomienie($subject, $tresc, $dateNaglowka);
+            if ($wiersze === []) {
+                $this->koperta->zakonczKwarantanna($importId, 'Brak rozpoznanego powiadomienia DDoS w treści/temacie');
+
+                return 0;
+            }
+
+            $licznik = 0;
+            foreach ($wiersze as $w) {
+                $kategoria = $this->parser->kategoriaDlaWiersza($w);
+                $wynikWagi = $this->waga->wylicz($kategoria, [
+                    'message_type' => $w['message_type'],
+                ]);
+
+                $db->table('mcs_play_wiersze')->insert([
+                    'import_id'        => $importId,
+                    'zaobserwowano_at' => $w['timestamp'],
+                    'ip'               => $w['ip'],
+                    'klucz_dedupu'     => $w['klucz_dedupu'],
+                    'payload_json'     => json_encode($w, JSON_UNESCAPED_UNICODE),
+                ]);
+                $idWZrodle = (string) $db->insertID();
+
+                $tytul = 'Play DDoS — ' . $w['message_type'];
+                if (! empty($w['event_id'])) {
+                    $tytul .= ' #' . $w['event_id'];
+                }
+
+                $this->zapis->zapisz([
+                    'zrodlo'           => $this->zrodlo(),
+                    'klucz_dedupu'     => $w['klucz_dedupu'],
+                    'podmiot_typ'      => $w['podmiot_typ'],
+                    'podmiot'          => $w['podmiot'],
+                    'zaobserwowano_at' => $w['timestamp'],
+                    'waga'             => $wynikWagi['waga'],
+                    'wersja_wagi'      => $wynikWagi['wersja'],
+                    'kategoria'        => $kategoria,
+                    'tytul'            => $tytul,
+                    'import_id'        => $importId,
+                    'id_w_zrodle'      => $idWZrodle,
+                    'payload'          => [
+                        'message_type'  => $w['message_type'],
+                        'event_id'      => $w['event_id'],
+                        'policy'        => $w['policy'],
+                        'tid'           => $w['tid'],
+                        'mitigation_id' => $w['mitigation_id'],
+                        'cidr'          => $w['cidr'],
+                        'waga_meta'     => $wynikWagi,
+                    ],
+                ]);
+                $licznik++;
+            }
+
+            $this->koperta->zakonczOk($importId, ['wierszy' => $licznik]);
+
+            return $licznik;
+        } catch (\Throwable $e) {
+            $this->koperta->zakonczBlad($importId, $e->getMessage());
+            throw $e;
+        }
     }
 
     private function aktualizujHealth(bool $ok, string $msg): void

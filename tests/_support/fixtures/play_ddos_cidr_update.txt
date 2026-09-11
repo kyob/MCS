@@ -1,0 +1,11 @@
+Subject: DDoS notification - CIDR Update: B2B_AS31242_SPM-1-4 - TID131197_ALFA-SYSTEM - 93570
+
+Message type CIDR Update
+Event 93570
+Event Status ACTIVE
+Start 2026-09-07 20:24:40.000000 CEST
+End -
+Policy B2B_AS31242_SPM-1-4
+Dimension Customer
+CIDR 198.51.100.0/24
+CIDR 203.0.113.64/28

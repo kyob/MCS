@@ -23,6 +23,8 @@ interface ImapKlientInterface
      *   message_id: ?string,
      *   subject: string,
      *   date: ?string,
+     *   from: string,
+     *   tresc: string,
      *   zalaczniki: list<array{filename: string, mime: string, tresc: string}>
      * }
      */
