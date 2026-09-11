@@ -44,9 +44,9 @@ final class PluginSeederTest extends CIUnitTestCase
     {
         $wynik = (new PluginSeeder())->zapisz();
 
-        $this->assertSame(['shadowserver', 'play', 'snds'], $wynik['nowe']);
+        $this->assertSame(['shadowserver', 'play', 'snds', 'mojecert'], $wynik['nowe']);
         $this->assertSame([], $wynik['juz_byly']);
-        $this->seeNumRecords(3, 'mcs_pluginy', []);
+        $this->seeNumRecords(4, 'mcs_pluginy', []);
         $this->seeInDatabase('mcs_pluginy', [
             'zrodlo'            => 'shadowserver',
             'nazwa'             => 'Shadowserver',
@@ -63,6 +63,11 @@ final class PluginSeederTest extends CIUnitTestCase
             'nazwa'             => 'SNDS',
             'import_wstrzymany' => 1,
         ]);
+        $this->seeInDatabase('mcs_pluginy', [
+            'zrodlo'            => 'mojecert',
+            'nazwa'             => 'MojeCert',
+            'import_wstrzymany' => 1,
+        ]);
     }
 
     public function testPonownyZapisNieNadpisujeIstniejacych(): void
@@ -73,8 +78,8 @@ final class PluginSeederTest extends CIUnitTestCase
         $wynik = (new PluginSeeder())->zapisz();
 
         $this->assertSame([], $wynik['nowe']);
-        $this->assertSame(['shadowserver', 'play', 'snds'], $wynik['juz_byly']);
-        $this->seeNumRecords(3, 'mcs_pluginy', []);
+        $this->assertSame(['shadowserver', 'play', 'snds', 'mojecert'], $wynik['juz_byly']);
+        $this->seeNumRecords(4, 'mcs_pluginy', []);
         $this->seeInDatabase('mcs_pluginy', [
             'zrodlo'            => 'play',
             'import_wstrzymany' => 0,

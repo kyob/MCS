@@ -1,0 +1,55 @@
+{
+  "org_slug": "demo-org",
+  "org_name": "Demo Organization",
+  "subnet_cidr": "198.51.100.0/24",
+  "results": [
+    {
+      "additional_data": {
+        "names_string": "*.example.test, example.test"
+      },
+      "report_html": "Nastepujace adresy zwracaja certyfikaty SSL/TLS wystawione na niepoprawne domeny: https://host198-51-100-10.example.test:443/",
+      "report_type": "bad_certificate_names",
+      "severity": "low",
+      "target": "https://host198-51-100-10.example.test:443/",
+      "target_ip": "198.51.100.10",
+      "timestamp": "2026-03-11T23:31:18.674657",
+      "last_domain": "example.test"
+    },
+    {
+      "additional_data": {},
+      "report_html": "Certyfikaty SSL/TLS nie sa podpisane przez zaufane CA: https://host198-51-100-20.example.test:443/",
+      "report_type": "certificate_authority_invalid",
+      "severity": "low",
+      "target": "https://host198-51-100-20.example.test:443/",
+      "target_ip": "198.51.100.20",
+      "timestamp": "2026-03-12T01:36:40.220771"
+    },
+    {
+      "additional_data": {
+        "expiry_date": "2025-05-07 16:43:34"
+      },
+      "html": "Certyfikat wygasl: https://host203-0-113-5.example.test:443/",
+      "report_type": "expired_ssl_certificate",
+      "severity": "medium",
+      "target": "https://host203-0-113-5.example.test:443/",
+      "target_ip": "203.0.113.5",
+      "timestamp": "2026-03-11T22:03:35.719522"
+    },
+    {
+      "report_type": "open_vuln_service",
+      "severity": "high",
+      "target": "https://host203-0-113-9.example.test:8443/",
+      "target_ip": "203.0.113.9",
+      "timestamp": "2026-03-12T08:00:00.000000",
+      "html": "Wykryto podatna usluge (syntetyczny wiersz fixture)."
+    },
+    {
+      "report_type": "bad_certificate_names",
+      "severity": "low",
+      "target": "https://invalid/",
+      "target_ip": "not-an-ip",
+      "timestamp": "2026-03-12T09:00:00.000000",
+      "html": "Wiersz bez poprawnego IP — parser pomija."
+    }
+  ]
+}

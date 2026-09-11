@@ -16,6 +16,7 @@ class PluginSeeder
         ['zrodlo' => 'shadowserver', 'nazwa' => 'Shadowserver'],
         ['zrodlo' => 'play', 'nazwa' => 'Play'],
         ['zrodlo' => 'snds', 'nazwa' => 'SNDS'],
+        ['zrodlo' => 'mojecert', 'nazwa' => 'MojeCert'],
     ];
 
     public function __construct(private readonly ?BaseConnection $db = null)
