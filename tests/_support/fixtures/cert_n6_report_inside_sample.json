@@ -1,0 +1,131 @@
+[
+  {
+    "restriction": "need-to-know",
+    "confidence": "medium",
+    "time": "2026-04-12T21:52:19Z",
+    "origin": "sinkhole",
+    "category": "bots",
+    "source": "hidden.fixture",
+    "name": "android.badbox2",
+    "id": "fixture-n6-id-0001-bots",
+    "sport": 51114,
+    "address": [
+      {
+        "asn": 64500,
+        "cc": "PL",
+        "ip": "198.51.100.10"
+      }
+    ],
+    "modified": "2026-04-13T05:00:59Z",
+    "adip": "x.x.100.10",
+    "dport": 80,
+    "fqdn": "example-1.test",
+    "proto": "tcp",
+    "name_details": {
+      "phrase": {
+        "android.badbox2": {
+          "n6kb": [
+            "https://n6portal.cert.pl/knowledge_base/articles/1020#n6kb-android_2ebadbox2"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "restriction": "need-to-know",
+    "time": "2026-04-12T15:39:31Z",
+    "category": "vulnerable",
+    "source": "hidden.fixture",
+    "name": "telnet",
+    "dport": 23,
+    "id": "fixture-n6-id-0002-vulnerable",
+    "modified": "2026-04-13T12:53:03Z",
+    "address": [
+      {
+        "asn": 64501,
+        "cc": "PL",
+        "ip": "198.51.100.11"
+      }
+    ],
+    "confidence": "medium",
+    "name_details": {
+      "phrase": {
+        "telnet": {
+          "n6kb": [
+            "https://n6portal.cert.pl/knowledge_base/articles/1090#n6kb-telnet"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "restriction": "need-to-know",
+    "time": "2026-04-12T13:52:06Z",
+    "category": "amplifier",
+    "source": "hidden.fixture",
+    "name": "resolver",
+    "id": "fixture-n6-id-0003-amplifier",
+    "modified": "2026-04-13T03:02:32Z",
+    "address": [
+      {
+        "asn": 64502,
+        "cc": "PL",
+        "ip": "198.51.100.12"
+      }
+    ],
+    "confidence": "medium",
+    "name_details": {
+      "phrase": {
+        "resolver": {
+          "n6kb": [
+            "https://n6portal.cert.pl/knowledge_base/articles/1010#n6kb-resolver"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "restriction": "need-to-know",
+    "confidence": "medium",
+    "time": "2026-04-12T10:23:34Z",
+    "origin": "honeypot",
+    "category": "server-exploit",
+    "source": "hidden.fixture",
+    "name": "unknown",
+    "id": "fixture-n6-id-0004-server-exploit",
+    "sport": 49294,
+    "address": [
+      {
+        "asn": 64503,
+        "cc": "PL",
+        "ip": "198.51.100.13"
+      }
+    ],
+    "modified": "2026-04-12T10:23:54Z",
+    "adip": "x.x.103.13",
+    "dport": 64587,
+    "proto": "tcp"
+  },
+  {
+    "id": "fixture-n6-id-noaddr",
+    "category": "bots",
+    "confidence": "medium",
+    "name": "should-skip",
+    "time": "2026-04-12T12:00:00Z",
+    "source": "hidden.fixture",
+    "restriction": "need-to-know"
+  },
+  {
+    "category": "bots",
+    "confidence": "low",
+    "name": "should-skip-noid",
+    "time": "2026-04-12T12:00:00Z",
+    "address": [
+      {
+        "ip": "198.51.100.99",
+        "asn": 1,
+        "cc": "PL"
+      }
+    ]
+  }
+]
