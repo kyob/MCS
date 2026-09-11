@@ -2,6 +2,7 @@
 
 namespace Config;
 
+use App\Filters\McsAuthFilter;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
 use CodeIgniter\Filters\CSRF;
@@ -34,6 +35,7 @@ class Filters extends BaseFilters
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
+        'mcsAuth'       => McsAuthFilter::class,
     ];
 
     /**
@@ -73,7 +75,7 @@ class Filters extends BaseFilters
     public array $globals = [
         'before' => [
             // 'honeypot',
-            // 'csrf',
+            'csrf' => ['except' => ['api/*']],
             // 'invalidchars',
         ],
         'after' => [
@@ -106,5 +108,14 @@ class Filters extends BaseFilters
      *
      * @var array<string, array<string, list<string>>>
      */
-    public array $filters = [];
+    public array $filters = [
+        'mcsAuth' => [
+            'before' => [
+                'ip',
+                'ip/*',
+                'admin',
+                'admin/*',
+            ],
+        ],
+    ];
 }
