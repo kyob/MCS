@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # MCS — wrapper cron/systemd dla php spark mcs:pobierz
-# Użycie: mcs-pobierz.sh [all|shadowserver|play|snds]
-# Domyślnie: all. Nie loguje sekretów (.env). Uruchamiać jako www-data.
+# Użycie: mcs-pobierz.sh [all|shadowserver|play|snds|mojecert|cert_n6|wanguard]
+# Domyślnie: all (= wszystkie z plugins/). Nie loguje sekretów (.env). Uruchamiać jako www-data.
 
 set -euo pipefail
 
