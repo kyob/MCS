@@ -9,7 +9,7 @@ class Auth extends BaseController
     public function login()
     {
         if (session()->get('mcs_user_id') !== null) {
-            return redirect()->to('/');
+            return redirect()->to('/admin/pluginy');
         }
 
         return view('auth/login', [
@@ -20,10 +20,10 @@ class Auth extends BaseController
     public function loginSubmit()
     {
         if (session()->get('mcs_user_id') !== null) {
-            return redirect()->to('/');
+            return redirect()->to('/admin/pluginy');
         }
 
-        $email = trim((string) $this->request->getPost('email'));
+        $email = strtolower(trim((string) $this->request->getPost('email')));
         $haslo = (string) $this->request->getPost('haslo');
 
         if ($email === '' || $haslo === '') {
@@ -50,7 +50,7 @@ class Auth extends BaseController
             return redirect()->to($cel);
         }
 
-        return redirect()->to('/');
+        return redirect()->to('/admin/pluginy');
     }
 
     public function logout()

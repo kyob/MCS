@@ -25,6 +25,8 @@ class UserModel extends Model
      */
     public function znajdzAktywnegoPoEmailu(string $email): ?array
     {
+        $email = strtolower(trim($email));
+
         $wiersz = $this->where('email', $email)
             ->where('aktywny', true)
             ->first();

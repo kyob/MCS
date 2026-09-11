@@ -91,10 +91,10 @@
     <form method="post" action="<?= site_url('login') ?>" autocomplete="on">
         <?= csrf_field() ?>
         <label for="email">E-mail</label>
-        <input id="email" type="email" name="email" required autofocus>
+        <input id="email" type="text" name="email" inputmode="email" autocomplete="username" required autofocus>
 
         <label for="haslo">Hasło</label>
-        <input id="haslo" type="password" name="haslo" required>
+        <input id="haslo" type="password" name="haslo" autocomplete="current-password" required>
 
         <button type="submit">Zaloguj</button>
     </form>

@@ -27,7 +27,7 @@ Przykłady:
      */
     public function run(array $params)
     {
-        $email = isset($params[0]) ? trim((string) $params[0]) : '';
+        $email = isset($params[0]) ? strtolower(trim((string) $params[0])) : '';
         $haslo = isset($params[1]) ? (string) $params[1] : '';
         $rola  = isset($params[2]) ? strtolower(trim((string) $params[2])) : '';
 

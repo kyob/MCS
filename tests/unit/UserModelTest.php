@@ -56,6 +56,7 @@ final class UserModelTest extends CIUnitTestCase
         ]);
 
         $this->assertNotNull($model->znajdzAktywnegoPoEmailu('aktywny@example.local'));
+        $this->assertNotNull($model->znajdzAktywnegoPoEmailu('  Aktywny@Example.Local  '));
         $this->assertNull($model->znajdzAktywnegoPoEmailu('wylaczony@example.local'));
         $this->assertNull($model->znajdzAktywnegoPoEmailu('brak@example.local'));
     }
