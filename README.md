@@ -16,6 +16,8 @@ LMS+ później dostanie mały plugin (badge → MCS).
 | [docs/04-czesci-systemu.md](docs/04-czesci-systemu.md) | Krok 4 — części MCS, pluginy, fazy |
 | [docs/05-stack.md](docs/05-stack.md) | Stack: PHP, CodeIgniter 4, PostgreSQL, osobny LXC/VM |
 | [docs/06-poprawki-po-krytyce.md](docs/06-poprawki-po-krytyce.md) | Decyzje po krytyce planu |
+| [docs/07-plan-faza-1a-szkielet.md](docs/07-plan-faza-1a-szkielet.md) | Plan Fazy 1a + LXC / sprzęt |
+| [docs/07-srodowisko-lxc.md](docs/07-srodowisko-lxc.md) | Fakty środowiska LXC (szablon) |
 
 ## Lokalizacja
 
