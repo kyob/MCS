@@ -1,7 +1,17 @@
 # MCS — Moja Czysta Sieć
 
-Osobna aplikacja (nie część LMS+).  
-Na razie tylko **plan i architektura** — bez kodu.
+Osobna aplikacja (nie część LMS+).
+
+CodeIgniter 4 zbootstrapowany (Task 2, 2026-09-11), wdrozony na CT `mcs`
+(192.0.2.110). Uruchomienie lokalne / na CT:
+
+```bash
+composer install
+cp .env.example .env   # uzupelnic haslo DB (na CT: z /root/mcs-bootstrap-secrets.txt)
+php spark list
+```
+
+Docroot: `public/`. Migracje domenowe MCS jeszcze nie istnieja (Task 3).
 
 LMS+ później dostanie mały plugin (badge → MCS).  
 **Planować można; realizacja pluginu dopiero po uruchomieniu MCS.**
@@ -19,6 +29,7 @@ LMS+ później dostanie mały plugin (badge → MCS).
 | [docs/07-plan-faza-1a-szkielet.md](docs/07-plan-faza-1a-szkielet.md) | Plan Fazy 1a + LXC / sprzęt |
 | [docs/07-srodowisko-lxc.md](docs/07-srodowisko-lxc.md) | Fakty środowiska LXC (szablon) |
 | [docs/07-zlecenie-agent-lxc.md](docs/07-zlecenie-agent-lxc.md) | Polecenie dla agenta: Task 1 LXC |
+| [docs/07-zlecenie-agent-ci4.md](docs/07-zlecenie-agent-ci4.md) | Polecenie dla agenta: Task 2 CI4 |
 
 ## Lokalizacja
 
