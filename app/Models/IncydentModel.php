@@ -19,6 +19,7 @@ class IncydentModel extends Model
         'pierwsze_widziane',
         'ostatnio_widziane',
         'waga',
+        'wersja_wagi',
         'kategoria',
         'tytul',
         'port',
