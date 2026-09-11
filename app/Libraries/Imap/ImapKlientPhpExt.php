@@ -5,8 +5,7 @@ namespace App\Libraries\Imap;
 use RuntimeException;
 
 /**
- * Implementacja na rozszerzeniu PHP `imap`.
- * Na tym LXC (2026-09-11) ext nie jest zainstalowane — przed live: php8.x-imap.
+ * Implementacja na rozszerzeniu PHP `imap` (PECL; na Debian Trixie: php8.4-imap z Sury).
  */
 final class ImapKlientPhpExt implements ImapKlientInterface
 {
@@ -17,7 +16,9 @@ final class ImapKlientPhpExt implements ImapKlientInterface
     {
         if (! extension_loaded('imap')) {
             throw new RuntimeException(
-                'Brak rozszerzenia PHP imap. Zainstaluj pakiet php-imap (np. php8.4-imap) i wznów php-fpm/cli.',
+                'Brak rozszerzenia PHP imap. Na Debian Trixie: apt install php8.4-imap'
+                . ' (pakiet z packages.sury.org — brak w stable) i systemctl restart php8.4-fpm.'
+                . ' Szczegóły: docs/09-imap-konfiguracja-env.md',
             );
         }
         if (! $ustawienia->jestSkonfigurowane()) {
