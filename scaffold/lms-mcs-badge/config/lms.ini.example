@@ -1,0 +1,13 @@
+; Przykład sekcji MCS dla lms.ini / konfiguracji LMS+
+; SKOPIUJ wartości ręcznie na host LMS — NIE commituj prawdziwego tokenu.
+;
+; Token MUSI być identyczny z MCS .env: mcs.badgeToken
+; URL MUSI być osiągalny z hosta LMS (HTTP/HTTPS).
+
+[mcs]
+base_url = https://mcs.example/
+badge_token = ZMIEN_TEN_SAM_CO_mcs.badgeToken
+cache_ttl = 120
+timeout = 5
+; opcjonalnie limit IP w jednym żądaniu batch (?ips=), gdy MCS doda endpoint zbiorczy
+; batch_max = 50

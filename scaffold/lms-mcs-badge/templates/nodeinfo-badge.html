@@ -1,0 +1,13 @@
+{# Minimalny badge MCS — wstawiane przez plugin LMS (liczba / max_waga / url z API). #}
+{# Nie pokazywać tokenów ani raw JSON. #}
+{% if api_niedostepne %}
+<div class="mcs-badge mcs-badge--offline" data-ip="{{ ip }}">
+  <span title="MCS API niedostępne">MCS: —</span>
+</div>
+{% else %}
+<div class="mcs-badge mcs-badge--{{ max_waga|default('none') }}" data-ip="{{ ip }}" data-liczba="{{ liczba }}">
+  <a href="{{ url }}" title="MCS — szczegóły incydentów ({{ okno_dni|default(7) }} dni)">
+    MCS: {{ liczba }}{% if max_waga and liczba > 0 %} ({{ max_waga }}){% endif %}
+  </a>
+</div>
+{% endif %}

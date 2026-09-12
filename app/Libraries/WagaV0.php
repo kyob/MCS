@@ -3,7 +3,10 @@
 namespace App\Libraries;
 
 /**
- * Minimalne reguły wagi MCS — wersja v0.
+ * Minimalne reguły wagi MCS — wersja v0 (historyczna).
+ *
+ * Nowe zapisy indeksu używają {@see WagaV1}. Ta klasa zostaje jako fallback
+ * i punkt odniesienia w testach regresji mapowań.
  *
  * Na zewnątrz zawsze etykieta: low | medium | high | critical.
  * Wynik niesie `wersja`, żeby badge/operacje wiedziały, czym liczono.

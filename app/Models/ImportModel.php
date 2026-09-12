@@ -22,4 +22,21 @@ class ImportModel extends Model
         'blad_text',
     ];
     protected $useTimestamps = false;
+
+    /**
+     * Ostatnie przebiegi importu (najnowsze pierwsze).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function ostatnie(int $limit = 30, ?string $zrodlo = null): array
+    {
+        $limit = max(1, min(200, $limit));
+        $b     = $this->builder();
+
+        if ($zrodlo !== null && $zrodlo !== '') {
+            $b->where('zrodlo', $zrodlo);
+        }
+
+        return $b->orderBy('id', 'DESC')->limit($limit)->get()->getResultArray();
+    }
 }

@@ -113,8 +113,13 @@ class Filters extends BaseFilters
     public array $filters = [
         'mcsAuth' => [
             'before' => [
+                '/',
+                'dashboard',
+                'szukaj',
                 'ip',
                 'ip/*',
+                'watchlista',
+                'watchlista/*',
                 'admin',
                 'admin/*',
             ],
@@ -122,6 +127,7 @@ class Filters extends BaseFilters
         'mcsBadgeToken' => [
             'before' => [
                 'api/badge',
+                'api/enrichment/*',
             ],
         ],
     ];

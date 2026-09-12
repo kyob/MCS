@@ -49,6 +49,7 @@
             font-size: 0.85rem;
             font-weight: 600;
         }
+        input[type="text"],
         input[type="email"],
         input[type="password"] {
             width: 100%;
@@ -82,7 +83,7 @@
 <body>
 <main>
     <h1>Moja Czysta Sieć</h1>
-    <p class="podpis">Zaloguj się, aby otworzyć raporty IP i panel.</p>
+    <p class="podpis">Zaloguj się, aby otworzyć przegląd zagrożeń, raporty IP i panel wtyczek.</p>
 
     <?php if (! empty($blad)): ?>
         <p class="blad"><?= esc($blad) ?></p>

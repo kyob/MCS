@@ -99,7 +99,7 @@ final class Parser
     }
 
     /**
-     * Mapowanie tag/severity → kategoria MCS pod WagaV0.
+     * Mapowanie tag/severity → kategoria MCS pod WagaV1 (tag też jako sygnał wagi).
      */
     public function kategoriaDlaWiersza(array $wiersz): string
     {

@@ -8,8 +8,8 @@ use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 
 /**
- * Wymaga sesji MCS na chronionych ścieżkach (/ip/*, /admin/*).
- * v1: obie role (admin, operator) mają ten sam dostęp do IP.
+ * Wymaga sesji MCS na chronionych ścieżkach (/, /dashboard, /szukaj, /ip/*, /admin/*).
+ * v1: obie role (admin, operator) mają ten sam dostęp.
  */
 class McsAuthFilter implements FilterInterface
 {

@@ -1,0 +1,26 @@
+{
+  "data": {
+    "ipAddress": "198.51.100.10",
+    "isPublic": true,
+    "ipVersion": 4,
+    "isWhitelisted": false,
+    "abuseConfidenceScore": 42,
+    "countryCode": "PL",
+    "usageType": "Fixed Line ISP",
+    "isp": "Example ISP",
+    "domain": "example.pl",
+    "hostnames": [],
+    "totalReports": 3,
+    "numDistinctUsers": 2,
+    "lastReportedAt": "2026-09-01T12:00:00+00:00",
+    "reports": [
+      {
+        "reportedAt": "2026-09-01T12:00:00+00:00",
+        "comment": "fixture sample",
+        "categories": [14, 18],
+        "reporterId": 1,
+        "reporterCountryCode": "PL"
+      }
+    ]
+  }
+}

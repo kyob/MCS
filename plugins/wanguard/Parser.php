@@ -16,7 +16,7 @@ class Parser
     public const MAPA_WERSJA = 'wanguard-v0';
 
     /**
-     * Fragmenty typu anomalii → kategoria MCS (WagaV0).
+     * Fragmenty typu anomalii → kategoria MCS (WagaV1).
      *
      * @var array<string, string>
      */

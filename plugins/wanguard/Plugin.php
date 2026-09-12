@@ -5,7 +5,7 @@ namespace McsPluginy\wanguard;
 use App\Libraries\ImportKoperta;
 use App\Libraries\IncydentZapis;
 use App\Libraries\SourcePluginInterface;
-use App\Libraries\WagaV0;
+use App\Libraries\WagaV1;
 use App\Models\PluginModel;
 use Config\Database;
 use RuntimeException;
@@ -25,20 +25,20 @@ class Plugin implements SourcePluginInterface
     private Parser $parser;
     private ImportKoperta $koperta;
     private IncydentZapis $zapis;
-    private WagaV0 $waga;
+    private WagaV1 $waga;
     private ?ApiClient $apiClient;
 
     public function __construct(
         ?Parser $parser = null,
         ?ImportKoperta $koperta = null,
         ?IncydentZapis $zapis = null,
-        ?WagaV0 $waga = null,
+        ?WagaV1 $waga = null,
         ?ApiClient $apiClient = null,
     ) {
         $this->parser    = $parser ?? new Parser();
         $this->koperta   = $koperta ?? new ImportKoperta();
         $this->zapis     = $zapis ?? new IncydentZapis();
-        $this->waga      = $waga ?? new WagaV0();
+        $this->waga      = $waga ?? new WagaV1();
         $this->apiClient = $apiClient;
     }
 

@@ -2,8 +2,7 @@
 
 namespace App\Commands;
 
-use App\Libraries\PluginRegistry;
-use App\Models\PluginModel;
+use App\Libraries\PobierzSerwis;
 use CodeIgniter\CLI\BaseCommand;
 use CodeIgniter\CLI\CLI;
 
@@ -32,40 +31,27 @@ class McsPobierz extends BaseCommand
             return;
         }
 
-        $rejestr = new PluginRegistry();
-        $pluginy = $rejestr->zaladuj();
-        if ($pluginy === []) {
-            CLI::error('Brak zaimplementowanych wtyczek w plugins/');
+        $wyniki = (new PobierzSerwis())->uruchom((string) $cel);
 
-            return;
-        }
+        foreach ($wyniki as $w) {
+            $zrodlo = (string) ($w['zrodlo'] ?? '');
+            $status = (string) ($w['status'] ?? '');
+            $msg    = (string) ($w['msg'] ?? '');
+            $etykieta = $zrodlo !== '' ? "[{$zrodlo}]" : '[?]';
 
-        $mapa = [];
-        foreach ($pluginy as $p) {
-            $mapa[$p->zrodlo()] = $p;
-        }
-
-        $cele = $cel === 'all' ? array_keys($mapa) : [$cel];
-
-        foreach ($cele as $zrodlo) {
-            if (! isset($mapa[$zrodlo])) {
-                CLI::error("Brak kodu wtyczki dla „{$zrodlo}”.");
-                continue;
-            }
-
-            $meta = model(PluginModel::class)->find($zrodlo);
-            if (is_array($meta) && PluginModel::jakoBool($meta['import_wstrzymany'] ?? false)) {
-                CLI::write("[{$zrodlo}] pominięto — import_wstrzymany=true (odblokuj w /admin/pluginy).", 'yellow');
-                continue;
-            }
-
-            CLI::write("[{$zrodlo}] start…", 'green');
-            try {
-                $mapa[$zrodlo]->pobierz();
-                $health = $mapa[$zrodlo]->health();
-                CLI::write("[{$zrodlo}] OK — " . ($health['msg'] ?: 'bez komunikatu'), 'green');
-            } catch (\Throwable $e) {
-                CLI::error("[{$zrodlo}] błąd: " . $e->getMessage());
+            switch ($status) {
+                case 'ok':
+                    CLI::write("{$etykieta} OK — {$msg}", 'green');
+                    break;
+                case 'pominiety':
+                    CLI::write("{$etykieta} {$msg}", 'yellow');
+                    break;
+                case 'zajety':
+                    CLI::write("{$etykieta} {$msg}", 'yellow');
+                    break;
+                default:
+                    CLI::error("{$etykieta} błąd: {$msg}");
+                    break;
             }
         }
     }

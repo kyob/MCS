@@ -7,7 +7,7 @@ use App\Libraries\IncydentZapis;
 use App\Libraries\Imap\ImapKlientFabryka;
 use App\Libraries\Imap\ImapKlientInterface;
 use App\Libraries\SourcePluginInterface;
-use App\Libraries\WagaV0;
+use App\Libraries\WagaV1;
 use App\Models\PluginModel;
 use Config\Database;
 use RuntimeException;
@@ -23,20 +23,20 @@ class Plugin implements SourcePluginInterface
     private Parser $parser;
     private ImportKoperta $koperta;
     private IncydentZapis $zapis;
-    private WagaV0 $waga;
+    private WagaV1 $waga;
     private ?ImapKlientFabryka $imapFabryka;
 
     public function __construct(
         ?Parser $parser = null,
         ?ImportKoperta $koperta = null,
         ?IncydentZapis $zapis = null,
-        ?WagaV0 $waga = null,
+        ?WagaV1 $waga = null,
         ?ImapKlientFabryka $imapFabryka = null,
     ) {
         $this->parser      = $parser ?? new Parser();
         $this->koperta     = $koperta ?? new ImportKoperta();
         $this->zapis       = $zapis ?? new IncydentZapis();
-        $this->waga        = $waga ?? new WagaV0();
+        $this->waga        = $waga ?? new WagaV1();
         $this->imapFabryka = $imapFabryka;
     }
 
@@ -94,26 +94,22 @@ class Plugin implements SourcePluginInterface
                 $stats['wiersze'],
                 $stats['fallback_ostatnie'] ? ', tryb=ostatnie_SEEN' : '',
             );
-            if ($stats['wiadomosci'] > 0 && $stats['ddos'] === 0) {
-                $msg = sprintf(
-                    'Play IMAP OK — %d wiadomości, 0 powiadomień DDoS od antyddos@play.pl.'
-                    . ' FreeScout (Play Anty-DDoS) prawdopodobnie ściągnął maile z IMAP'
-                    . ' (zostaw kopie / wyłącz usuwanie / osobna skrzynka dla MCS).',
-                    $stats['wiadomosci'],
-                );
-                $this->aktualizujHealth(false, $msg);
-                throw new RuntimeException($msg);
-            }
-            if ($stats['wiadomosci'] === 0) {
-                $msg = 'Play IMAP OK — skrzynka pusta. Czekam na powiadomienia DDoS (nie CSV).';
-                $this->aktualizujHealth(false, $msg);
-                throw new RuntimeException($msg);
+            // IMAP działa, ale brak DDoS w skrzynce = tor gotowy (czekamy na alert).
+            // Historyczne maile mogły zniknąć po FreeScout; to nie jest awaria credentials.
+            if ($stats['ddos'] === 0) {
+                $msg = $stats['wiadomosci'] === 0
+                    ? 'Play IMAP OK — skrzynka pusta; tor gotowy, czekam na powiadomienia DDoS (antyddos@play.pl).'
+                    : sprintf(
+                        'Play IMAP OK — %d wiadomości, 0× DDoS od antyddos@play.pl; tor gotowy, czekam na kolejne alerty.',
+                        $stats['wiadomosci'],
+                    );
+                $this->aktualizujHealth(true, $msg);
+
+                return;
             }
             $this->aktualizujHealth(true, $msg);
         } catch (\Throwable $e) {
-            if (! str_contains($e->getMessage(), 'Play IMAP OK')) {
-                $this->aktualizujHealth(false, $e->getMessage());
-            }
+            $this->aktualizujHealth(false, $e->getMessage());
             throw $e;
         } finally {
             $klient->zamknij();

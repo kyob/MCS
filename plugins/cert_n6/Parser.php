@@ -10,7 +10,7 @@ namespace McsPluginy\cert_n6;
 class Parser
 {
     /**
-     * Kategoria n6 → kategoria MCS (WagaV0).
+     * Kategoria n6 → kategoria MCS (WagaV1).
      *
      * @var array<string, string>
      */

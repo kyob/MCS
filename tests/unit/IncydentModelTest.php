@@ -168,6 +168,81 @@ final class IncydentModelTest extends CIUnitTestCase
         $this->assertSame(7, $agregat['okno_dni']);
     }
 
+    public function testAgregatBadgeBatchWhereIn(): void
+    {
+        $ipA    = '198.51.100.10';
+        $ipB    = '203.0.113.1';
+        $ipC    = '203.0.113.50';
+        $teraz  = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $wOknie = $teraz->modify('-1 days')->format('Y-m-d H:i:s');
+        $poza   = $teraz->modify('-12 days')->format('Y-m-d H:i:s');
+
+        $this->wstawIncydent('shadowserver', 'a1', $ipA, 'high', $wOknie);
+        $this->wstawIncydent('play', 'a2', $ipA, 'low', $wOknie);
+        $this->wstawIncydent('snds', 'a3', $ipA, 'critical', $wOknie); // ukryte źródło
+        $this->wstawIncydent('play', 'b1', $ipB, 'medium', $wOknie);
+        $this->wstawIncydent('shadowserver', 'c-old', $ipC, 'critical', $poza);
+
+        $mapa = model(IncydentModel::class)->agregatBadgeDlaIpLista([$ipA, $ipB, $ipC, $ipA]);
+
+        $this->assertSame([$ipA, $ipB, $ipC], array_keys($mapa));
+        $this->assertSame(2, $mapa[$ipA]['liczba']);
+        $this->assertSame('high', $mapa[$ipA]['max_waga']);
+        $this->assertSame(2, $mapa[$ipA]['liczba_zrodel']);
+        $this->assertSame(1, $mapa[$ipB]['liczba']);
+        $this->assertSame('medium', $mapa[$ipB]['max_waga']);
+        $this->assertSame(0, $mapa[$ipC]['liczba']);
+        $this->assertNull($mapa[$ipC]['max_waga']);
+        $this->assertSame(0, $mapa[$ipC]['liczba_zrodel']);
+    }
+
+    public function testKpiITopWieloZrodlowe(): void
+    {
+        $ipA    = '198.51.100.10';
+        $ipB    = '203.0.113.1';
+        $teraz  = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $wOknie = $teraz->modify('-1 days')->format('Y-m-d H:i:s');
+        $poza   = $teraz->modify('-20 days')->format('Y-m-d H:i:s');
+
+        $this->wstawIncydent('shadowserver', 'a1', $ipA, 'high', $wOknie);
+        $this->wstawIncydent('play', 'a2', $ipA, 'critical', $wOknie);
+        $this->wstawIncydent('snds', 'a3', $ipA, 'critical', $wOknie); // ukryte źródło
+        $this->wstawIncydent('shadowserver', 'b1', $ipB, 'low', $wOknie);
+        $this->wstawIncydent('play', 'old', $ipA, 'high', $poza);
+
+        $model = model(IncydentModel::class);
+        $kpi   = $model->kpiPrzegladu(7);
+
+        $this->assertSame(3, $kpi['liczba_incydentow']);
+        $this->assertSame(2, $kpi['liczba_ip']);
+        $this->assertSame(1, $kpi['ip_wielozrodlowe']);
+        $this->assertSame(2, $kpi['critical_high']);
+        $this->assertSame('critical', $kpi['max_waga']);
+
+        $top = $model->topProblematyczneIp(7, null, null, null, 2, 10);
+        $this->assertCount(1, $top);
+        $this->assertSame($ipA, $top[0]['ip']);
+        $this->assertSame(2, $top[0]['liczba_zrodel']);
+        $this->assertSame(['play', 'shadowserver'], $top[0]['zrodla']);
+        $this->assertSame('critical', $top[0]['max_waga']);
+
+        $ostatnie = $model->ostatnieIncydenty(7, null, $ipA, 'high', 10);
+        $this->assertCount(2, $ostatnie);
+        $this->assertSame(['critical', 'high'], array_column($ostatnie, 'waga'));
+    }
+
+    public function testWidoczneZrodlaPomijaUkryte(): void
+    {
+        $teraz  = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $wOknie = $teraz->format('Y-m-d H:i:s');
+        $this->wstawIncydent('shadowserver', 'a1', '198.51.100.10', 'low', $wOknie);
+        $this->wstawIncydent('snds', 'c1', '198.51.100.10', 'critical', $wOknie);
+
+        $zrodla = model(IncydentModel::class)->widoczneZrodla();
+
+        $this->assertSame(['shadowserver'], $zrodla);
+    }
+
     /**
      * @param bool $ukrytyWUi
      */

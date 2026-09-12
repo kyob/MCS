@@ -11,7 +11,7 @@ use CodeIgniter\Config\BaseConfig;
 class Mcs extends BaseConfig
 {
     /**
-     * Sekret serwerowy LMS→MCS dla GET /api/badge.
+     * Sekret serwerowy LMS→MCS dla GET|POST /api/badge (single + batch).
      * Pusty = filtr zawsze odrzuca (fail-closed).
      */
     public string $badgeToken = '';

@@ -9,7 +9,7 @@ use CodeIgniter\HTTP\ResponseInterface;
 use Config\Mcs;
 
 /**
- * Token serwerowy dla GET /api/badge.
+ * Token serwerowy dla GET|POST /api/badge (single + batch).
  * Akceptuje Authorization: Bearer … lub X-Mcs-Badge-Token.
  */
 class McsBadgeTokenFilter implements FilterInterface
