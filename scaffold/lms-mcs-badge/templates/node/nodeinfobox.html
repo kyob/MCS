@@ -1,0 +1,35 @@
+{block name="nodeinfobox-leftcolumn" append}
+    {if isset($nodeinfo.mcs_badge)}
+    <tr>
+        <td>
+            {icon name="search" class="fa-fw"}
+        </td>
+        <td>
+            <abbr title="Moja Czysta Sieć — agregat 7 dni">MCS</abbr>
+        </td>
+        <td>
+            {if $nodeinfo.mcs_badge.api_niedostepne}
+                <span class="mcs-badge mcs-badge--offline" title="MCS API niedostępne">MCS: —</span>
+            {else}
+                {assign var=mcs_url value=$nodeinfo.mcs_badge.url}
+                {if $mcs_url}
+                    <a href="{$mcs_url|escape}" target="_blank" rel="noopener" class="mcs-badge"
+                       title="MCS — szczegóły ({$nodeinfo.mcs_badge.okno_dni|default:7} dni)">
+                        MCS: {$nodeinfo.mcs_badge.liczba|intval}
+                        {if $nodeinfo.mcs_badge.max_waga && $nodeinfo.mcs_badge.liczba > 0}
+                            ({$nodeinfo.mcs_badge.max_waga|escape})
+                        {/if}
+                    </a>
+                {else}
+                    <span class="mcs-badge">
+                        MCS: {$nodeinfo.mcs_badge.liczba|intval}
+                        {if $nodeinfo.mcs_badge.max_waga && $nodeinfo.mcs_badge.liczba > 0}
+                            ({$nodeinfo.mcs_badge.max_waga|escape})
+                        {/if}
+                    </span>
+                {/if}
+            {/if}
+        </td>
+    </tr>
+    {/if}
+{/block}

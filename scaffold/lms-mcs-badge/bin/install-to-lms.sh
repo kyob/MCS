@@ -60,8 +60,10 @@ fi
 
 FILES=(
   LMSMcsBadgePlugin.php
+  handlers/McsBadgeHandler.php
   lib/McsBadgeClient.php
   lib/McsBadgeCache.php
+  templates/node/nodeinfobox.html
   templates/nodeinfo-badge.html
   config/lms.ini.example
   README.md
@@ -86,14 +88,16 @@ if [[ "$YES" -ne 1 ]]; then
   exit 0
 fi
 
-mkdir -p "$DEST/lib" "$DEST/templates" "$DEST/config"
+mkdir -p "$DEST/lib" "$DEST/templates/node" "$DEST/config" "$DEST/handlers"
 for f in "${FILES[@]}"; do
   install -m 0644 "$SRC_DIR/$f" "$DEST/$f"
 done
 
 echo "Zainstalowano do: $DEST"
 echo "NIE zapisano tokenu. Uzupełnij lms.ini sekcją [mcs] ręcznie."
+echo "Po instalacji (jako root): composer dump-autoload -d \"$LMS_ROOT\" — żeby classmap widział LMSMcsBadgePlugin."
 echo "Weryfikacja składni:"
 php -l "$DEST/LMSMcsBadgePlugin.php"
+php -l "$DEST/handlers/McsBadgeHandler.php"
 php -l "$DEST/lib/McsBadgeClient.php"
 php -l "$DEST/lib/McsBadgeCache.php"

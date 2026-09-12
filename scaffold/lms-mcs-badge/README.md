@@ -10,20 +10,19 @@
 
 | Środowisko | Stan |
 |------------|------|
-| MCS `GET /api/badge?ip=` | działa (token w `.env` MCS); smoke z CT i z LMS hosta → 200/401 |
-| LMS drzewo | na `kyob@192.0.2.50:/var/www/html/lmsplus` (nie na CT MCS) |
-| Scaffold na LMS | skopiowany do `~/mcs-badge-staging/lms-mcs-badge/` (selfcheck OK) |
-| Plugin w `plugins/LMSMcsBadgePlugin` | **nie zainstalowany** — brak passwordless sudo / zapis do `plugins/` i `/etc/lms/lms.ini` |
-| `[mcs]` w `/etc/lms/lms.ini` | **brak** |
-| Cutover starych źródeł LMS | **wstrzymany** do smoke badge |
+| MCS `GET /api/badge?ip=` | **OK** (200/401) |
+| LMS drzewo | `kyob@192.0.2.50:/var/www/html/lmsplus` |
+| Scaffold na LMS | `~/mcs-badge-staging/lms-mcs-badge/` (LMS+ handlers + `templates/node/nodeinfobox.html`) |
+| `[mcs]` w `/etc/lms/lms.ini` | **OK** |
+| `phpui.plugins` → `LMSMcsBadgePlugin` | **OK** |
+| Runtime | autoload bridge ze stagingu (do `composer dump-autoload` jako root) |
+| Smoke | node `9910` / `176.97.24.50` → `liczba>0` |
+| Cutover fetch | SNDS + N6 soft-off; MojeCert timer = leftover root |
 
-### Bloker — komendy operatora (sudo na LMS)
+### Opcjonalnie — pełna kopia do `plugins/` (root)
 
 ```bash
-sudo ~/mcs-badge-staging/lms-mcs-badge/bin/install-to-lms.sh \
-  --lms-root /var/www/html/lmsplus --yes
-sudo edit /etc/lms/lms.ini   # dopisz [mcs] wg wzoru poniżej; token = mcs.badgeToken z MCS
-# włącz plugin w panelu LMS+ → smoke nodeinfo
+bash /home/kyob/mcs-badge-staging/update-mcs-badge-fix.sh
 ```
 
 ## Config LMS (bez sekretów w gicie)
@@ -46,12 +45,14 @@ timeout = 5
 
 | Plik | Rola |
 |------|------|
-| `LMSMcsBadgePlugin.php` | Plugin LMS+ — hook `nodeinfo_before_display` |
+| `LMSMcsBadgePlugin.php` | Plugin LMS+ — `registerHandlers()` |
+| `handlers/McsBadgeHandler.php` | `smarty_initialized` + `nodeinfo_before_display` |
 | `lib/McsBadgeClient.php` | HTTP Bearer → `/api/badge` (single + batch `ips=`) |
 | `lib/McsBadgeCache.php` | Cache plikowy TTL (domyślnie 120 s) |
-| `templates/nodeinfo-badge.html` | Markup badge / stan „API niedostępne” |
+| `templates/node/nodeinfobox.html` | Blok Smarty `nodeinfobox-leftcolumn` (extendsall) |
+| `templates/nodeinfo-badge.html` | Zapasowy markup mini-tpl |
 | `config/lms.ini.example` | Wzór sekcji `[mcs]` |
-| `bin/install-to-lms.sh` | Bezpieczna kopia do `plugins/LMSMcsBadgePlugin` |
+| `bin/install-to-lms.sh` | Kopia do `plugins/LMSMcsBadgePlugin` (+ przypomnienie `composer dump-autoload`) |
 | `bin/selfcheck.php` | Smoke lokalny (bez LMS) |
 
 ## Kroki instalacji (operator — host LMS)

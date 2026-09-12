@@ -20,8 +20,10 @@ function fail(string $msg): void
 
 foreach ([
     'LMSMcsBadgePlugin.php',
+    'handlers/McsBadgeHandler.php',
     'lib/McsBadgeClient.php',
     'lib/McsBadgeCache.php',
+    'templates/node/nodeinfobox.html',
     'templates/nodeinfo-badge.html',
     'config/lms.ini.example',
     'bin/install-to-lms.sh',
