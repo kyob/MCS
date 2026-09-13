@@ -73,8 +73,17 @@ foreach (glob($dir . '/*') ?: [] as $f) {
 @rmdir($dir);
 
 $tpl = file_get_contents($root . '/templates/nodeinfo-badge.html');
-if ($tpl === false || !str_contains($tpl, 'mcs-badge')) {
+if ($tpl === false || !str_contains($tpl, 'mcs-badge') || !str_contains($tpl, 'Szczegóły w MCS')) {
     fail('template');
+}
+
+$nodeTpl = file_get_contents($root . '/templates/node/nodeinfobox.html');
+if ($nodeTpl === false
+    || !str_contains($nodeTpl, 'Moja Czysta Sieć')
+    || !str_contains($nodeTpl, 'Szczegóły w MCS')
+    || !str_contains($nodeTpl, 'Zgłoszenia')
+) {
+    fail('nodeinfobox template');
 }
 
 if (!is_executable($root . '/bin/install-to-lms.sh')) {

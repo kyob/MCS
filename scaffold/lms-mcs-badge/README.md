@@ -84,8 +84,8 @@ Wykonuj na **staging**, dopiero potem prod.
 
 4. **Włącz plugin** w panelu LMS+ (jak inne `LMS*Plugin`). W razie potrzeby dostosuj nazwę hooka / assign Smarty do Waszej wersji LMS+ (kod jest luźno sprzężony).
 
-5. **Smoke nodeinfo:** otwórz kartę hosta z IP, które ma incydenty w MCS (okno 7 dni) → badge `MCS: N (waga)`.  
-   IP bez incydentów → `MCS: 0`. Zły token / MCS down → `MCS: —` (bez stack trace).
+5. **Smoke nodeinfo:** otwórz kartę hosta z IP, które ma incydenty w MCS (okno 7 dni) → box „Moja Czysta Sieć” z liczbą zgłoszeń, wagą PL, źródłami/kategoriami i linkiem „Szczegóły w MCS”.  
+   IP bez incydentów → „Brak zgłoszeń…”. Zły token / MCS down → „API niedostępne” (bez stack trace).
 
 6. **Klik** → deep link `/ip/{ip}` w MCS (po zalogowaniu szczegóły).
 

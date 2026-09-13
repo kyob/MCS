@@ -142,6 +142,9 @@ final class IncydentModelTest extends CIUnitTestCase
         $this->assertSame(0, $agregat['liczba']);
         $this->assertNull($agregat['max_waga']);
         $this->assertSame(0, $agregat['liczba_zrodel']);
+        $this->assertSame([], $agregat['zrodla']);
+        $this->assertSame([], $agregat['kategorie']);
+        $this->assertSame([], $agregat['przyklady']);
         $this->assertSame(7, $agregat['okno_dni']);
     }
 
@@ -152,9 +155,9 @@ final class IncydentModelTest extends CIUnitTestCase
         $wOknie = $teraz->modify('-2 days')->format('Y-m-d H:i:s');
         $poza   = $teraz->modify('-10 days')->format('Y-m-d H:i:s');
 
-        $this->wstawIncydent('shadowserver', 'a1', $ip, 'high', $wOknie);
-        $this->wstawIncydent('play', 'b1', $ip, 'low', $wOknie);
-        $this->wstawIncydent('play', 'b2', $ip, 'critical', $wOknie); // druga w tym samym źródle
+        $this->wstawIncydent('shadowserver', 'a1', $ip, 'high', $wOknie, false, 'botnet', 'SS bot');
+        $this->wstawIncydent('play', 'b1', $ip, 'low', $wOknie, false, 'spam', 'Play low');
+        $this->wstawIncydent('play', 'b2', $ip, 'critical', $wOknie, false, 'botnet', 'Play crit'); // druga w tym samym źródle
         $this->wstawIncydent('snds', 'c1', $ip, 'critical', $wOknie); // plugin ukryty
         $this->wstawIncydent('shadowserver', 'd1', $ip, 'medium', $poza); // poza oknem 7 dni
         $this->wstawIncydent('play', 'e1', $ip, 'medium', $wOknie, true); // ukryty_w_ui
@@ -165,6 +168,9 @@ final class IncydentModelTest extends CIUnitTestCase
         $this->assertSame(3, $agregat['liczba']);
         $this->assertSame('critical', $agregat['max_waga']);
         $this->assertSame(2, $agregat['liczba_zrodel']);
+        $this->assertSame(['play', 'shadowserver'], $agregat['zrodla']);
+        $this->assertSame(['botnet', 'spam'], $agregat['kategorie']);
+        $this->assertSame(['Play crit', 'SS bot', 'Play low'], $agregat['przyklady']);
         $this->assertSame(7, $agregat['okno_dni']);
     }
 
@@ -194,6 +200,9 @@ final class IncydentModelTest extends CIUnitTestCase
         $this->assertSame(0, $mapa[$ipC]['liczba']);
         $this->assertNull($mapa[$ipC]['max_waga']);
         $this->assertSame(0, $mapa[$ipC]['liczba_zrodel']);
+        $this->assertSame([], $mapa[$ipC]['zrodla']);
+        $this->assertSame([], $mapa[$ipC]['kategorie']);
+        $this->assertSame([], $mapa[$ipC]['przyklady']);
     }
 
     public function testKpiITopWieloZrodlowe(): void
@@ -253,6 +262,8 @@ final class IncydentModelTest extends CIUnitTestCase
         string $waga,
         string $ostatnio,
         bool $ukrytyWUi = false,
+        string $kategoria = 'other',
+        string $tytul = '',
     ): void {
         $this->db->table('mcs_incydenty')->insert([
             'zrodlo'            => $zrodlo,
@@ -262,8 +273,8 @@ final class IncydentModelTest extends CIUnitTestCase
             'pierwsze_widziane' => $ostatnio,
             'ostatnio_widziane' => $ostatnio,
             'waga'              => $waga,
-            'kategoria'         => 'other',
-            'tytul'             => "Test {$klucz}",
+            'kategoria'         => $kategoria,
+            'tytul'             => $tytul !== '' ? $tytul : "Test {$klucz}",
             'ukryty_w_ui'       => $ukrytyWUi ? 1 : 0,
         ]);
     }

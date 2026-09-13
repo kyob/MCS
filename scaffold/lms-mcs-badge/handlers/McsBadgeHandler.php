@@ -94,18 +94,21 @@ class McsBadgeHandler
     }
 
     /**
-     * @return array{api_niedostepne:bool,liczba:int,max_waga:?string,url:string,okno_dni:int,liczba_zrodel:int}
+     * @return array{
+     *   api_niedostepne: bool,
+     *   liczba: int,
+     *   max_waga: ?string,
+     *   url: string,
+     *   okno_dni: int,
+     *   liczba_zrodel: int,
+     *   zrodla: list<string>,
+     *   kategorie: list<string>,
+     *   przyklady: list<string>
+     * }
      */
     private function fetchBadgeSafe(string $ip): array
     {
-        $fallback = [
-            'api_niedostepne' => true,
-            'liczba'          => 0,
-            'max_waga'        => null,
-            'url'             => '',
-            'okno_dni'        => 7,
-            'liczba_zrodel'   => 0,
-        ];
+        $fallback = $this->pustyBadge(true);
 
         $cfg = $this->readMcsConfig();
         if ($cfg['base_url'] === '' || $cfg['badge_token'] === '') {
@@ -116,14 +119,7 @@ class McsBadgeHandler
             $cache = new McsBadgeCache($cfg['cache_ttl']);
             $cached = $cache->get($ip);
             if (is_array($cached) && isset($cached['liczba'])) {
-                return [
-                    'api_niedostepne' => !empty($cached['api_niedostepne']),
-                    'liczba'          => (int) $cached['liczba'],
-                    'max_waga'        => isset($cached['max_waga']) ? (string) $cached['max_waga'] : null,
-                    'url'             => (string) ($cached['url'] ?? ''),
-                    'okno_dni'        => (int) ($cached['okno_dni'] ?? 7),
-                    'liczba_zrodel'   => (int) ($cached['liczba_zrodel'] ?? 0),
-                ];
+                return $this->normalizujBadge($cached, !empty($cached['api_niedostepne']));
             }
 
             $client = new McsBadgeClient($cfg['base_url'], $cfg['badge_token'], $cfg['timeout']);
@@ -132,23 +128,98 @@ class McsBadgeHandler
                 return $fallback;
             }
 
-            $data = $res['data'];
-            $out = [
-                'api_niedostepne' => false,
-                'liczba'          => (int) ($data['liczba'] ?? 0),
-                'max_waga'        => isset($data['max_waga']) && $data['max_waga'] !== ''
-                    ? (string) $data['max_waga']
-                    : null,
-                'url'             => (string) ($data['url'] ?? ''),
-                'okno_dni'        => (int) ($data['okno_dni'] ?? 7),
-                'liczba_zrodel'   => (int) ($data['liczba_zrodel'] ?? 0),
-            ];
+            $out = $this->normalizujBadge($res['data'], false);
             $cache->set($ip, $out);
 
             return $out;
         } catch (Throwable $e) {
             return $fallback;
         }
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     * @return array{
+     *   api_niedostepne: bool,
+     *   liczba: int,
+     *   max_waga: ?string,
+     *   url: string,
+     *   okno_dni: int,
+     *   liczba_zrodel: int,
+     *   zrodla: list<string>,
+     *   kategorie: list<string>,
+     *   przyklady: list<string>
+     * }
+     */
+    private function normalizujBadge(array $data, bool $apiNiedostepne): array
+    {
+        $maxWaga = isset($data['max_waga']) && $data['max_waga'] !== '' && $data['max_waga'] !== null
+            ? (string) $data['max_waga']
+            : null;
+
+        return [
+            'api_niedostepne' => $apiNiedostepne,
+            'liczba'          => (int) ($data['liczba'] ?? 0),
+            'max_waga'        => $maxWaga,
+            'url'             => (string) ($data['url'] ?? ''),
+            'okno_dni'        => (int) ($data['okno_dni'] ?? 7),
+            'liczba_zrodel'   => (int) ($data['liczba_zrodel'] ?? 0),
+            'zrodla'          => $this->listaStringow($data['zrodla'] ?? []),
+            'kategorie'       => $this->listaStringow($data['kategorie'] ?? []),
+            'przyklady'       => $this->listaStringow($data['przyklady'] ?? []),
+        ];
+    }
+
+    /**
+     * @return array{
+     *   api_niedostepne: bool,
+     *   liczba: int,
+     *   max_waga: ?string,
+     *   url: string,
+     *   okno_dni: int,
+     *   liczba_zrodel: int,
+     *   zrodla: list<string>,
+     *   kategorie: list<string>,
+     *   przyklady: list<string>
+     * }
+     */
+    private function pustyBadge(bool $apiNiedostepne): array
+    {
+        return [
+            'api_niedostepne' => $apiNiedostepne,
+            'liczba'          => 0,
+            'max_waga'        => null,
+            'url'             => '',
+            'okno_dni'        => 7,
+            'liczba_zrodel'   => 0,
+            'zrodla'          => [],
+            'kategorie'       => [],
+            'przyklady'       => [],
+        ];
+    }
+
+    /**
+     * @param mixed $wartosc
+     * @return list<string>
+     */
+    private function listaStringow($wartosc): array
+    {
+        if (!is_array($wartosc)) {
+            return [];
+        }
+        $out = [];
+        foreach ($wartosc as $el) {
+            if (!is_string($el) && !is_int($el) && !is_float($el)) {
+                continue;
+            }
+            $s = trim((string) $el);
+            if ($s === '') {
+                continue;
+            }
+            $out[] = $s;
+        }
+
+        return $out;
     }
 
     /**

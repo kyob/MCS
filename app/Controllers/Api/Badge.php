@@ -170,6 +170,9 @@ class Badge extends BaseController
                 'liczba'        => 0,
                 'max_waga'      => null,
                 'liczba_zrodel' => 0,
+                'zrodla'        => [],
+                'kategorie'     => [],
+                'przyklady'     => [],
             ];
             $okno     = $agregat['okno_dni'];
             $wyniki[] = $this->wierszBadge($ip, $agregat);
@@ -183,8 +186,26 @@ class Badge extends BaseController
     }
 
     /**
-     * @param array{okno_dni: int, liczba: int, max_waga: ?string, liczba_zrodel: int} $agregat
-     * @return array{ip: string, okno_dni: int, liczba: int, max_waga: ?string, liczba_zrodel: int, url: string}
+     * @param array{
+     *   okno_dni: int,
+     *   liczba: int,
+     *   max_waga: ?string,
+     *   liczba_zrodel: int,
+     *   zrodla?: list<string>,
+     *   kategorie?: list<string>,
+     *   przyklady?: list<string>
+     * } $agregat
+     * @return array{
+     *   ip: string,
+     *   okno_dni: int,
+     *   liczba: int,
+     *   max_waga: ?string,
+     *   liczba_zrodel: int,
+     *   zrodla: list<string>,
+     *   kategorie: list<string>,
+     *   przyklady: list<string>,
+     *   url: string
+     * }
      */
     private function wierszBadge(string $ip, array $agregat): array
     {
@@ -196,6 +217,9 @@ class Badge extends BaseController
             'liczba'        => $agregat['liczba'],
             'max_waga'      => $agregat['max_waga'],
             'liczba_zrodel' => $agregat['liczba_zrodel'],
+            'zrodla'        => array_values($agregat['zrodla'] ?? []),
+            'kategorie'     => array_values($agregat['kategorie'] ?? []),
+            'przyklady'     => array_values($agregat['przyklady'] ?? []),
             'url'           => $baza . '/ip/' . rawurlencode($ip),
         ];
     }

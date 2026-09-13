@@ -94,6 +94,9 @@ final class BadgeApiTest extends CIUnitTestCase
         $this->assertSame($ip, $json['ip']);
         $this->assertSame(1, $json['liczba']);
         $this->assertSame('high', $json['max_waga']);
+        $this->assertSame(['shadowserver'], $json['zrodla']);
+        $this->assertSame(['other'], $json['kategorie']);
+        $this->assertSame(['Test s1'], $json['przyklady']);
         $this->assertArrayNotHasKey('wyniki', $json);
     }
 

@@ -2,31 +2,97 @@
     {if isset($nodeinfo.mcs_badge)}
     <tr>
         <td>
-            {icon name="search" class="fa-fw"}
+            {icon name="shield-halved" class="lms-ui-button-clipboard fa-fw"}
         </td>
         <td>
-            <abbr title="Moja Czysta Sieć — agregat 7 dni">MCS</abbr>
+            Moja Czysta Sieć
+            <span style="display:block;font-size:0.85em;font-weight:normal;color:#666;margin-top:2px;">MCS</span>
         </td>
         <td>
             {if $nodeinfo.mcs_badge.api_niedostepne}
-                <span class="mcs-badge mcs-badge--offline" title="MCS API niedostępne">MCS: —</span>
+                <span class="lms-ui-warning"><strong>API niedostępne</strong></span>
+                <br>
+                <small style="color:#888">Nie udało się pobrać zgłoszeń z MCS. Odśwież stronę później.</small>
             {else}
-                {assign var=mcs_url value=$nodeinfo.mcs_badge.url}
-                {if $mcs_url}
-                    <a href="{$mcs_url|escape}" target="_blank" rel="noopener" class="mcs-badge"
-                       title="MCS — szczegóły ({$nodeinfo.mcs_badge.okno_dni|default:7} dni)">
-                        MCS: {$nodeinfo.mcs_badge.liczba|intval}
-                        {if $nodeinfo.mcs_badge.max_waga && $nodeinfo.mcs_badge.liczba > 0}
-                            ({$nodeinfo.mcs_badge.max_waga|escape})
-                        {/if}
-                    </a>
+                {assign var=mcs_liczba value=$nodeinfo.mcs_badge.liczba|intval}
+                {assign var=mcs_waga value=$nodeinfo.mcs_badge.max_waga|default:''}
+                {assign var=mcs_okno value=$nodeinfo.mcs_badge.okno_dni|default:7}
+                {assign var=mcs_url value=$nodeinfo.mcs_badge.url|default:''}
+                {if $mcs_waga == 'critical' || $mcs_waga == 'high'}
+                    {assign var=mcs_waga_class value='lms-ui-negative'}
+                {elseif $mcs_waga == 'medium'}
+                    {assign var=mcs_waga_class value='lms-ui-warning'}
+                {elseif $mcs_waga == 'low'}
+                    {assign var=mcs_waga_class value='lms-ui-positive'}
                 {else}
-                    <span class="mcs-badge">
-                        MCS: {$nodeinfo.mcs_badge.liczba|intval}
-                        {if $nodeinfo.mcs_badge.max_waga && $nodeinfo.mcs_badge.liczba > 0}
-                            ({$nodeinfo.mcs_badge.max_waga|escape})
-                        {/if}
-                    </span>
+                    {assign var=mcs_waga_class value=''}
+                {/if}
+                {if $mcs_waga == 'critical'}
+                    {assign var=mcs_waga_pl value='krytyczna'}
+                {elseif $mcs_waga == 'high'}
+                    {assign var=mcs_waga_pl value='wysoka'}
+                {elseif $mcs_waga == 'medium'}
+                    {assign var=mcs_waga_pl value='średnia'}
+                {elseif $mcs_waga == 'low'}
+                    {assign var=mcs_waga_pl value='niska'}
+                {elseif $mcs_waga}
+                    {assign var=mcs_waga_pl value=$mcs_waga}
+                {else}
+                    {assign var=mcs_waga_pl value='—'}
+                {/if}
+
+                {if $mcs_liczba > 0}
+                    Zgłoszenia (ostatnie {$mcs_okno} dni):&nbsp;
+                    <span class="{$mcs_waga_class}"><strong>{$mcs_liczba}</strong></span>
+                    &nbsp;·&nbsp;Waga max:&nbsp;
+                    <span class="{$mcs_waga_class}"><strong>{$mcs_waga_pl|escape}</strong></span>
+                    {if $nodeinfo.mcs_badge.liczba_zrodel|default:0 > 0}
+                        &nbsp;·&nbsp;Źródła: <strong>{$nodeinfo.mcs_badge.liczba_zrodel|intval}</strong>
+                    {/if}
+
+                    {if !empty($nodeinfo.mcs_badge.zrodla)}
+                    <br>
+                    Lista źródeł:&nbsp;
+                    {foreach from=$nodeinfo.mcs_badge.zrodla item=mcs_z name=mcs_zrodla}
+                        <strong>{$mcs_z|escape}</strong>{if !$smarty.foreach.mcs_zrodla.last}, {/if}
+                    {/foreach}
+                    {/if}
+
+                    {if !empty($nodeinfo.mcs_badge.kategorie)}
+                    <br>
+                    {foreach from=$nodeinfo.mcs_badge.kategorie item=mcs_kat}
+                        <span style="display:inline-block;background:#e8e8e8;color:#444;padding:1px 6px;border-radius:3px;font-size:0.78em;margin:2px 2px 0 0">{$mcs_kat|escape}</span>
+                    {/foreach}
+                    {/if}
+
+                    {if !empty($nodeinfo.mcs_badge.przyklady)}
+                    <br>
+                    <small style="color:#555">
+                        Przykłady:
+                        {foreach from=$nodeinfo.mcs_badge.przyklady item=mcs_tyt name=mcs_przyklady}
+                            {$mcs_tyt|escape}{if !$smarty.foreach.mcs_przyklady.last}; {/if}
+                        {/foreach}
+                    </small>
+                    {/if}
+
+                    <br>
+                    <small style="color:#888">Tylko informacja — MCS nie blokuje automatycznie.</small>
+                    {if $mcs_url}
+                    &nbsp;
+                    <a href="{$mcs_url|escape}" target="_blank" rel="noopener"
+                       class="lms-ui-button lms-ui-button-secondary" style="padding:1px 8px;font-size:0.85em">
+                        Szczegóły w MCS
+                    </a>
+                    {/if}
+                {else}
+                    <span style="color:#888">Brak zgłoszeń w ostatnich {$mcs_okno} dniach.</span>
+                    {if $mcs_url}
+                    &nbsp;
+                    <a href="{$mcs_url|escape}" target="_blank" rel="noopener"
+                       class="lms-ui-button lms-ui-button-secondary" style="padding:1px 8px;font-size:0.85em">
+                        Szczegóły w MCS
+                    </a>
+                    {/if}
                 {/if}
             {/if}
         </td>

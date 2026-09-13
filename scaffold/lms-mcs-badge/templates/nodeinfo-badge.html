@@ -1,13 +1,21 @@
-{# Minimalny badge MCS — wstawiane przez plugin LMS (liczba / max_waga / url z API). #}
+{# Badge MCS — bogatszy podgląd dla operatora (liczba / waga / źródła / kategorie). #}
 {# Nie pokazywać tokenów ani raw JSON. #}
 {% if api_niedostepne %}
 <div class="mcs-badge mcs-badge--offline" data-ip="{{ ip }}">
-  <span title="MCS API niedostępne">MCS: —</span>
+  <strong>Moja Czysta Sieć</strong> — API niedostępne
 </div>
 {% else %}
 <div class="mcs-badge mcs-badge--{{ max_waga|default('none') }}" data-ip="{{ ip }}" data-liczba="{{ liczba }}">
-  <a href="{{ url }}" title="MCS — szczegóły incydentów ({{ okno_dni|default(7) }} dni)">
-    MCS: {{ liczba }}{% if max_waga and liczba > 0 %} ({{ max_waga }}){% endif %}
-  </a>
+  <strong>Moja Czysta Sieć</strong>
+  {% if liczba > 0 %}
+    — Zgłoszenia: {{ liczba }}{% if max_waga %} (waga {{ max_waga }}){% endif %}
+    {% if zrodla %}; źródła: {{ zrodla|join(', ') }}{% endif %}
+    {% if kategorie %}; kategorie: {{ kategorie|join(', ') }}{% endif %}
+  {% else %}
+    — brak zgłoszeń ({{ okno_dni|default(7) }} dni)
+  {% endif %}
+  {% if url %}
+    · <a href="{{ url }}" title="Szczegóły w MCS">Szczegóły w MCS</a>
+  {% endif %}
 </div>
 {% endif %}
