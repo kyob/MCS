@@ -147,7 +147,9 @@ class McsBadgeHandler
      *   okno_dni: int,
      *   liczba_zrodel: int,
      *   zrodla: list<string>,
+     *   zrodla_etykiety: list<string>,
      *   kategorie: list<string>,
+     *   kategorie_chip: list<string>,
      *   przyklady: list<string>
      * }
      */
@@ -157,16 +159,21 @@ class McsBadgeHandler
             ? (string) $data['max_waga']
             : null;
 
+        $zrodla = $this->listaStringow($data['zrodla'] ?? []);
+        $kategorie = $this->listaStringow($data['kategorie'] ?? []);
+
         return [
-            'api_niedostepne' => $apiNiedostepne,
-            'liczba'          => (int) ($data['liczba'] ?? 0),
-            'max_waga'        => $maxWaga,
-            'url'             => (string) ($data['url'] ?? ''),
-            'okno_dni'        => (int) ($data['okno_dni'] ?? 7),
-            'liczba_zrodel'   => (int) ($data['liczba_zrodel'] ?? 0),
-            'zrodla'          => $this->listaStringow($data['zrodla'] ?? []),
-            'kategorie'       => $this->listaStringow($data['kategorie'] ?? []),
-            'przyklady'       => $this->listaStringow($data['przyklady'] ?? []),
+            'api_niedostepne'  => $apiNiedostepne,
+            'liczba'           => (int) ($data['liczba'] ?? 0),
+            'max_waga'         => $maxWaga,
+            'url'              => (string) ($data['url'] ?? ''),
+            'okno_dni'         => (int) ($data['okno_dni'] ?? 7),
+            'liczba_zrodel'    => (int) ($data['liczba_zrodel'] ?? 0),
+            'zrodla'           => $zrodla,
+            'zrodla_etykiety'  => $this->etykietyZrodel($zrodla),
+            'kategorie'        => $kategorie,
+            'kategorie_chip'   => $this->kategorieChip($kategorie, 2),
+            'przyklady'        => $this->listaStringow($data['przyklady'] ?? []),
         ];
     }
 
@@ -179,23 +186,70 @@ class McsBadgeHandler
      *   okno_dni: int,
      *   liczba_zrodel: int,
      *   zrodla: list<string>,
+     *   zrodla_etykiety: list<string>,
      *   kategorie: list<string>,
+     *   kategorie_chip: list<string>,
      *   przyklady: list<string>
      * }
      */
     private function pustyBadge(bool $apiNiedostepne): array
     {
         return [
-            'api_niedostepne' => $apiNiedostepne,
-            'liczba'          => 0,
-            'max_waga'        => null,
-            'url'             => '',
-            'okno_dni'        => 7,
-            'liczba_zrodel'   => 0,
-            'zrodla'          => [],
-            'kategorie'       => [],
-            'przyklady'       => [],
+            'api_niedostepne'  => $apiNiedostepne,
+            'liczba'           => 0,
+            'max_waga'         => null,
+            'url'              => '',
+            'okno_dni'         => 7,
+            'liczba_zrodel'    => 0,
+            'zrodla'           => [],
+            'zrodla_etykiety'  => [],
+            'kategorie'        => [],
+            'kategorie_chip'   => [],
+            'przyklady'        => [],
         ];
+    }
+
+    /**
+     * @param list<string> $zrodla
+     * @return list<string>
+     */
+    private function etykietyZrodel(array $zrodla): array
+    {
+        $mapa = [
+            'cert_n6'      => 'N6',
+            'shadowserver' => 'Shadowserver',
+            'play'         => 'Play',
+            'snds'         => 'SNDS',
+            'abuseipdb'    => 'AbuseIPDB',
+            'mojecert'     => 'MojeCERT',
+            'wanguard'     => 'Wanguard',
+        ];
+        $out = [];
+        foreach ($zrodla as $kod) {
+            $out[] = $mapa[$kod] ?? $kod;
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param list<string> $kategorie
+     * @return list<string>
+     */
+    private function kategorieChip(array $kategorie, int $limit): array
+    {
+        $out = [];
+        foreach ($kategorie as $kat) {
+            if (strcasecmp($kat, 'other') === 0) {
+                continue;
+            }
+            $out[] = $kat;
+            if (count($out) >= $limit) {
+                break;
+            }
+        }
+
+        return $out;
     }
 
     /**

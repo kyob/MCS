@@ -1,21 +1,18 @@
-{# Badge MCS — bogatszy podgląd dla operatora (liczba / waga / źródła / kategorie). #}
-{# Nie pokazywać tokenów ani raw JSON. #}
+{# Kompaktowy badge MCS — pigułki wagi / liczby / źródeł (bez ścian tekstu). #}
 {% if api_niedostepne %}
 <div class="mcs-badge mcs-badge--offline" data-ip="{{ ip }}">
-  <strong>Moja Czysta Sieć</strong> — API niedostępne
+  <span class="mcs-pill mcs-pill-warn">API niedostępne</span>
 </div>
 {% else %}
 <div class="mcs-badge mcs-badge--{{ max_waga|default('none') }}" data-ip="{{ ip }}" data-liczba="{{ liczba }}">
-  <strong>Moja Czysta Sieć</strong>
   {% if liczba > 0 %}
-    — Zgłoszenia: {{ liczba }}{% if max_waga %} (waga {{ max_waga }}){% endif %}
-    {% if zrodla %}; źródła: {{ zrodla|join(', ') }}{% endif %}
-    {% if kategorie %}; kategorie: {{ kategorie|join(', ') }}{% endif %}
+    <span class="mcs-pill mcs-pill-sev-{{ max_waga|default('none') }}">{{ max_waga|default('?')|upper }}</span>
+    <span class="mcs-pill mcs-pill-count">{{ liczba }} zgłoszeń</span>
+    {% if zrodla %}{% for z in zrodla %}<span class="mcs-pill mcs-pill-src">{{ z }}</span>{% endfor %}{% endif %}
+    {% if kategorie %}{% for k in kategorie[:2] %}{% if k != 'other' %}<span class="mcs-pill mcs-pill-cat">{{ k }}</span>{% endif %}{% endfor %}{% endif %}
   {% else %}
-    — brak zgłoszeń ({{ okno_dni|default(7) }} dni)
+    <span class="mcs-pill mcs-pill-ok">Brak zgłoszeń</span>
   {% endif %}
-  {% if url %}
-    · <a href="{{ url }}" title="Szczegóły w MCS">Szczegóły w MCS</a>
-  {% endif %}
+  {% if url %} · <a href="{{ url }}">Szczegóły w MCS</a>{% endif %}
 </div>
 {% endif %}

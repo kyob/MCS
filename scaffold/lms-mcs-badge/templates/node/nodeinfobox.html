@@ -9,91 +9,78 @@
             <span style="display:block;font-size:0.85em;font-weight:normal;color:#666;margin-top:2px;">MCS</span>
         </td>
         <td>
+            <style>
+                .mcs-pill {
+                    display: inline-block;
+                    vertical-align: middle;
+                    padding: 0.18em 0.65em;
+                    border-radius: 0.35em;
+                    font-size: 0.82em;
+                    font-weight: 700;
+                    line-height: 1.35;
+                    white-space: nowrap;
+                    margin: 2px 4px 2px 0;
+                    border: 1px solid transparent;
+                }
+                .mcs-pill-sev-critical { background: #c62828; color: #fff; border-color: #b71c1c; }
+                .mcs-pill-sev-high { background: #e53935; color: #fff; border-color: #c62828; }
+                .mcs-pill-sev-medium { background: #fb8c00; color: #fff; border-color: #ef6c00; }
+                .mcs-pill-sev-low { background: #43a047; color: #fff; border-color: #2e7d32; }
+                .mcs-pill-sev-none { background: #eceff1; color: #546e7a; border-color: #cfd8dc; }
+                .mcs-pill-count { background: #37474f; color: #fff; border-color: #263238; }
+                .mcs-pill-src { background: #e3f2fd; color: #1565c0; border-color: #90caf9; font-weight: 600; }
+                .mcs-pill-cat { background: #f3e5f5; color: #6a1b9a; border-color: #ce93d8; font-weight: 600; }
+                .mcs-pill-warn { background: #fff8e1; color: #e65100; border-color: #ffcc80; }
+                .mcs-pill-ok { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; font-weight: 600; }
+                .mcs-badge-row { display: flex; flex-wrap: wrap; align-items: center; }
+                .mcs-badge-link { margin-left: 6px; white-space: nowrap; font-weight: 600; }
+            </style>
             {if $nodeinfo.mcs_badge.api_niedostepne}
-                <span class="lms-ui-warning"><strong>API niedostępne</strong></span>
-                <br>
-                <small style="color:#888">Nie udało się pobrać zgłoszeń z MCS. Odśwież stronę później.</small>
+                <div class="mcs-badge-row" title="Nie udało się pobrać zgłoszeń z MCS">
+                    <span class="mcs-pill mcs-pill-warn">API niedostępne</span>
+                </div>
             {else}
                 {assign var=mcs_liczba value=$nodeinfo.mcs_badge.liczba|intval}
                 {assign var=mcs_waga value=$nodeinfo.mcs_badge.max_waga|default:''}
                 {assign var=mcs_okno value=$nodeinfo.mcs_badge.okno_dni|default:7}
                 {assign var=mcs_url value=$nodeinfo.mcs_badge.url|default:''}
-                {if $mcs_waga == 'critical' || $mcs_waga == 'high'}
-                    {assign var=mcs_waga_class value='lms-ui-negative'}
-                {elseif $mcs_waga == 'medium'}
-                    {assign var=mcs_waga_class value='lms-ui-warning'}
-                {elseif $mcs_waga == 'low'}
-                    {assign var=mcs_waga_class value='lms-ui-positive'}
-                {else}
-                    {assign var=mcs_waga_class value=''}
-                {/if}
                 {if $mcs_waga == 'critical'}
-                    {assign var=mcs_waga_pl value='krytyczna'}
+                    {assign var=mcs_sev_class value='mcs-pill-sev-critical'}
+                    {assign var=mcs_waga_pl value='KRYTYCZNA'}
                 {elseif $mcs_waga == 'high'}
-                    {assign var=mcs_waga_pl value='wysoka'}
+                    {assign var=mcs_sev_class value='mcs-pill-sev-high'}
+                    {assign var=mcs_waga_pl value='WYSOKA'}
                 {elseif $mcs_waga == 'medium'}
-                    {assign var=mcs_waga_pl value='średnia'}
+                    {assign var=mcs_sev_class value='mcs-pill-sev-medium'}
+                    {assign var=mcs_waga_pl value='ŚREDNIA'}
                 {elseif $mcs_waga == 'low'}
-                    {assign var=mcs_waga_pl value='niska'}
-                {elseif $mcs_waga}
-                    {assign var=mcs_waga_pl value=$mcs_waga}
+                    {assign var=mcs_sev_class value='mcs-pill-sev-low'}
+                    {assign var=mcs_waga_pl value='NISKA'}
                 {else}
-                    {assign var=mcs_waga_pl value='—'}
+                    {assign var=mcs_sev_class value='mcs-pill-sev-none'}
+                    {assign var=mcs_waga_pl value='BRAK'}
                 {/if}
 
-                {if $mcs_liczba > 0}
-                    Zgłoszenia (ostatnie {$mcs_okno} dni):&nbsp;
-                    <span class="{$mcs_waga_class}"><strong>{$mcs_liczba}</strong></span>
-                    &nbsp;·&nbsp;Waga max:&nbsp;
-                    <span class="{$mcs_waga_class}"><strong>{$mcs_waga_pl|escape}</strong></span>
-                    {if $nodeinfo.mcs_badge.liczba_zrodel|default:0 > 0}
-                        &nbsp;·&nbsp;Źródła: <strong>{$nodeinfo.mcs_badge.liczba_zrodel|intval}</strong>
-                    {/if}
-
-                    {if !empty($nodeinfo.mcs_badge.zrodla)}
-                    <br>
-                    Lista źródeł:&nbsp;
-                    {foreach from=$nodeinfo.mcs_badge.zrodla item=mcs_z name=mcs_zrodla}
-                        <strong>{$mcs_z|escape}</strong>{if !$smarty.foreach.mcs_zrodla.last}, {/if}
-                    {/foreach}
-                    {/if}
-
-                    {if !empty($nodeinfo.mcs_badge.kategorie)}
-                    <br>
-                    {foreach from=$nodeinfo.mcs_badge.kategorie item=mcs_kat}
-                        <span style="display:inline-block;background:#e8e8e8;color:#444;padding:1px 6px;border-radius:3px;font-size:0.78em;margin:2px 2px 0 0">{$mcs_kat|escape}</span>
-                    {/foreach}
-                    {/if}
-
-                    {if !empty($nodeinfo.mcs_badge.przyklady)}
-                    <br>
-                    <small style="color:#555">
-                        Przykłady:
-                        {foreach from=$nodeinfo.mcs_badge.przyklady item=mcs_tyt name=mcs_przyklady}
-                            {$mcs_tyt|escape}{if !$smarty.foreach.mcs_przyklady.last}; {/if}
+                <div class="mcs-badge-row"
+                     title="Agregat {$mcs_okno} dni · tylko informacja, bez auto-blokad">
+                    {if $mcs_liczba > 0}
+                        <span class="mcs-pill {$mcs_sev_class}">{$mcs_waga_pl|escape}</span>
+                        <span class="mcs-pill mcs-pill-count">
+                            {$mcs_liczba} {if $mcs_liczba == 1}zgłoszenie{elseif $mcs_liczba >= 2 && $mcs_liczba <= 4}zgłoszenia{else}zgłoszeń{/if}
+                        </span>
+                        {foreach from=$nodeinfo.mcs_badge.zrodla_etykiety|default:[] item=mcs_z_lbl}
+                            <span class="mcs-pill mcs-pill-src">{$mcs_z_lbl|escape}</span>
                         {/foreach}
-                    </small>
+                        {foreach from=$nodeinfo.mcs_badge.kategorie_chip|default:[] item=mcs_kat}
+                            <span class="mcs-pill mcs-pill-cat">{$mcs_kat|escape}</span>
+                        {/foreach}
+                    {else}
+                        <span class="mcs-pill mcs-pill-ok">Brak zgłoszeń</span>
                     {/if}
-
-                    <br>
-                    <small style="color:#888">Tylko informacja — MCS nie blokuje automatycznie.</small>
                     {if $mcs_url}
-                    &nbsp;
-                    <a href="{$mcs_url|escape}" target="_blank" rel="noopener"
-                       class="lms-ui-button lms-ui-button-secondary" style="padding:1px 8px;font-size:0.85em">
-                        Szczegóły w MCS
-                    </a>
+                        <a href="{$mcs_url|escape}" target="_blank" rel="noopener" class="mcs-badge-link">Szczegóły w MCS</a>
                     {/if}
-                {else}
-                    <span style="color:#888">Brak zgłoszeń w ostatnich {$mcs_okno} dniach.</span>
-                    {if $mcs_url}
-                    &nbsp;
-                    <a href="{$mcs_url|escape}" target="_blank" rel="noopener"
-                       class="lms-ui-button lms-ui-button-secondary" style="padding:1px 8px;font-size:0.85em">
-                        Szczegóły w MCS
-                    </a>
-                    {/if}
-                {/if}
+                </div>
             {/if}
         </td>
     </tr>

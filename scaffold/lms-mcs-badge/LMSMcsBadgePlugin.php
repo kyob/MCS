@@ -16,7 +16,7 @@ class LMSMcsBadgePlugin extends LMSPlugin
     public const PLUGIN_DIRECTORY_NAME = 'LMSMcsBadgePlugin';
     // Bez PLUGIN_DB_VERSION — brak migracji SQL (sam badge API).
     public const PLUGIN_NAME = 'MCS Badge';
-    public const PLUGIN_DESCRIPTION = 'Box MCS na nodeinfo: zgłoszenia 7 dni, źródła, kategorie + deep link (bez auto-blokad).';
+    public const PLUGIN_DESCRIPTION = 'Badge MCS na nodeinfo: pigułki wagi/liczby/źródeł + deep link (bez auto-blokad).';
     public const PLUGIN_AUTHOR = 'MCS';
 
     public function registerHandlers()
@@ -43,8 +43,8 @@ class LMSMcsBadgePlugin extends LMSPlugin
             'name'        => self::PLUGIN_NAME,
             'description' => self::PLUGIN_DESCRIPTION,
             'authors'     => [['name' => 'MCS', 'email' => '']],
-            'version'     => '0.4.0',
-            'revision'    => 2,
+            'version'     => '0.5.0',
+            'revision'    => 3,
             'minver'      => '1.0',
         ];
     }

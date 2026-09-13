@@ -81,7 +81,10 @@ $nodeTpl = file_get_contents($root . '/templates/node/nodeinfobox.html');
 if ($nodeTpl === false
     || !str_contains($nodeTpl, 'Moja Czysta Sieć')
     || !str_contains($nodeTpl, 'Szczegóły w MCS')
-    || !str_contains($nodeTpl, 'Zgłoszenia')
+    || !str_contains($nodeTpl, 'mcs-pill')
+    || !str_contains($nodeTpl, 'mcs-pill-sev-high')
+    || str_contains($nodeTpl, 'Lista źródeł')
+    || str_contains($nodeTpl, 'Przykłady:')
 ) {
     fail('nodeinfobox template');
 }
