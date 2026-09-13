@@ -7,7 +7,7 @@ use CodeIgniter\Test\CIUnitTestCase;
  */
 final class IpShowViewTest extends CIUnitTestCase
 {
-    public function testWidokMaLinkDoSzczegolowIPanelAbuseipdb(): void
+    public function testWidokMaStatusProblemyIPanelAbuseipdb(): void
     {
         $html = view('ip/show', [
             'title'           => 'IP 198.51.100.10 — MCS',
@@ -16,21 +16,14 @@ final class IpShowViewTest extends CIUnitTestCase
             'szukajIp'        => '198.51.100.10',
             'ip'              => '198.51.100.10',
             'blad'            => null,
-            'incydenty'       => [
-                [
-                    'id'                => 42,
-                    'waga'              => 'high',
-                    'zrodlo'            => 'shadowserver',
-                    'tytul'             => 'Test',
-                    'kategoria'         => 'exposure',
-                    'port'              => 22,
-                    'protokol'          => 'tcp',
-                    'ostatnio_widziane' => '2026-09-11 10:00:00',
-                ],
+            'statusIp'        => [
+                'max_waga'         => 'high',
+                'liczba_problemow' => 1,
+                'top_tytuly'       => ['Test'],
             ],
-            'kartyZrodel'        => [
+            'problemy'        => [
                 [
-                    'incydent_id'        => 42,
+                    'klucz'              => 'k1',
                     'zrodlo'             => 'shadowserver',
                     'zrodlo_etykieta'    => 'Shadowserver',
                     'waga'               => 'high',
@@ -38,13 +31,21 @@ final class IpShowViewTest extends CIUnitTestCase
                     'kategoria_etykieta' => 'ekspozycja',
                     'tytul'              => 'Test',
                     'port_tekst'         => '22/tcp',
+                    'liczba_zdarzen'     => 2,
+                    'pierwsze_widziane'  => '2026-09-01 10:00:00',
                     'ostatnio_widziane'  => '2026-09-11 10:00:00',
-                    'url'                => 'http://example.test/ip/198.51.100.10/incydent/42',
-                    'pola'               => [
-                        ['klucz' => 'tag', 'wartosc' => 'open'],
-                        ['klucz' => 'port', 'wartosc' => '22'],
+                    'timeline'           => [
+                        ['dzien' => '2026-09-11', 'aktywny' => true],
+                        ['dzien' => '2026-09-12', 'aktywny' => false],
                     ],
-                    'liczba_obserwacji'  => 2,
+                    'czlonkowie'         => [
+                        [
+                            'id'                => 42,
+                            'waga'              => 'high',
+                            'ostatnio_widziane' => '2026-09-11 10:00:00',
+                            'url'               => 'http://example.test/ip/198.51.100.10/incydent/42',
+                        ],
+                    ],
                 ],
             ],
             'zrodla'             => ['shadowserver'],
@@ -58,12 +59,16 @@ final class IpShowViewTest extends CIUnitTestCase
             'abuseipdbKomunikat' => 'Brak mcs.abuseipdb.apiKey — ustaw w .env albo fixturePath.',
         ]);
 
-        $this->assertStringContainsString('ip/198.51.100.10/incydent/42', $html);
-        $this->assertStringContainsString('Karty źródeł', $html);
+        $this->assertStringContainsString('1 problem', $html);
+        $this->assertStringContainsString('Problemy', $html);
         $this->assertStringContainsString('Shadowserver', $html);
         $this->assertStringContainsString('ekspozycja', $html);
-        $this->assertStringContainsString('open', $html);
+        $this->assertStringContainsString('mini-timeline', $html);
+        $this->assertStringContainsString('incydent', $html);
+        $this->assertStringContainsString('#42', $html);
         $this->assertStringContainsString('Timeline i pełne dane', $html);
+        $this->assertStringNotContainsString('Karty źródeł', $html);
+        $this->assertStringNotContainsString('Skróty incydentów', $html);
         $this->assertStringContainsString('AbuseIPDB', $html);
         $this->assertStringContainsString('mcs.abuseipdb.apiKey', $html);
         $this->assertStringContainsString('Sprawdź AbuseIPDB', $html);
@@ -78,8 +83,12 @@ final class IpShowViewTest extends CIUnitTestCase
             'szukajIp'        => '198.51.100.10',
             'ip'              => '198.51.100.10',
             'blad'            => null,
-            'incydenty'       => [],
-            'kartyZrodel'     => [],
+            'statusIp'        => [
+                'max_waga'         => '',
+                'liczba_problemow' => 0,
+                'top_tytuly'       => [],
+            ],
+            'problemy'        => [],
             'zrodla'          => [],
             'filtrZrodlo'     => null,
             'asMatchWlaczone' => false,

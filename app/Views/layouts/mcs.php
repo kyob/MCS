@@ -294,57 +294,94 @@
             text-decoration: none;
         }
         a.cta-ip:hover { filter: brightness(1.05); background: #d7e6f4; }
-        .karty-zrodel {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-            gap: 0.75rem;
-            margin: 0.5rem 0 1.25rem;
-        }
-        .karta-zrodla {
+        .ip-status {
             border: 1px solid var(--kreska);
             background: #f5f8fb;
-            padding: 0.65rem 0.75rem 0.7rem;
+            padding: 0.65rem 0.85rem;
+            margin: 0.35rem 0 0.85rem;
         }
-        .karta-zrodla-naglowek {
+        .ip-status-wiersz {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.25rem;
-            margin: 0 0 0.4rem;
+            gap: 0.45rem 0.75rem;
+            align-items: center;
+            font-size: 0.92rem;
         }
-        .karta-zrodla-tytul {
-            margin: 0 0 0.25rem;
-            font-size: 0.95rem;
+        .ip-status-top {
+            color: var(--meta);
+            font-size: 0.85rem;
+        }
+        .lista-problemow {
+            list-style: none;
+            margin: 0.35rem 0 1rem;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+        .pozycja-problemu {
+            border: 1px solid var(--kreska);
+            background: #f5f8fb;
+        }
+        .pozycja-problemu > details > summary {
+            list-style: none;
+            cursor: pointer;
+            padding: 0.6rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+        .pozycja-problemu > details > summary::-webkit-details-marker { display: none; }
+        .pozycja-problemu > details[open] > summary {
+            border-bottom: 1px solid var(--kreska);
+            background: #eef3f8;
+        }
+        .problem-naglowek {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem 0.4rem;
+            align-items: center;
+        }
+        .problem-tytul {
             font-weight: 600;
+            font-size: 0.95rem;
             line-height: 1.3;
         }
-        .karta-zrodla-tytul a { color: var(--akcent); text-decoration: none; }
-        .karta-zrodla-tytul a:hover { text-decoration: underline; }
-        .karta-zrodla-meta {
-            margin: 0;
+        .problem-meta {
             font-size: 0.78rem;
             color: var(--meta);
         }
-        .karta-zrodla-pola {
-            display: grid;
-            gap: 0.25rem 0.5rem;
-            margin: 0.45rem 0 0;
-            font-size: 0.82rem;
+        .mini-timeline {
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+            height: 1.1rem;
+            margin-top: 0.15rem;
         }
-        .karta-zrodla-pola > div {
-            display: grid;
-            grid-template-columns: 6.5rem 1fr;
-            gap: 0.25rem 0.5rem;
+        .mini-timeline-slupek {
+            width: 0.45rem;
+            height: 0.35rem;
+            background: #d5dde6;
         }
-        .karta-zrodla-pola dt {
+        .mini-timeline-slupek.aktywny {
+            height: 100%;
+            background: var(--akcent);
+        }
+        .lista-czlonkow {
+            list-style: none;
             margin: 0;
-            color: var(--meta);
-            font-size: 0.75rem;
+            padding: 0.45rem 0.75rem 0.65rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
         }
-        .karta-zrodla-pola dd {
-            margin: 0;
-            word-break: break-word;
+        .lista-czlonkow li {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem 0.75rem;
+            align-items: baseline;
+            font-size: 0.85rem;
         }
-        .karta-zrodla-cta { margin: 0.55rem 0 0; }
         .legenda {
             margin: 1.25rem 0 0;
             font-size: 0.85rem;

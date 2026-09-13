@@ -8,7 +8,7 @@
             <span class="badge-nasze" title="Adres w przestrzeni AS198050">nasze IP</span>
         <?php endif; ?>
     </h2>
-    <p class="podpis">Lista skrótów i kart źródeł — widać od razu dlaczego IP jest problematyczne (waga, kategoria, kluczowe pola).</p>
+    <p class="podpis">Szybka ocena: status + problemy zagregowane (nie każda karta osobno).</p>
 
     <?php if (! empty($asMatchWlaczone) && empty($blad)): ?>
         <?php if (! empty($naszeIp)): ?>
@@ -22,6 +22,34 @@
     <?php if (! empty($blad)): ?>
         <p class="blad"><?= esc($blad) ?></p>
     <?php else: ?>
+        <?php
+        $statusIp = is_array($statusIp ?? null) ? $statusIp : [];
+        $problemy = is_array($problemy ?? null) ? $problemy : [];
+        $maxWaga  = (string) ($statusIp['max_waga'] ?? '');
+        $klasaMax = in_array($maxWaga, ['low', 'medium', 'high', 'critical'], true)
+            ? 'waga-' . $maxWaga
+            : '';
+        $liczbaProblemow = (int) ($statusIp['liczba_problemow'] ?? 0);
+        $topTytuly = is_array($statusIp['top_tytuly'] ?? null) ? $statusIp['top_tytuly'] : [];
+        ?>
+
+        <section class="ip-status" aria-label="Status IP">
+            <div class="ip-status-wiersz">
+                <?php if ($maxWaga !== ''): ?>
+                    <span class="kontekst-chip <?= esc($klasaMax, 'attr') ?>"><?= esc(strtoupper($maxWaga)) ?></span>
+                <?php else: ?>
+                    <span class="kontekst-chip">brak wagi</span>
+                <?php endif; ?>
+                <strong><?= $liczbaProblemow ?> <?= $liczbaProblemow === 1 ? 'problem' : 'problemów' ?></strong>
+                <?php if ($topTytuly !== []): ?>
+                    <span class="ip-status-top">
+                        Najgorsze:
+                        <?= esc(implode(' · ', $topTytuly)) ?>
+                    </span>
+                <?php endif; ?>
+            </div>
+        </section>
+
         <nav class="filtry" aria-label="Filtr źródła">
             <span>Źródło:</span>
             <a href="<?= site_url('ip/' . $ip) ?>" class="<?= $filtrZrodlo === null ? 'aktywny' : '' ?>">wszystkie</a>
@@ -31,120 +59,77 @@
             <?php endforeach; ?>
         </nav>
 
-        <?php $kartyZrodel = is_array($kartyZrodel ?? null) ? $kartyZrodel : []; ?>
-        <?php if ($kartyZrodel !== []): ?>
-            <h3>Karty źródeł</h3>
-            <p class="podpis" style="margin-top:0">Skrót WHY per incydent — szczegóły i timeline po kliknięciu.</p>
-            <div class="karty-zrodel" aria-label="Karty źródeł">
-                <?php foreach ($kartyZrodel as $karta): ?>
-                    <?php
-                    $waga = (string) ($karta['waga'] ?? '');
-                    $klasaWagi = in_array($waga, ['low', 'medium', 'high', 'critical'], true)
-                        ? 'waga-' . $waga
-                        : '';
-                    $urlKarty = (string) ($karta['url'] ?? '');
-                    ?>
-                    <article class="karta-zrodla">
-                        <header class="karta-zrodla-naglowek">
-                            <span class="kontekst-chip kontekst-chip-zrodlo"><?= esc((string) ($karta['zrodlo_etykieta'] ?? '')) ?></span>
-                            <?php if ($waga !== ''): ?>
-                                <span class="kontekst-chip <?= esc($klasaWagi, 'attr') ?>"><?= esc(strtoupper($waga)) ?></span>
-                            <?php endif; ?>
-                            <?php if (($karta['kategoria'] ?? '') !== '' && strcasecmp((string) $karta['kategoria'], 'other') !== 0): ?>
-                                <span class="kontekst-chip kontekst-chip-kat"><?= esc((string) ($karta['kategoria_etykieta'] ?? '')) ?></span>
-                            <?php endif; ?>
-                        </header>
-                        <h4 class="karta-zrodla-tytul">
-                            <?php if ($urlKarty !== ''): ?>
-                                <a href="<?= esc($urlKarty, 'attr') ?>"><?= esc((string) ($karta['tytul'] ?? 'Incydent')) ?></a>
-                            <?php else: ?>
-                                <?= esc((string) ($karta['tytul'] ?? 'Incydent')) ?>
-                            <?php endif; ?>
-                        </h4>
-                        <p class="karta-zrodla-meta">
-                            port <?= esc((string) ($karta['port_tekst'] ?? '—')) ?>
-                            · ostatnio <?= esc((string) ($karta['ostatnio_widziane'] ?? '—')) ?>
-                            <?php if ((int) ($karta['liczba_obserwacji'] ?? 0) > 0): ?>
-                                · <?= (int) $karta['liczba_obserwacji'] ?> obs.
-                            <?php endif; ?>
-                        </p>
-                        <?php if (! empty($karta['pola'])): ?>
-                            <dl class="karta-zrodla-pola">
-                                <?php foreach ($karta['pola'] as $pole): ?>
-                                    <div>
-                                        <dt><?= esc((string) ($pole['klucz'] ?? '')) ?></dt>
-                                        <dd><?= esc((string) ($pole['wartosc'] ?? '')) ?></dd>
-                                    </div>
-                                <?php endforeach; ?>
-                            </dl>
-                        <?php else: ?>
-                            <p class="pusto" style="margin:0.35rem 0 0">Brak pól źródła (id_w_zrodle puste lub nieznane).</p>
-                        <?php endif; ?>
-                        <?php if ($urlKarty !== ''): ?>
-                            <p class="karta-zrodla-cta">
-                                <a class="cta-ip" href="<?= esc($urlKarty, 'attr') ?>">Timeline i pełne dane</a>
-                            </p>
-                        <?php endif; ?>
-                    </article>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-
-        <h3>Skróty incydentów</h3>
-        <?php if ($incydenty === []): ?>
-            <p class="pusto">Brak widocznych incydentów dla tego IP.</p>
+        <h3>Problemy</h3>
+        <?php if ($problemy === []): ?>
+            <p class="pusto">Brak widocznych problemów dla tego IP.</p>
         <?php else: ?>
-            <table>
-                <thead>
-                <tr>
-                    <th>Waga</th>
-                    <th>Źródło</th>
-                    <th>Tytuł</th>
-                    <th>Kategoria</th>
-                    <th>Port</th>
-                    <th>Ostatnio</th>
-                </tr>
-                </thead>
-                <tbody>
-                <?php foreach ($incydenty as $wiersz): ?>
+            <ul class="lista-problemow" aria-label="Zagregowane problemy">
+                <?php foreach ($problemy as $problem): ?>
                     <?php
-                    $waga = (string) ($wiersz['waga'] ?? '');
+                    $waga = (string) ($problem['waga'] ?? '');
                     $klasaWagi = in_array($waga, ['low', 'medium', 'high', 'critical'], true)
                         ? 'waga-' . $waga
                         : '';
-                    $port = $wiersz['port'] ?? null;
-                    $protokol = $wiersz['protokol'] ?? null;
-                    $portTekst = $port !== null && $port !== ''
-                        ? (string) $port . ($protokol ? '/' . $protokol : '')
-                        : '—';
-                    $incydentId = (int) ($wiersz['id'] ?? 0);
-                    $urlSzczegoly = $incydentId > 0
-                        ? site_url('ip/' . $ip . '/incydent/' . $incydentId)
-                        : null;
+                    $liczba = (int) ($problem['liczba_zdarzen'] ?? 0);
+                    $timeline = is_array($problem['timeline'] ?? null) ? $problem['timeline'] : [];
+                    $czlonkowie = is_array($problem['czlonkowie'] ?? null) ? $problem['czlonkowie'] : [];
                     ?>
-                    <tr class="<?= $urlSzczegoly ? 'wiersz-klik' : '' ?>"
-                        <?php if ($urlSzczegoly): ?>
-                            data-href="<?= $urlSzczegoly ?>"
-                            tabindex="0"
-                            role="link"
-                            aria-label="Szczegóły incydentu"
-                        <?php endif; ?>>
-                        <td class="<?= esc($klasaWagi, 'attr') ?>"><?= esc($waga) ?></td>
-                        <td><?= esc((string) ($wiersz['zrodlo'] ?? '')) ?></td>
-                        <td>
-                            <?php if ($urlSzczegoly): ?>
-                                <a href="<?= $urlSzczegoly ?>"><?= esc((string) ($wiersz['tytul'] ?? '')) ?></a>
+                    <li class="pozycja-problemu">
+                        <details>
+                            <summary>
+                                <span class="problem-naglowek">
+                                    <span class="kontekst-chip kontekst-chip-zrodlo"><?= esc((string) ($problem['zrodlo_etykieta'] ?? '')) ?></span>
+                                    <?php if ($waga !== ''): ?>
+                                        <span class="kontekst-chip <?= esc($klasaWagi, 'attr') ?>"><?= esc(strtoupper($waga)) ?></span>
+                                    <?php endif; ?>
+                                    <?php if (($problem['kategoria'] ?? '') !== '' && strcasecmp((string) $problem['kategoria'], 'other') !== 0): ?>
+                                        <span class="kontekst-chip kontekst-chip-kat"><?= esc((string) ($problem['kategoria_etykieta'] ?? '')) ?></span>
+                                    <?php endif; ?>
+                                    <span class="problem-tytul"><?= esc((string) ($problem['tytul'] ?? 'Problem')) ?></span>
+                                </span>
+                                <span class="problem-meta">
+                                    port <?= esc((string) ($problem['port_tekst'] ?? '—')) ?>
+                                    · <?= $liczba ?> <?php
+                                        echo match (true) {
+                                            $liczba === 1 => 'zdarzenie',
+                                            $liczba >= 2 && $liczba <= 4 => 'zdarzenia',
+                                            default => 'zdarzeń',
+                                        };
+                                    ?>
+                                    · <?= esc((string) ($problem['pierwsze_widziane'] ?? '—')) ?>
+                                    → <?= esc((string) ($problem['ostatnio_widziane'] ?? '—')) ?>
+                                </span>
+                                <?php if ($timeline !== []): ?>
+                                    <span class="mini-timeline" aria-label="Aktywność 14 dni" title="Aktywność w ostatnich 14 dniach">
+                                        <?php foreach ($timeline as $dzien): ?>
+                                            <span class="mini-timeline-slupek<?= ! empty($dzien['aktywny']) ? ' aktywny' : '' ?>"
+                                                  title="<?= esc((string) ($dzien['dzien'] ?? ''), 'attr') ?>"></span>
+                                        <?php endforeach; ?>
+                                    </span>
+                                <?php endif; ?>
+                            </summary>
+                            <?php if ($czlonkowie === []): ?>
+                                <p class="pusto">Brak zdarzeń w grupie.</p>
                             <?php else: ?>
-                                <?= esc((string) ($wiersz['tytul'] ?? '')) ?>
+                                <ul class="lista-czlonkow">
+                                    <?php foreach ($czlonkowie as $cz): ?>
+                                        <li>
+                                            <a href="<?= esc((string) ($cz['url'] ?? ''), 'attr') ?>">
+                                                Timeline i pełne dane
+                                            </a>
+                                            <span class="podpis">
+                                                #<?= (int) ($cz['id'] ?? 0) ?>
+                                                · <?= esc((string) ($cz['waga'] ?? '')) ?>
+                                                · <?= esc((string) ($cz['ostatnio_widziane'] ?? '')) ?>
+                                            </span>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
                             <?php endif; ?>
-                        </td>
-                        <td><?= esc((string) ($wiersz['kategoria'] ?? '')) ?></td>
-                        <td><?= esc($portTekst) ?></td>
-                        <td><?= esc((string) ($wiersz['ostatnio_widziane'] ?? '')) ?></td>
-                    </tr>
+                        </details>
+                    </li>
                 <?php endforeach; ?>
-                </tbody>
-            </table>
+            </ul>
         <?php endif; ?>
     <?php endif; ?>
 </main>
@@ -265,18 +250,6 @@
         if (b && !b.disabled) {
             b.addEventListener('click', function () { odpytaj(b); });
         }
-    });
-    document.querySelectorAll('tr.wiersz-klik[data-href]').forEach(function (tr) {
-        tr.addEventListener('click', function (e) {
-            if (e.target && e.target.closest('a')) return;
-            window.location = tr.getAttribute('data-href');
-        });
-        tr.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                window.location = tr.getAttribute('data-href');
-            }
-        });
     });
 })();
 </script>

@@ -3,12 +3,12 @@
 namespace App\Controllers;
 
 use App\Libraries\Enrichment\AbuseipdbSerwis;
-use App\Libraries\KartyZrodel;
+use App\Libraries\ProblemyIp;
 use App\Libraries\Siec\As198050Matcher;
 use App\Models\IncydentModel;
 
 /**
- * Strona podmiotu IP — lista skrótów, panel enrichment AbuseIPDB.
+ * Strona podmiotu IP — status + zagregowane problemy, panel enrichment AbuseIPDB.
  */
 class Ip extends BaseController
 {
@@ -25,6 +25,12 @@ class Ip extends BaseController
             $abuseKomunikat = 'Brak mcs.abuseipdb.apiKey — ustaw w .env albo mcs.abuseipdb.fixturePath do dry-run.';
         }
 
+        $pustyStatus = [
+            'max_waga'         => '',
+            'liczba_problemow' => 0,
+            'top_tytuly'       => [],
+        ];
+
         if ($ip === '' || ! filter_var($ip, FILTER_VALIDATE_IP)) {
             return $this->response->setStatusCode(400)->setBody(
                 view('ip/show', [
@@ -34,8 +40,8 @@ class Ip extends BaseController
                     'szukajIp'           => $ip,
                     'ip'                 => $ip,
                     'blad'               => 'Nieprawidłowy adres IP.',
-                    'incydenty'          => [],
-                    'kartyZrodel'        => [],
+                    'problemy'           => [],
+                    'statusIp'           => $pustyStatus,
                     'zrodla'             => [],
                     'filtrZrodlo'        => null,
                     'asMatchWlaczone'    => false,
@@ -55,7 +61,7 @@ class Ip extends BaseController
         $model     = model(IncydentModel::class);
         $incydenty = $model->dlaPodmiotuIp($ip, $filtrZrodlo);
         $zrodla    = $model->zrodlaDlaPodmiotuIp($ip);
-        $karty     = (new KartyZrodel())->dlaIncydentow($ip, $incydenty);
+        $agregat   = (new ProblemyIp())->zbuduj($ip, $incydenty);
 
         $matcher         = new As198050Matcher();
         $asMatchWlaczone = $matcher->jestWlaczone();
@@ -70,8 +76,8 @@ class Ip extends BaseController
             'szukajIp'           => $ip,
             'ip'                 => $ip,
             'blad'               => null,
-            'incydenty'          => $incydenty,
-            'kartyZrodel'        => $karty,
+            'problemy'           => $agregat['problemy'],
+            'statusIp'           => $agregat['status'],
             'zrodla'             => $zrodla,
             'filtrZrodlo'        => $filtrZrodlo,
             'asMatchWlaczone'    => $asMatchWlaczone,
