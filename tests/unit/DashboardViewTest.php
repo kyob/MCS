@@ -36,8 +36,18 @@ final class DashboardViewTest extends CIUnitTestCase
                     'liczba_incydentow' => 4,
                     'liczba_zrodel'     => 2,
                     'zrodla'            => ['cert_n6', 'shadowserver'],
+                    'kategorie'         => ['exposure', 'malware'],
                     'max_waga'          => 'high',
                     'ostatnio_widziane' => '2026-09-11 10:00:00',
+                    'kontekst'          => [
+                        'zdanie' => 'ekspozycja/malware, źródła: N6+Shadowserver, waga high. Sprawdź szczegóły IP.',
+                        'chipy'  => [
+                            ['typ' => 'waga-high', 'tekst' => 'HIGH'],
+                            ['typ' => 'zrodlo', 'tekst' => 'N6'],
+                            ['typ' => 'kategoria', 'tekst' => 'ekspozycja'],
+                        ],
+                        'cta' => 'Szczegóły',
+                    ],
                 ],
             ],
             'ostatnie' => [
@@ -56,6 +66,9 @@ final class DashboardViewTest extends CIUnitTestCase
         $this->assertStringContainsString('Problematyczne IP', $html);
         $this->assertStringContainsString('198.51.100.10', $html);
         $this->assertStringContainsString('Ostatnie incydenty', $html);
-        $this->assertStringContainsString('cert_n6', $html);
+        $this->assertStringContainsString('N6', $html);
+        $this->assertStringContainsString('Szczegóły', $html);
+        $this->assertStringContainsString('kontekst-chip', $html);
+        $this->assertStringContainsString('ekspozycja/malware', $html);
     }
 }

@@ -252,6 +252,99 @@
             font-size: 0.78rem;
             white-space: nowrap;
         }
+        .komorka-kontekst { min-width: 14rem; max-width: 28rem; }
+        .kontekst-chipy {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            margin: 0 0 0.25rem;
+        }
+        .kontekst-chip {
+            display: inline-block;
+            padding: 0.08rem 0.4rem;
+            border: 1px solid var(--kreska);
+            background: #eef3f8;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+        }
+        .kontekst-chip.waga-critical { color: #7a1212; border-color: #c9a0a0; background: #f7ecec; }
+        .kontekst-chip.waga-high { color: #9a4a12; border-color: #d4b896; background: #f7f0e8; }
+        .kontekst-chip.waga-medium { color: #6a5a10; border-color: #cfc89a; background: #f5f3e6; }
+        .kontekst-chip.waga-low { color: #3a5a4a; border-color: #a8c0b4; background: #eaf2ee; }
+        .kontekst-chip-zrodlo { background: #e4eef7; border-color: #b8cde0; color: var(--akcent); }
+        .kontekst-chip-kat { background: #f0eef6; border-color: #c8c2d8; color: #4a4560; }
+        .kontekst-chip-liczba { font-weight: 500; color: var(--meta); }
+        .kontekst-zdanie {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--meta);
+            line-height: 1.35;
+        }
+        .komorka-cta { white-space: nowrap; vertical-align: middle; }
+        a.cta-ip {
+            display: inline-block;
+            padding: 0.2rem 0.55rem;
+            border: 1px solid var(--akcent);
+            background: #e4eef7;
+            color: var(--akcent);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        a.cta-ip:hover { filter: brightness(1.05); background: #d7e6f4; }
+        .karty-zrodel {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+            gap: 0.75rem;
+            margin: 0.5rem 0 1.25rem;
+        }
+        .karta-zrodla {
+            border: 1px solid var(--kreska);
+            background: #f5f8fb;
+            padding: 0.65rem 0.75rem 0.7rem;
+        }
+        .karta-zrodla-naglowek {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            margin: 0 0 0.4rem;
+        }
+        .karta-zrodla-tytul {
+            margin: 0 0 0.25rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+        .karta-zrodla-tytul a { color: var(--akcent); text-decoration: none; }
+        .karta-zrodla-tytul a:hover { text-decoration: underline; }
+        .karta-zrodla-meta {
+            margin: 0;
+            font-size: 0.78rem;
+            color: var(--meta);
+        }
+        .karta-zrodla-pola {
+            display: grid;
+            gap: 0.25rem 0.5rem;
+            margin: 0.45rem 0 0;
+            font-size: 0.82rem;
+        }
+        .karta-zrodla-pola > div {
+            display: grid;
+            grid-template-columns: 6.5rem 1fr;
+            gap: 0.25rem 0.5rem;
+        }
+        .karta-zrodla-pola dt {
+            margin: 0;
+            color: var(--meta);
+            font-size: 0.75rem;
+        }
+        .karta-zrodla-pola dd {
+            margin: 0;
+            word-break: break-word;
+        }
+        .karta-zrodla-cta { margin: 0.55rem 0 0; }
         .legenda {
             margin: 1.25rem 0 0;
             font-size: 0.85rem;

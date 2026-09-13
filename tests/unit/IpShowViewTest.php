@@ -28,6 +28,25 @@ final class IpShowViewTest extends CIUnitTestCase
                     'ostatnio_widziane' => '2026-09-11 10:00:00',
                 ],
             ],
+            'kartyZrodel'        => [
+                [
+                    'incydent_id'        => 42,
+                    'zrodlo'             => 'shadowserver',
+                    'zrodlo_etykieta'    => 'Shadowserver',
+                    'waga'               => 'high',
+                    'kategoria'          => 'exposure',
+                    'kategoria_etykieta' => 'ekspozycja',
+                    'tytul'              => 'Test',
+                    'port_tekst'         => '22/tcp',
+                    'ostatnio_widziane'  => '2026-09-11 10:00:00',
+                    'url'                => 'http://example.test/ip/198.51.100.10/incydent/42',
+                    'pola'               => [
+                        ['klucz' => 'tag', 'wartosc' => 'open'],
+                        ['klucz' => 'port', 'wartosc' => '22'],
+                    ],
+                    'liczba_obserwacji'  => 2,
+                ],
+            ],
             'zrodla'             => ['shadowserver'],
             'filtrZrodlo'        => null,
             'asMatchWlaczone'    => false,
@@ -40,6 +59,11 @@ final class IpShowViewTest extends CIUnitTestCase
         ]);
 
         $this->assertStringContainsString('ip/198.51.100.10/incydent/42', $html);
+        $this->assertStringContainsString('Karty źródeł', $html);
+        $this->assertStringContainsString('Shadowserver', $html);
+        $this->assertStringContainsString('ekspozycja', $html);
+        $this->assertStringContainsString('open', $html);
+        $this->assertStringContainsString('Timeline i pełne dane', $html);
         $this->assertStringContainsString('AbuseIPDB', $html);
         $this->assertStringContainsString('mcs.abuseipdb.apiKey', $html);
         $this->assertStringContainsString('Sprawdź AbuseIPDB', $html);
@@ -55,6 +79,7 @@ final class IpShowViewTest extends CIUnitTestCase
             'ip'              => '198.51.100.10',
             'blad'            => null,
             'incydenty'       => [],
+            'kartyZrodel'     => [],
             'zrodla'          => [],
             'filtrZrodlo'     => null,
             'asMatchWlaczone' => false,

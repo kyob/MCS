@@ -213,8 +213,8 @@ final class IncydentModelTest extends CIUnitTestCase
         $wOknie = $teraz->modify('-1 days')->format('Y-m-d H:i:s');
         $poza   = $teraz->modify('-20 days')->format('Y-m-d H:i:s');
 
-        $this->wstawIncydent('shadowserver', 'a1', $ipA, 'high', $wOknie);
-        $this->wstawIncydent('play', 'a2', $ipA, 'critical', $wOknie);
+        $this->wstawIncydent('shadowserver', 'a1', $ipA, 'high', $wOknie, false, 'exposure');
+        $this->wstawIncydent('play', 'a2', $ipA, 'critical', $wOknie, false, 'abuse');
         $this->wstawIncydent('snds', 'a3', $ipA, 'critical', $wOknie); // ukryte źródło
         $this->wstawIncydent('shadowserver', 'b1', $ipB, 'low', $wOknie);
         $this->wstawIncydent('play', 'old', $ipA, 'high', $poza);
@@ -234,6 +234,8 @@ final class IncydentModelTest extends CIUnitTestCase
         $this->assertSame(2, $top[0]['liczba_zrodel']);
         $this->assertSame(['play', 'shadowserver'], $top[0]['zrodla']);
         $this->assertSame('critical', $top[0]['max_waga']);
+        $this->assertContains('exposure', $top[0]['kategorie']);
+        $this->assertContains('abuse', $top[0]['kategorie']);
 
         $ostatnie = $model->ostatnieIncydenty(7, null, $ipA, 'high', 10);
         $this->assertCount(2, $ostatnie);

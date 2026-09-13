@@ -103,7 +103,7 @@
     <h3>Problematyczne IP</h3>
     <p class="podpis" style="margin-top:0">
         Sortowanie: liczba źródeł → waga → liczba incydentów → ostatnia aktywność.
-        Kliknij IP, aby zobaczyć skorelowane zdarzenia.
+        Chipy i krótkie „dlaczego” — jak w badge LMS; CTA prowadzi do szczegółów IP.
     </p>
 
     <?php if ($topIp === []): ?>
@@ -113,11 +113,12 @@
             <thead>
             <tr>
                 <th>IP</th>
+                <th>Kontekst</th>
                 <th>Źródła</th>
                 <th>Incydenty</th>
                 <th>Max waga</th>
-                <th>Źródła (lista)</th>
                 <th>Ostatnio</th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
@@ -128,23 +129,50 @@
                 $klasaWagi = in_array($maxWaga, ['low', 'medium', 'high', 'critical'], true)
                     ? 'waga-' . $maxWaga
                     : '';
+                $kontekst = is_array($wiersz['kontekst'] ?? null) ? $wiersz['kontekst'] : null;
+                $urlIp    = site_url('ip/' . $ipWiersz);
                 ?>
                 <tr class="<?= ! empty($wiersz['nasze_ip']) ? 'wiersz-nasze' : '' ?>">
                     <td>
-                        <a href="<?= site_url('ip/' . $ipWiersz) ?>"><?= esc($ipWiersz) ?></a>
+                        <a href="<?= $urlIp ?>"><?= esc($ipWiersz) ?></a>
                         <?php if (! empty($wiersz['nasze_ip'])): ?>
                             <span class="badge-nasze" title="Adres w przestrzeni AS198050">nasze</span>
+                        <?php endif; ?>
+                    </td>
+                    <td class="komorka-kontekst">
+                        <?php if ($kontekst !== null): ?>
+                            <div class="kontekst-chipy" aria-label="Skrót kontekstu">
+                                <?php foreach (($kontekst['chipy'] ?? []) as $chip): ?>
+                                    <?php
+                                    $typ = (string) ($chip['typ'] ?? '');
+                                    $klasaChip = 'kontekst-chip';
+                                    if (str_starts_with($typ, 'waga-')) {
+                                        $klasaChip .= ' ' . $typ;
+                                    } elseif ($typ === 'zrodlo') {
+                                        $klasaChip .= ' kontekst-chip-zrodlo';
+                                    } elseif ($typ === 'kategoria') {
+                                        $klasaChip .= ' kontekst-chip-kat';
+                                    } elseif ($typ === 'liczba') {
+                                        $klasaChip .= ' kontekst-chip-liczba';
+                                    }
+                                    ?>
+                                    <span class="<?= esc($klasaChip, 'attr') ?>"><?= esc((string) ($chip['tekst'] ?? '')) ?></span>
+                                <?php endforeach; ?>
+                            </div>
+                            <p class="kontekst-zdanie"><?= esc((string) ($kontekst['zdanie'] ?? '')) ?></p>
+                        <?php else: ?>
+                            <?php foreach (($wiersz['zrodla'] ?? []) as $z): ?>
+                                <span class="zrodla-chip"><?= esc((string) $z) ?></span>
+                            <?php endforeach; ?>
                         <?php endif; ?>
                     </td>
                     <td><?= (int) ($wiersz['liczba_zrodel'] ?? 0) ?></td>
                     <td><?= (int) ($wiersz['liczba_incydentow'] ?? 0) ?></td>
                     <td class="<?= esc($klasaWagi, 'attr') ?>"><?= esc($maxWaga !== '' ? $maxWaga : '—') ?></td>
-                    <td>
-                        <?php foreach (($wiersz['zrodla'] ?? []) as $z): ?>
-                            <span class="zrodla-chip"><?= esc((string) $z) ?></span>
-                        <?php endforeach; ?>
-                    </td>
                     <td><?= esc((string) ($wiersz['ostatnio_widziane'] ?? '—')) ?></td>
+                    <td class="komorka-cta">
+                        <a class="cta-ip" href="<?= $urlIp ?>"><?= esc((string) (($kontekst['cta'] ?? null) ?: 'Szczegóły')) ?></a>
+                    </td>
                 </tr>
             <?php endforeach; ?>
             </tbody>

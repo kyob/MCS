@@ -8,7 +8,7 @@
             <span class="badge-nasze" title="Adres w przestrzeni AS198050">nasze IP</span>
         <?php endif; ?>
     </h2>
-    <p class="podpis">Lista skrótów incydentów ze wspólnego indeksu (źródła nieukryte). Korelacja wielu źródeł na jednym IP.</p>
+    <p class="podpis">Lista skrótów i kart źródeł — widać od razu dlaczego IP jest problematyczne (waga, kategoria, kluczowe pola).</p>
 
     <?php if (! empty($asMatchWlaczone) && empty($blad)): ?>
         <?php if (! empty($naszeIp)): ?>
@@ -31,6 +31,66 @@
             <?php endforeach; ?>
         </nav>
 
+        <?php $kartyZrodel = is_array($kartyZrodel ?? null) ? $kartyZrodel : []; ?>
+        <?php if ($kartyZrodel !== []): ?>
+            <h3>Karty źródeł</h3>
+            <p class="podpis" style="margin-top:0">Skrót WHY per incydent — szczegóły i timeline po kliknięciu.</p>
+            <div class="karty-zrodel" aria-label="Karty źródeł">
+                <?php foreach ($kartyZrodel as $karta): ?>
+                    <?php
+                    $waga = (string) ($karta['waga'] ?? '');
+                    $klasaWagi = in_array($waga, ['low', 'medium', 'high', 'critical'], true)
+                        ? 'waga-' . $waga
+                        : '';
+                    $urlKarty = (string) ($karta['url'] ?? '');
+                    ?>
+                    <article class="karta-zrodla">
+                        <header class="karta-zrodla-naglowek">
+                            <span class="kontekst-chip kontekst-chip-zrodlo"><?= esc((string) ($karta['zrodlo_etykieta'] ?? '')) ?></span>
+                            <?php if ($waga !== ''): ?>
+                                <span class="kontekst-chip <?= esc($klasaWagi, 'attr') ?>"><?= esc(strtoupper($waga)) ?></span>
+                            <?php endif; ?>
+                            <?php if (($karta['kategoria'] ?? '') !== '' && strcasecmp((string) $karta['kategoria'], 'other') !== 0): ?>
+                                <span class="kontekst-chip kontekst-chip-kat"><?= esc((string) ($karta['kategoria_etykieta'] ?? '')) ?></span>
+                            <?php endif; ?>
+                        </header>
+                        <h4 class="karta-zrodla-tytul">
+                            <?php if ($urlKarty !== ''): ?>
+                                <a href="<?= esc($urlKarty, 'attr') ?>"><?= esc((string) ($karta['tytul'] ?? 'Incydent')) ?></a>
+                            <?php else: ?>
+                                <?= esc((string) ($karta['tytul'] ?? 'Incydent')) ?>
+                            <?php endif; ?>
+                        </h4>
+                        <p class="karta-zrodla-meta">
+                            port <?= esc((string) ($karta['port_tekst'] ?? '—')) ?>
+                            · ostatnio <?= esc((string) ($karta['ostatnio_widziane'] ?? '—')) ?>
+                            <?php if ((int) ($karta['liczba_obserwacji'] ?? 0) > 0): ?>
+                                · <?= (int) $karta['liczba_obserwacji'] ?> obs.
+                            <?php endif; ?>
+                        </p>
+                        <?php if (! empty($karta['pola'])): ?>
+                            <dl class="karta-zrodla-pola">
+                                <?php foreach ($karta['pola'] as $pole): ?>
+                                    <div>
+                                        <dt><?= esc((string) ($pole['klucz'] ?? '')) ?></dt>
+                                        <dd><?= esc((string) ($pole['wartosc'] ?? '')) ?></dd>
+                                    </div>
+                                <?php endforeach; ?>
+                            </dl>
+                        <?php else: ?>
+                            <p class="pusto" style="margin:0.35rem 0 0">Brak pól źródła (id_w_zrodle puste lub nieznane).</p>
+                        <?php endif; ?>
+                        <?php if ($urlKarty !== ''): ?>
+                            <p class="karta-zrodla-cta">
+                                <a class="cta-ip" href="<?= esc($urlKarty, 'attr') ?>">Timeline i pełne dane</a>
+                            </p>
+                        <?php endif; ?>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+        <h3>Skróty incydentów</h3>
         <?php if ($incydenty === []): ?>
             <p class="pusto">Brak widocznych incydentów dla tego IP.</p>
         <?php else: ?>

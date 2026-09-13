@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Libraries\Enrichment\AbuseipdbSerwis;
+use App\Libraries\KartyZrodel;
 use App\Libraries\Siec\As198050Matcher;
 use App\Models\IncydentModel;
 
@@ -34,6 +35,7 @@ class Ip extends BaseController
                     'ip'                 => $ip,
                     'blad'               => 'Nieprawidłowy adres IP.',
                     'incydenty'          => [],
+                    'kartyZrodel'        => [],
                     'zrodla'             => [],
                     'filtrZrodlo'        => null,
                     'asMatchWlaczone'    => false,
@@ -53,6 +55,7 @@ class Ip extends BaseController
         $model     = model(IncydentModel::class);
         $incydenty = $model->dlaPodmiotuIp($ip, $filtrZrodlo);
         $zrodla    = $model->zrodlaDlaPodmiotuIp($ip);
+        $karty     = (new KartyZrodel())->dlaIncydentow($ip, $incydenty);
 
         $matcher         = new As198050Matcher();
         $asMatchWlaczone = $matcher->jestWlaczone();
@@ -68,6 +71,7 @@ class Ip extends BaseController
             'ip'                 => $ip,
             'blad'               => null,
             'incydenty'          => $incydenty,
+            'kartyZrodel'        => $karty,
             'zrodla'             => $zrodla,
             'filtrZrodlo'        => $filtrZrodlo,
             'asMatchWlaczone'    => $asMatchWlaczone,

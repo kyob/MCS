@@ -396,6 +396,7 @@ class IncydentModel extends Model
      *   liczba_incydentow: int,
      *   liczba_zrodel: int,
      *   zrodla: list<string>,
+     *   kategorie: list<string>,
      *   max_waga: ?string,
      *   ostatnio_widziane: ?string
      * }>
@@ -424,6 +425,7 @@ class IncydentModel extends Model
                     'ip'                => $podmiot,
                     'liczba_incydentow' => 0,
                     'zrodla'            => [],
+                    'kategorie'         => [],
                     'max_ranga'         => 0,
                     'max_waga'          => null,
                     'ostatnio_widziane' => null,
@@ -433,6 +435,10 @@ class IncydentModel extends Model
             $z = (string) ($wiersz['zrodlo'] ?? '');
             if ($z !== '') {
                 $poIp[$podmiot]['zrodla'][$z] = true;
+            }
+            $kat = isset($wiersz['kategoria']) ? trim((string) $wiersz['kategoria']) : '';
+            if ($kat !== '') {
+                $poIp[$podmiot]['kategorie'][$kat] = ($poIp[$podmiot]['kategorie'][$kat] ?? 0) + 1;
             }
             $waga = (string) ($wiersz['waga'] ?? '');
             $nr   = $ranga[$waga] ?? 0;
@@ -457,11 +463,15 @@ class IncydentModel extends Model
             if ($liczbaZrodel < $minZrodel) {
                 continue;
             }
+            $katCount = $wiersz['kategorie'];
+            arsort($katCount, SORT_NUMERIC);
+            $kategorie = array_slice(array_keys($katCount), 0, self::BADGE_TOP_KATEGORII);
             $lista[] = [
                 'ip'                => $wiersz['ip'],
                 'liczba_incydentow' => $wiersz['liczba_incydentow'],
                 'liczba_zrodel'     => $liczbaZrodel,
                 'zrodla'            => $zrodla,
+                'kategorie'         => array_values($kategorie),
                 'max_waga'          => $wiersz['max_waga'],
                 'ostatnio_widziane' => $wiersz['ostatnio_widziane'],
                 '_max_ranga'        => $wiersz['max_ranga'],
@@ -564,7 +574,7 @@ class IncydentModel extends Model
         ?string $minWaga,
     ): array {
         $builder = $this->builderWidocznych()
-            ->select('i.podmiot, i.zrodlo, i.waga, i.ostatnio_widziane')
+            ->select('i.podmiot, i.zrodlo, i.waga, i.kategoria, i.ostatnio_widziane')
             ->where('i.ostatnio_widziane >=', $this->odDatyOkna($oknoDni));
 
         if ($zrodlo !== null && $zrodlo !== '') {

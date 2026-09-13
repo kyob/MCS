@@ -45,6 +45,10 @@ $RECYCLE.BIN/
 .vagrant
 Vagrantfile
 
+# LMS import with real badge_token (staging copy also on LMS host)
+scaffold/lms-mcs-badge/config/lms-mcs-import.ini
+
+
 #-------------------------
 # Temporary Files
 #-------------------------

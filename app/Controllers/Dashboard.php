@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\KontekstIp;
 use App\Libraries\Siec\As198050Matcher;
 use App\Models\IncydentModel;
 
@@ -71,6 +72,7 @@ class Dashboard extends BaseController
 
         $topIp    = $this->oznaczIFiltrujIp($topIp, 'ip', $matcher, $filtrSiec);
         $ostatnie = $this->oznaczIFiltrujIp($ostatnie, 'podmiot', $matcher, $filtrSiec);
+        $topIp    = $this->dolaczKontekstIp($topIp);
 
         return view('dashboard/index', $this->daneWidoku([
             'okno'            => $okno,
@@ -86,6 +88,22 @@ class Dashboard extends BaseController
             'ostatnie'        => $ostatnie,
             'zrodla'          => $model->widoczneZrodla(),
         ]));
+    }
+
+    /**
+     * @param list<array<string, mixed>> $wiersze
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function dolaczKontekstIp(array $wiersze): array
+    {
+        $kontekst = new KontekstIp();
+        foreach ($wiersze as &$w) {
+            $w['kontekst'] = $kontekst->zbuduj($w);
+        }
+        unset($w);
+
+        return $wiersze;
     }
 
     /**
