@@ -14,6 +14,7 @@ class PluginModel extends Model
     protected $allowedFields    = [
         'zrodlo',
         'nazwa',
+        'opis',
         'import_wstrzymany',
         'ukryty_w_ui',
         'health_at',

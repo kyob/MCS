@@ -90,4 +90,45 @@ final class ImportModelTest extends CIUnitTestCase
             $this->assertSame('play', $w['zrodlo']);
         }
     }
+
+    public function testSzukajFiltrujePoStatusieITekscie(): void
+    {
+        $lista = model(ImportModel::class)->szukaj(
+            null,
+            'blad',
+            'timeout',
+            null,
+            null,
+            25,
+        );
+
+        $this->assertCount(1, $lista);
+        $this->assertSame('shadowserver', $lista[0]['zrodlo']);
+        $this->assertSame('blad', $lista[0]['status']);
+    }
+
+    public function testSzukajFiltrujePoZrodleIDacie(): void
+    {
+        $lista = model(ImportModel::class)->szukaj(
+            'play',
+            null,
+            null,
+            '2026-09-11',
+            '2026-09-11',
+            25,
+        );
+
+        $this->assertCount(2, $lista);
+        foreach ($lista as $w) {
+            $this->assertSame('play', $w['zrodlo']);
+            $this->assertStringStartsWith('2026-09-11', (string) $w['rozpoczeto_at']);
+        }
+    }
+
+    public function testListaZrodelZwracaPosortowaneUnikalne(): void
+    {
+        $lista = model(ImportModel::class)->listaZrodel();
+
+        $this->assertSame(['play', 'shadowserver', 'snds'], $lista);
+    }
 }

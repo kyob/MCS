@@ -106,6 +106,24 @@ final class As198050Matcher
     }
 
     /**
+     * Prefiksy IPv4 AS (do selecta Podsieć). IPv6 pomijane — ręczne pole CIDR.
+     *
+     * @return list<string>
+     */
+    public function cidryIpv4(): array
+    {
+        $out = [];
+        foreach ($this->cidry() as $cidr) {
+            $siec = str_contains($cidr, '/') ? explode('/', $cidr, 2)[0] : $cidr;
+            if (filter_var($siec, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false) {
+                $out[] = $cidr;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
      * Czy IP należy do skonfigurowanej przestrzeni AS198050.
      * Gdy matchowanie wyłączone — zawsze false (nie oznaczamy jako „nasze”).
      */
@@ -116,6 +134,32 @@ final class As198050Matcher
         }
 
         return $this->cidr->ipWLiscie($ip, $this->cidry());
+    }
+
+    /**
+     * Callback dla list dashboardu: AS (gdy włączone) oraz opcjonalny CIDR.
+     *
+     * @return (callable(string): bool)|null
+     */
+    public function filtrAkceptujIp(?string $cidr = null): ?callable
+    {
+        $cidr = $cidr !== null ? trim($cidr) : '';
+        $cidr = $cidr !== '' ? $cidr : null;
+        $asOn = $this->jestWlaczone();
+        if (! $asOn && $cidr === null) {
+            return null;
+        }
+
+        return function (string $adres) use ($asOn, $cidr): bool {
+            if ($asOn && ! $this->czyNaszeIp($adres)) {
+                return false;
+            }
+            if ($cidr !== null && ! $this->cidr->ipWCidr($adres, $cidr)) {
+                return false;
+            }
+
+            return true;
+        };
     }
 
     public function cidrMatcher(): CidrMatcher

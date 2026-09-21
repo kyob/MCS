@@ -1,0 +1,7 @@
+Result ID,Date,IP Address,Download,Upload,Latency,ISP,Operating System,Server
+st-1001,2026-09-16 10:15:00,91.231.80.10,94000,22000,8.5,Alfa-System,Android,Olsztyn
+st-1002,2026-09-16 11:00:00,8.8.8.8,150000,80000,12.0,Google,Web,Olsztyn
+st-1001,2026-09-16 10:16:00,91.231.80.10,1,1,1.0,Alfa-System,Android,Olsztyn
+st-1003,2026-09-16T12:30:00Z,91.231.81.20,51200,10240,24,Alfa-System,iOS,Olsztyn
+,2026-09-16 13:00:00,91.231.80.11,1000,1000,5,Alfa-System,Web,Olsztyn
+st-1004,2026-09-16 14:00:00,not-an-ip,1000,1000,5,Alfa-System,Web,Olsztyn

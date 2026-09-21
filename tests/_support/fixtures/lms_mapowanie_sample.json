@@ -1,0 +1,40 @@
+{
+  "items": [
+    {
+      "ip": "91.231.81.84",
+      "node_id": 9833,
+      "komputer": "LETNIA-17",
+      "node_login": null,
+      "customer_id": 1884,
+      "abonent": "Misiura Jakub",
+      "customer_lastname": "Misiura",
+      "customer_name": "Jakub",
+      "netid": 227,
+      "access": 1
+    },
+    {
+      "ip": "198.51.100.10",
+      "node_id": 11106,
+      "komputer": "Kochanowskiego-8",
+      "node_login": null,
+      "customer_id": 6603,
+      "abonent": "MICHALAK Łukasz",
+      "customer_lastname": "MICHALAK",
+      "customer_name": "Łukasz",
+      "netid": 1,
+      "access": 1
+    },
+    {
+      "ip": "198.51.100.20",
+      "node_id": 11105,
+      "komputer": "AP12-IIa16",
+      "node_login": null,
+      "customer_id": 7768,
+      "abonent": "Ligęza Patryk",
+      "customer_lastname": "Ligęza",
+      "customer_name": "Patryk",
+      "netid": 1,
+      "access": 1
+    }
+  ]
+}

@@ -6,6 +6,7 @@ use App\Libraries\ImportKoperta;
 use App\Libraries\IncydentZapis;
 use App\Libraries\Imap\ImapKlientFabryka;
 use App\Libraries\Imap\ImapKlientInterface;
+use App\Libraries\PluginOpisPolaczenia;
 use App\Libraries\SourcePluginInterface;
 use App\Libraries\WagaV1;
 use App\Models\PluginModel;
@@ -112,6 +113,19 @@ class Plugin implements SourcePluginInterface
             'ok'  => (bool) ($ok ?? false),
             'msg' => $msg !== '' ? $msg : 'brak przebiegu',
         ];
+    }
+
+    /**
+     * @return array{
+     *   skrot: string,
+     *   tryb_aktywny: string,
+     *   tryb_etykieta: string,
+     *   pozycje: list<array{nazwa: string, wartosc: string, aktywna: bool, ustawiona: bool}>
+     * }
+     */
+    public function opisPolaczenia(): array
+    {
+        return PluginOpisPolaczenia::imap('mcs.shadowserver');
     }
 
     /**

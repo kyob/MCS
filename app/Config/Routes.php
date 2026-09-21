@@ -20,22 +20,41 @@ $routes->get('logout', 'Auth::logout');
 // Chronione sesją (filtr mcsAuth w Config\Filters).
 $routes->get('ip/(:segment)', 'Ip::show/$1');
 $routes->get('ip/(:segment)/incydent/(:num)', 'Incydent::show/$1/$2');
+$routes->post('ip/(:segment)/incydent/(:num)/ukryj', 'Incydent::ukryj/$1/$2');
 $routes->get('ip/(:segment)/enrichment/abuseipdb', 'Ip::abuseipdb/$1');
+$routes->get('ip/(:segment)/enrichment/ismalicious', 'Ip::ismalicious/$1');
+$routes->get('ip/(:segment)/enrichment/spamrats', 'Ip::spamrats/$1');
+$routes->get('ip/(:segment)/enrichment/lms', 'Ip::lms/$1');
 $routes->get('watchlista', 'Watchlista::index');
 $routes->post('watchlista/dodaj', 'Watchlista::dodaj');
 $routes->post('watchlista/usun', 'Watchlista::usun');
-$routes->get('admin/pluginy', 'Admin\Pluginy::index');
-$routes->post('admin/pluginy', 'Admin\Pluginy::zapisz');
-$routes->post('admin/pluginy/pobierz', 'Admin\Pluginy::pobierz');
-$routes->get('admin/ustawienia', 'Admin\Ustawienia::index');
-$routes->post('admin/ustawienia', 'Admin\Ustawienia::zapisz');
-$routes->post('admin/ustawienia/przywroc-domyslne', 'Admin\Ustawienia::przywrocDomyslne');
-$routes->get('admin', 'Admin\Pluginy::index');
+$routes->group('admin', ['filter' => 'mcsRola:admin,superadmin'], static function ($routes) {
+    $routes->get('/', 'Admin\Pluginy::index');
+    $routes->get('pluginy', 'Admin\Pluginy::index');
+    $routes->get('pluginy/historia-importow', 'Admin\Pluginy::historiaImportow');
+    $routes->post('pluginy', 'Admin\Pluginy::zapisz');
+    $routes->post('pluginy/pobierz', 'Admin\Pluginy::pobierz');
+    $routes->get('ustawienia', 'Admin\Ustawienia::index');
+    $routes->post('ustawienia', 'Admin\Ustawienia::zapisz');
+    $routes->post('ustawienia/przywroc-domyslne', 'Admin\Ustawienia::przywrocDomyslne');
+});
+
+$routes->group('admin/uzytkownicy', ['filter' => 'mcsRola:superadmin'], static function ($routes) {
+    $routes->get('/', 'Admin\Uzytkownicy::index');
+    $routes->post('/', 'Admin\Uzytkownicy::dodaj');
+    $routes->post('rola', 'Admin\Uzytkownicy::zmienRole');
+    $routes->post('haslo', 'Admin\Uzytkownicy::ustawHaslo');
+    $routes->post('aktywny', 'Admin\Uzytkownicy::ustawAktywny');
+    $routes->post('usun', 'Admin\Uzytkownicy::usun');
+});
 
 // API badge — token serwerowy (filtr mcsBadgeToken); CSRF wyłączone dla api/* .
 // GET ?ip= (single) | GET ?ips=a,b | POST JSON {"ips":[…]}.
 $routes->get('api/badge', 'Api\Badge::index');
 $routes->post('api/badge', 'Api\Badge::index');
 
-// Enrichment AbuseIPDB (ten sam token co badge; poza indeksem/badge streamowym).
+// Enrichment AbuseIPDB / LMS (ten sam token co badge; poza indeksem/badge streamowym).
 $routes->get('api/enrichment/abuseipdb', 'Api\EnrichmentAbuseipdb::check');
+$routes->get('api/enrichment/ismalicious', 'Api\EnrichmentIsmalicious::check');
+$routes->get('api/enrichment/spamrats', 'Api\EnrichmentSpamrats::check');
+$routes->get('api/enrichment/lms', 'Api\EnrichmentLms::check');

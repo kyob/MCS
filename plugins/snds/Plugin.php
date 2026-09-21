@@ -4,6 +4,7 @@ namespace McsPluginy\snds;
 
 use App\Libraries\ImportKoperta;
 use App\Libraries\IncydentZapis;
+use App\Libraries\PluginOpisPolaczenia;
 use App\Libraries\SourcePluginInterface;
 use App\Libraries\WagaV1;
 use App\Models\PluginModel;
@@ -135,6 +136,44 @@ class Plugin implements SourcePluginInterface
             'ok'  => (bool) ($ok ?? false),
             'msg' => $msg !== '' ? $msg : 'brak przebiegu',
         ];
+    }
+
+    /**
+     * @return array{
+     *   skrot: string,
+     *   tryb_aktywny: string,
+     *   tryb_etykieta: string,
+     *   pozycje: list<array{nazwa: string, wartosc: string, aktywna: bool, ustawiona: bool}>
+     * }
+     */
+    public function opisPolaczenia(): array
+    {
+        $plik     = trim((string) env('mcs.snds.fixturePath', ''));
+        $template = trim((string) env('mcs.snds.dataUrlTemplate', ''));
+        if ($template === '') {
+            $template = $this->uzyjLegacyUrl() ? self::URL_LEGACY : self::URL_SUBSTRATE;
+        }
+        $urlWidok = str_replace('%s', '…', $template);
+        $kluczOk  = $this->kluczApi() !== '';
+        $lookback = (string) max(1, (int) env('mcs.snds.lookbackDays', 3));
+
+        return PluginOpisPolaczenia::plikIKanal(
+            $plik,
+            'HTTP DataKey',
+            $urlWidok,
+            $kluczOk,
+            'http',
+            'HTTP',
+            [
+                PluginOpisPolaczenia::pozycja(
+                    'Klucz API',
+                    PluginOpisPolaczenia::sekret($kluczOk),
+                    false,
+                    $kluczOk,
+                ),
+                PluginOpisPolaczenia::pozycja('Lookback (dni)', $lookback, false, true),
+            ],
+        );
     }
 
     /**

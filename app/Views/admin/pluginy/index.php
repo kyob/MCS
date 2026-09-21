@@ -1,180 +1,233 @@
 <?= $this->extend('layouts/mcs') ?>
 <?= $this->section('content') ?>
 
-<main class="panel">
-    <h2>Wtyczki źródeł</h2>
-    <p class="podpis">Przełączniki: wstrzymaj import oraz ukryj w liście IP i badge. „Pobierz teraz” uruchamia ten sam tor co cron (<code>mcs:pobierz</code>).</p>
-
-    <?php if (! empty($blad)): ?>
-        <p class="blad"><?= esc($blad) ?></p>
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Wtyczki źródeł</h1>
+        <p class="text-body-secondary mb-0">
+            Import i UI przełączasz kliknięciem stanu. Szczegóły źródła i statusu — po najechaniu albo ikonie info.
+            „Pobierz teraz” = ten sam tor co cron (<code>mcs:pobierz</code>).
+        </p>
+    </div>
+    <?php if ($pluginy !== []): ?>
+        <span class="badge text-bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle px-3 py-2">
+            <?= count($pluginy) ?> źródeł
+        </span>
     <?php endif; ?>
-    <?php if (! empty($komunikat)): ?>
-        <p class="ok"><?= esc($komunikat) ?></p>
-    <?php endif; ?>
+</div>
 
-    <?php if ($pluginy === []): ?>
-        <p class="pusto">Brak wtyczek w rejestrze. Uruchom: <code>php spark mcs:seed-pluginy</code></p>
-    <?php else: ?>
-        <table>
-            <thead>
-            <tr>
-                <th>Źródło</th>
-                <th>Stany</th>
-                <th>Zdrowie</th>
-                <th>Akcje</th>
-            </tr>
-            </thead>
-            <tbody>
-            <?php foreach ($pluginy as $wiersz): ?>
-                <?php
-                $zrodlo = (string) ($wiersz['zrodlo'] ?? '');
-                $nazwa  = (string) ($wiersz['nazwa'] ?? $zrodlo);
-                $importWstrzymany = (bool) ($wiersz['import_wstrzymany'] ?? false);
-                $ukrytyWUi        = (bool) ($wiersz['ukryty_w_ui'] ?? false);
-                $healthOk         = $wiersz['health_ok'] ?? null;
-                $healthMsg        = (string) ($wiersz['health_msg'] ?? '');
-                $healthAt         = (string) ($wiersz['health_at'] ?? '');
-                $klasaHealth      = $healthOk === true ? ' ok' : ($healthOk === false ? ' blad' : '');
-                ?>
-                <tr>
-                    <td>
-                        <strong><?= esc($nazwa) ?></strong><br>
-                        <code><?= esc($zrodlo) ?></code>
-                    </td>
-                    <td>
-                        <form method="post" action="<?= site_url('admin/pluginy') ?>" class="przełączniki">
-                            <?= csrf_field() ?>
-                            <input type="hidden" name="zrodlo" value="<?= esc($zrodlo, 'attr') ?>">
-                            <label>
-                                <input type="checkbox" name="import_wstrzymany" value="1"
-                                    <?= $importWstrzymany ? 'checked' : '' ?>>
-                                Wstrzymaj import
-                            </label>
-                            <label>
-                                <input type="checkbox" name="ukryty_w_ui" value="1"
-                                    <?= $ukrytyWUi ? 'checked' : '' ?>>
-                                Ukryj w UI / badge
-                            </label>
-                            <button type="submit">Zapisz</button>
-                        </form>
-                    </td>
-                    <td class="health<?= esc($klasaHealth, 'attr') ?>">
-                        <?php if ($healthAt === '' && $healthMsg === '' && $healthOk === null): ?>
-                            brak danych
-                        <?php else: ?>
-                            <?= $healthOk === true ? 'OK' : ($healthOk === false ? 'błąd' : '—') ?>
-                            <?php if ($healthMsg !== ''): ?>
-                                — <?= esc($healthMsg) ?>
-                            <?php endif; ?>
-                            <?php if ($healthAt !== ''): ?>
-                                <br><?= esc($healthAt) ?>
-                            <?php endif; ?>
-                        <?php endif; ?>
-                    </td>
-                    <td class="akcje-zrodla">
-                        <form method="post" action="<?= site_url('admin/pluginy/pobierz') ?>" class="form-pobierz"
-                              onsubmit="return confirm('Uruchomić pobieranie dla <?= esc($zrodlo, 'js') ?>? Może potrwać dłużej.');">
-                            <?= csrf_field() ?>
-                            <input type="hidden" name="zrodlo" value="<?= esc($zrodlo, 'attr') ?>">
-                            <button type="submit" <?= $importWstrzymany ? 'disabled title="Odblokuj import (Wstrzymaj import = wyłączone), potem spróbuj ponownie"' : '' ?>>
-                                Pobierz teraz
-                            </button>
-                        </form>
-                        <button type="button" disabled title="Dostępne w późniejszej fazie">Usuń dane</button>
-                        <span class="pozniej" title="Świadoma akcja usuwania danych — poza Fazą 1a">później</span>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
-    <?php endif; ?>
+<?php if (! empty($blad)): ?>
+    <div class="alert alert-danger border-0 shadow-sm rounded-3" role="alert"><?= esc($blad) ?></div>
+<?php endif; ?>
+<?php if (! empty($komunikat)): ?>
+    <div class="alert alert-success border-0 shadow-sm rounded-3" role="status"><?= esc($komunikat) ?></div>
+<?php endif; ?>
 
-    <dl class="legenda">
-        <dt>Wstrzymaj import</dt>
-        <dd>Job (cron i „Pobierz teraz”) nie biegnie; historia i badge nadal widoczne (o ile nie ukryte).</dd>
-        <dt>Pobierz teraz</dt>
-        <dd>Ręczny przebieg tego samego toru co <code>php spark mcs:pobierz &lt;zrodlo&gt;</code>. Przy zajętej blokadzie (cron) dostaniesz komunikat zamiast drugiego równoległego joba.</dd>
-        <dt>Ukryj w UI / badge</dt>
-        <dd>Dane zostają w bazie; lista IP i badge ich nie pokazują.</dd>
-        <dt>Usuń dane</dt>
-        <dd>Osobna, świadoma akcja — niedostępna w Fazie 1a.</dd>
-    </dl>
-</main>
+<?php if ($pluginy === []): ?>
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body">
+            <p class="text-body-secondary mb-0">Brak wtyczek w rejestrze. Uruchom: <code>php spark mcs:seed-pluginy</code></p>
+        </div>
+    </div>
+<?php else: ?>
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="text-nowrap ps-3">Lp.</th>
+                        <th scope="col">Nazwa</th>
+                        <th scope="col" title="Kliknij stan, żeby włączyć lub wstrzymać pobieranie (cron i Pobierz teraz).">Import</th>
+                        <th scope="col" title="Kliknij, żeby pokazać lub ukryć źródło w listach i badge.">UI</th>
+                        <th scope="col" class="text-nowrap">Ostatni update</th>
+                        <th scope="col" title="Najedź, żeby zobaczyć komunikat.">Status</th>
+                        <th scope="col" class="pe-3">Akcje</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php $lp = 0; ?>
+                    <?php foreach ($pluginy as $wiersz): ?>
+                        <?php
+                        $lp++;
+                        $zrodlo = (string) ($wiersz['zrodlo'] ?? '');
+                        $nazwa  = (string) ($wiersz['nazwa'] ?? $zrodlo);
+                        $opis   = trim((string) ($wiersz['opis'] ?? ''));
+                        $importWstrzymany = (bool) ($wiersz['import_wstrzymany'] ?? false);
+                        $ukrytyWUi        = (bool) ($wiersz['ukryty_w_ui'] ?? false);
+                        $healthOk         = $wiersz['health_ok'] ?? null;
+                        $healthMsg        = \App\Libraries\PluginOpisPolaczenia::bezZargonu(
+                            (string) ($wiersz['health_msg'] ?? ''),
+                        );
+                        $healthAt         = (string) ($wiersz['health_at'] ?? '');
+                        $opisPol          = is_array($wiersz['opis_polaczenia'] ?? null) ? $wiersz['opis_polaczenia'] : [];
+                        $polSkrot         = (string) ($opisPol['skrot'] ?? '');
+                        $polPozycje       = is_array($opisPol['pozycje'] ?? null) ? $opisPol['pozycje'] : [];
+                        $dataUp           = \App\Libraries\CzasUi::dataGodzina($healthAt);
+                        $ileTemu          = \App\Libraries\CzasUi::wzglednie($healthAt);
 
-<main class="panel">
-    <h2>Historia importów</h2>
-    <p class="podpis">Ostatnie <?= (int) count($importy ?? []) ?> przebiegów z <code>mcs_importy</code> (ok / błąd / kwarantanna / w trakcie).</p>
+                        $szczegolyHtml = '';
+                        if ($opis !== '') {
+                            $szczegolyHtml .= '<p class="mb-2">' . esc($opis) . '</p>';
+                        }
+                        if ($polSkrot !== '') {
+                            $szczegolyHtml .= '<p class="mb-2"><span class="text-body-secondary">Połączenie:</span> '
+                                . '<code>' . esc($polSkrot) . '</code></p>';
+                        }
+                        if ($polPozycje !== []) {
+                            $szczegolyHtml .= '<ul class="list-unstyled small mb-0">';
+                            foreach ($polPozycje as $poz) {
+                                $pozNazwa   = (string) ($poz['nazwa'] ?? '');
+                                $pozWartosc = (string) ($poz['wartosc'] ?? '');
+                                $pozAktywna = (bool) ($poz['aktywna'] ?? false);
+                                $szczegolyHtml .= '<li class="mb-2"><div class="text-body-secondary">' . esc($pozNazwa);
+                                if ($pozAktywna) {
+                                    $szczegolyHtml .= ' <span class="badge text-bg-primary">Aktywny</span>';
+                                }
+                                $szczegolyHtml .= '</div><div class="font-monospace text-break">'
+                                    . esc($pozWartosc) . '</div></li>';
+                            }
+                            $szczegolyHtml .= '</ul>';
+                        }
 
-    <?php if (empty($importy)): ?>
-        <p class="pusto">Brak przebiegów importu.</p>
-    <?php else: ?>
-        <table>
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Źródło</th>
-                <th>Status</th>
-                <th>Start</th>
-                <th>Koniec</th>
-                <th>Szczegóły</th>
-            </tr>
-            </thead>
-            <tbody>
-            <?php foreach ($importy as $imp): ?>
-                <?php
-                $st = (string) ($imp['status'] ?? '');
-                $klasaSt = match ($st) {
-                    'ok' => ' ok',
-                    'blad', 'kwarantanna' => ' blad',
-                    default => '',
-                };
-                $etykietaSt = match ($st) {
-                    'ok' => 'ok',
-                    'blad' => 'błąd',
-                    'kwarantanna' => 'kwarantanna',
-                    'w_trakcie' => 'w trakcie',
-                    default => $st !== '' ? $st : '—',
-                };
-                $szczegoly = trim((string) ($imp['blad_text'] ?? ''));
-                if ($szczegoly === '' && ! empty($imp['id_wiadomosci'])) {
-                    $szczegoly = 'msg: ' . (string) $imp['id_wiadomosci'];
-                }
-                if ($szczegoly === '' && ! empty($imp['checksum'])) {
-                    $szczegoly = 'checksum: ' . substr((string) $imp['checksum'], 0, 16) . '…';
-                }
-                ?>
-                <tr>
-                    <td><?= (int) ($imp['id'] ?? 0) ?></td>
-                    <td><code><?= esc((string) ($imp['zrodlo'] ?? '')) ?></code></td>
-                    <td class="health<?= esc($klasaSt, 'attr') ?>"><?= esc($etykietaSt) ?></td>
-                    <td><?= esc((string) ($imp['rozpoczeto_at'] ?? '')) ?></td>
-                    <td><?= esc((string) ($imp['zakonczono_at'] ?? '—')) ?></td>
-                    <td class="health"><?= $szczegoly !== '' ? esc($szczegoly) : '—' ?></td>
-                </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
-    <?php endif; ?>
-</main>
+                        if ($healthOk === true) {
+                            $statusIkona  = 'bi-check-circle-fill text-success';
+                            $statusEtykieta = 'OK';
+                        } elseif ($healthOk === false) {
+                            $statusIkona  = 'bi-x-circle-fill text-danger';
+                            $statusEtykieta = 'błąd';
+                        } else {
+                            $statusIkona  = 'bi-dash-circle text-secondary';
+                            $statusEtykieta = 'brak danych';
+                        }
+                        $statusTitle = $healthMsg !== '' ? $healthMsg : $statusEtykieta;
+                        $szczegolyId = 'plugin-szcz-' . preg_replace('/[^a-z0-9_-]+/i', '-', $zrodlo);
+                        $szczegolySkrot = $polSkrot !== '' ? $polSkrot : $opis;
+                        ?>
+                        <tr>
+                            <td class="text-body-secondary ps-3"><?= $lp ?></td>
+                            <td>
+                                <span class="fw-semibold" title="<?= esc($zrodlo) ?>"><?= esc($nazwa) ?></span>
+                                <?php if ($szczegolyHtml !== ''): ?>
+                                    <button type="button"
+                                            class="btn btn-link btn-sm p-0 ms-1 align-baseline"
+                                            data-bs-toggle="popover"
+                                            data-bs-html="true"
+                                            data-bs-placement="bottom"
+                                            data-bs-title="<?= esc($nazwa) ?>"
+                                            data-mcs-popover="<?= esc($szczegolyId, 'attr') ?>"
+                                            title="<?= esc($szczegolySkrot) ?>"
+                                            aria-label="Szczegóły połączenia">
+                                        <i class="bi bi-info-circle" aria-hidden="true"></i>
+                                    </button>
+                                    <div id="<?= esc($szczegolyId, 'attr') ?>" hidden>
+                                        <?= $szczegolyHtml ?>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <form method="post" action="<?= site_url('admin/pluginy') ?>" class="mb-0">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="zrodlo" value="<?= esc($zrodlo, 'attr') ?>">
+                                    <input type="hidden" name="import_wstrzymany" value="<?= $importWstrzymany ? '0' : '1' ?>">
+                                    <input type="hidden" name="ukryty_w_ui" value="<?= $ukrytyWUi ? '1' : '0' ?>">
+                                    <button type="submit"
+                                            class="badge rounded-pill border-0 <?= $importWstrzymany ? 'text-bg-secondary' : 'text-bg-success' ?>"
+                                            title="<?= $importWstrzymany ? 'Kliknij, aby włączyć import' : 'Kliknij, aby wstrzymać import' ?>"><?= $importWstrzymany ? 'nieaktywny' : 'aktywny' ?></button>
+                                </form>
+                            </td>
+                            <td>
+                                <form method="post" action="<?= site_url('admin/pluginy') ?>" class="mb-0">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="zrodlo" value="<?= esc($zrodlo, 'attr') ?>">
+                                    <input type="hidden" name="import_wstrzymany" value="<?= $importWstrzymany ? '1' : '0' ?>">
+                                    <input type="hidden" name="ukryty_w_ui" value="<?= $ukrytyWUi ? '0' : '1' ?>">
+                                    <button type="submit"
+                                            class="badge rounded-pill border-0 <?= $ukrytyWUi ? 'text-bg-secondary' : 'text-bg-primary' ?>"
+                                            title="<?= $ukrytyWUi ? 'Kliknij, aby pokazać w UI' : 'Kliknij, aby ukryć w listach i badge' ?>"><?= $ukrytyWUi ? 'niewidoczny' : 'widoczny' ?></button>
+                                </form>
+                            </td>
+                            <td class="small text-nowrap">
+                                <?php if ($dataUp === ''): ?>
+                                    <span class="text-body-secondary">—</span>
+                                <?php else: ?>
+                                    <div><?= esc($dataUp) ?></div>
+                                    <div class="text-body-secondary"><?= esc($ileTemu) ?></div>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <span class="fs-5"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-title="<?= esc($statusTitle) ?>"
+                                      title="<?= esc($statusTitle) ?>">
+                                    <i class="bi <?= $statusIkona ?>" aria-hidden="true"></i>
+                                    <span class="visually-hidden"><?= esc($statusEtykieta) ?></span>
+                                </span>
+                            </td>
+                            <td class="pe-3">
+                                <div class="d-inline-flex align-items-center gap-1 text-nowrap">
+                                    <form method="post" action="<?= site_url('admin/pluginy/pobierz') ?>" class="mb-0"
+                                          onsubmit="return confirm('Uruchomić pobieranie dla <?= esc($zrodlo, 'js') ?>? Może potrwać dłużej.');">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="zrodlo" value="<?= esc($zrodlo, 'attr') ?>">
+                                        <button type="submit" class="btn btn-sm btn-success"
+                                            <?= $importWstrzymany ? 'disabled title="Import nieaktywny — włącz import, potem spróbuj ponownie"' : '' ?>>
+                                            <i class="bi bi-download me-1" aria-hidden="true"></i>Pobierz teraz
+                                        </button>
+                                    </form>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" disabled
+                                            title="Dostępne w późniejszej fazie">Usuń dane</button>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
 
-<style>
-    .akcje-zrodla {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.35rem;
-        align-items: center;
-    }
-    .form-pobierz { display: inline; margin: 0; }
-    .form-pobierz button[type="submit"] {
-        background: #2a6a4a;
-    }
-    .form-pobierz button[type="submit"]:disabled {
-        background: #eef2f6;
-        color: #6a7a8a;
-        border: 1px solid var(--kreska);
-        cursor: not-allowed;
-        filter: none;
-    }
-</style>
+<section class="mb-4">
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-transparent border-0 pt-3 px-3 pb-0 d-flex flex-wrap justify-content-between align-items-start gap-2">
+            <div>
+                <h2 class="h5 mb-1">Historia importów</h2>
+                <p class="small text-body-secondary mb-0">
+                    Ostatnie <?= (int) count($importy ?? []) ?> przebiegów
+                    (ok / błąd / kwarantanna / w trakcie).
+                </p>
+            </div>
+            <a href="<?= site_url('admin/pluginy/historia-importow') ?>" class="btn btn-outline-primary btn-sm">
+                Pełna historia importów
+            </a>
+        </div>
+        <div class="card-body pt-3">
+            <?php if (empty($importy)): ?>
+                <p class="text-body-secondary mb-0">Brak przebiegów importu.</p>
+            <?php else: ?>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Źródło</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Start</th>
+                            <th scope="col">Koniec</th>
+                            <th scope="col">Szczegóły</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <?php foreach ($importy as $imp): ?>
+                            <?= view('admin/pluginy/_import_wiersz', ['imp' => $imp]) ?>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</section>
 
 <?= $this->endSection() ?>

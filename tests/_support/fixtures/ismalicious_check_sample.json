@@ -1,0 +1,21 @@
+{
+  "malicious": true,
+  "apiVersion": "v2",
+  "enrichmentLevel": "standard",
+  "dataTrust": "high",
+  "evidence": [
+    {
+      "type": "blocklist",
+      "source": "fixture",
+      "finding": "listed"
+    }
+  ],
+  "riskScore": 78.5,
+  "confidence": 0.91,
+  "blocklistHits": 4,
+  "blocklistListed": true,
+  "classification": {
+    "category": "malware",
+    "label": "malware"
+  }
+}

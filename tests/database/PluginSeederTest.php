@@ -24,6 +24,7 @@ final class PluginSeederTest extends CIUnitTestCase
             "CREATE TABLE {$tabela} (
                 zrodlo VARCHAR(50) PRIMARY KEY,
                 nazwa VARCHAR(100) NOT NULL,
+                opis TEXT NULL,
                 import_wstrzymany BOOLEAN NOT NULL DEFAULT 1,
                 ukryty_w_ui BOOLEAN NOT NULL DEFAULT 0,
                 health_at TEXT NULL,
@@ -44,9 +45,12 @@ final class PluginSeederTest extends CIUnitTestCase
     {
         $wynik = (new PluginSeeder())->zapisz();
 
-        $this->assertSame(['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard'], $wynik['nowe']);
+        $this->assertSame(
+            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'qrator', 'lms_mapowanie', 'ismalicious', 'spamrats', 'spoofer', 'speedtest'],
+            $wynik['nowe'],
+        );
         $this->assertSame([], $wynik['juz_byly']);
-        $this->seeNumRecords(6, 'mcs_pluginy', []);
+        $this->seeNumRecords(13, 'mcs_pluginy', []);
         $this->seeInDatabase('mcs_pluginy', [
             'zrodlo'            => 'shadowserver',
             'nazwa'             => 'Shadowserver',
@@ -58,6 +62,12 @@ final class PluginSeederTest extends CIUnitTestCase
             'nazwa'             => 'Play',
             'import_wstrzymany' => 1,
         ]);
+        $play = $this->db->table('mcs_pluginy')->where('zrodlo', 'play')->get()->getRowArray();
+        $this->assertIsArray($play);
+        $this->assertSame(
+            'Play Ochrona Anty-DDoS — MCS importuje alerty e-mail (IMAP) jako incydenty.',
+            (string) ($play['opis'] ?? ''),
+        );
         $this->seeInDatabase('mcs_pluginy', [
             'zrodlo'            => 'snds',
             'nazwa'             => 'SNDS',
@@ -78,6 +88,43 @@ final class PluginSeederTest extends CIUnitTestCase
             'nazwa'             => 'Wanguard',
             'import_wstrzymany' => 1,
         ]);
+        $this->seeInDatabase('mcs_pluginy', [
+            'zrodlo'            => 'cloudflare_botnet',
+            'nazwa'             => 'Cloudflare Botnet',
+            'import_wstrzymany' => 1,
+        ]);
+        $this->seeInDatabase('mcs_pluginy', [
+            'zrodlo'            => 'qrator',
+            'nazwa'             => 'Qrator Radar',
+            'import_wstrzymany' => 1,
+            'ukryty_w_ui'       => 1,
+        ]);
+        $this->seeInDatabase('mcs_pluginy', [
+            'zrodlo'            => 'spoofer',
+            'nazwa'             => 'CAIDA Spoofer',
+            'import_wstrzymany' => 1,
+            'ukryty_w_ui'       => 0,
+        ]);
+        $qrator = $this->db->table('mcs_pluginy')->where('zrodlo', 'qrator')->get()->getRowArray();
+        $this->assertIsArray($qrator);
+        $this->assertStringContainsString('płatne', (string) ($qrator['opis'] ?? ''));
+    }
+
+    public function testPonownyZapisWymuszaQratorUkryty(): void
+    {
+        (new PluginSeeder())->zapisz();
+        $this->db->table('mcs_pluginy')->where('zrodlo', 'qrator')->update([
+            'import_wstrzymany' => 0,
+            'ukryty_w_ui'       => 0,
+        ]);
+
+        (new PluginSeeder())->zapisz();
+
+        $this->seeInDatabase('mcs_pluginy', [
+            'zrodlo'            => 'qrator',
+            'import_wstrzymany' => 1,
+            'ukryty_w_ui'       => 1,
+        ]);
     }
 
     public function testPonownyZapisNieNadpisujeIstniejacych(): void
@@ -88,11 +135,25 @@ final class PluginSeederTest extends CIUnitTestCase
         $wynik = (new PluginSeeder())->zapisz();
 
         $this->assertSame([], $wynik['nowe']);
-        $this->assertSame(['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard'], $wynik['juz_byly']);
-        $this->seeNumRecords(6, 'mcs_pluginy', []);
+        $this->assertSame(
+            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'qrator', 'lms_mapowanie', 'ismalicious', 'spamrats', 'spoofer', 'speedtest'],
+            $wynik['juz_byly'],
+        );
+        $this->assertContains('play', $wynik['opis_zaktualizowany']);
+        $this->seeNumRecords(13, 'mcs_pluginy', []);
         $this->seeInDatabase('mcs_pluginy', [
             'zrodlo'            => 'play',
             'import_wstrzymany' => 0,
         ]);
+        $this->seeInDatabase('mcs_pluginy', [
+            'zrodlo' => 'lms_mapowanie',
+            'nazwa'  => 'LMS mapowanie',
+        ]);
+        $play = $this->db->table('mcs_pluginy')->where('zrodlo', 'play')->get()->getRowArray();
+        $this->assertIsArray($play);
+        $this->assertSame(
+            'Play Ochrona Anty-DDoS — MCS importuje alerty e-mail (IMAP) jako incydenty.',
+            (string) ($play['opis'] ?? ''),
+        );
     }
 }

@@ -4,6 +4,7 @@ namespace McsPluginy\cert_n6;
 
 use App\Libraries\ImportKoperta;
 use App\Libraries\IncydentZapis;
+use App\Libraries\PluginOpisPolaczenia;
 use App\Libraries\SourcePluginInterface;
 use App\Libraries\WagaV1;
 use App\Models\PluginModel;
@@ -107,6 +108,48 @@ class Plugin implements SourcePluginInterface
             'ok'  => (bool) ($ok ?? false),
             'msg' => $msg !== '' ? $msg : 'brak przebiegu',
         ];
+    }
+
+    /**
+     * @return array{
+     *   skrot: string,
+     *   tryb_aktywny: string,
+     *   tryb_etykieta: string,
+     *   pozycje: list<array{nazwa: string, wartosc: string, aktywna: bool, ustawiona: bool}>
+     * }
+     */
+    public function opisPolaczenia(): array
+    {
+        $plik   = trim((string) env('mcs.cert_n6.fixturePath', ''));
+        $base   = rtrim(trim((string) env('mcs.cert_n6.baseUrl', 'https://n6api.cert.pl')), '/');
+        $res    = trim((string) env('mcs.cert_n6.reportResource', 'report/inside'));
+        $url    = ($base !== '' ? $base : 'https://n6api.cert.pl') . '/' . ltrim($res !== '' ? $res : 'report/inside', '/');
+        $client = $this->apiClient ?? ApiClient::fromEnv();
+        $certOk = trim((string) env('mcs.cert_n6.clientCertFile', '')) !== '';
+        $tokOk  = $client->hasAuth();
+
+        return PluginOpisPolaczenia::plikIKanal(
+            $plik,
+            'HTTP n6',
+            $url,
+            $tokOk,
+            'http',
+            'HTTP',
+            [
+                PluginOpisPolaczenia::pozycja(
+                    'Uwierzytelnianie',
+                    PluginOpisPolaczenia::sekret($tokOk),
+                    false,
+                    $tokOk,
+                ),
+                PluginOpisPolaczenia::pozycja(
+                    'Certyfikat klienta',
+                    PluginOpisPolaczenia::sekret($certOk),
+                    false,
+                    $certOk,
+                ),
+            ],
+        );
     }
 
     public function importujPlik(string $sciezka): int

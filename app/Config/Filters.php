@@ -4,6 +4,7 @@ namespace Config;
 
 use App\Filters\McsAuthFilter;
 use App\Filters\McsBadgeTokenFilter;
+use App\Filters\McsRolaFilter;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
 use CodeIgniter\Filters\CSRF;
@@ -37,6 +38,7 @@ class Filters extends BaseFilters
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
         'mcsAuth'        => McsAuthFilter::class,
+        'mcsRola'        => McsRolaFilter::class,
         'mcsBadgeToken'  => McsBadgeTokenFilter::class,
     ];
 
@@ -115,6 +117,7 @@ class Filters extends BaseFilters
             'before' => [
                 '/',
                 'dashboard',
+                'dashboard/*',
                 'szukaj',
                 'ip',
                 'ip/*',

@@ -63,6 +63,29 @@ final class PluginRegistryTest extends CIUnitTestCase
         $this->assertSame([], (new PluginRegistry($this->katalog))->zaladuj());
     }
 
+    public function testProdukcyjnePluginyZwracajaOpisPolaczeniaBezSekretow(): void
+    {
+        $pluginy = (new PluginRegistry())->zaladuj();
+        $this->assertNotEmpty($pluginy);
+
+        $zrodla = [];
+        foreach ($pluginy as $plugin) {
+            $opis = $plugin->opisPolaczenia();
+            $zrodla[] = $plugin->zrodlo();
+            $this->assertArrayHasKey('skrot', $opis);
+            $this->assertArrayHasKey('pozycje', $opis);
+            $this->assertNotSame('', $opis['skrot']);
+            $json = json_encode($opis, JSON_UNESCAPED_SLASHES);
+            $this->assertIsString($json);
+            $this->assertDoesNotMatchRegularExpression('/tryb=fixture/', $json);
+        }
+
+        $this->assertContains('lms_mapowanie', $zrodla);
+        $this->assertContains('play', $zrodla);
+        $this->assertContains('spoofer', $zrodla);
+        $this->assertContains('speedtest', $zrodla);
+    }
+
     private function zapiszPlugin(string $zrodlo): void
     {
         $dir = $this->katalog . '/' . $zrodlo;
@@ -90,6 +113,16 @@ class Plugin implements SourcePluginInterface
     public function health(): array
     {
         return ['ok' => false, 'msg' => 'brak importera'];
+    }
+
+    public function opisPolaczenia(): array
+    {
+        return [
+            'skrot'         => 'brak konfiguracji',
+            'tryb_aktywny'  => 'brak',
+            'tryb_etykieta' => 'brak konfiguracji',
+            'pozycje'       => [],
+        ];
     }
 }
 PHP);

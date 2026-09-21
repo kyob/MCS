@@ -6,6 +6,7 @@ use App\Libraries\ImportKoperta;
 use App\Libraries\IncydentZapis;
 use App\Libraries\Imap\ImapKlientFabryka;
 use App\Libraries\Imap\ImapKlientInterface;
+use App\Libraries\PluginOpisPolaczenia;
 use App\Libraries\SourcePluginInterface;
 use App\Libraries\WagaV1;
 use App\Models\PluginModel;
@@ -13,7 +14,9 @@ use Config\Database;
 use RuntimeException;
 
 /**
- * Plugin źródła Play — powiadomienia DDoS w treści maila (antyddos@play.pl).
+ * Plugin źródła Play (Ochrona Anty-DDoS) — powiadomienia DDoS w treści maila
+ * (antyddos@play.pl) przez IMAP. Usługa Play chroni przed atakami wolumetrycznymi;
+ * MCS importuje alerty Event/Mitigation/CIDR, nie sam tor ochrony sieciowej.
  *
  * Uwaga operacyjna: FreeScout na tej samej skrzynce potrafi ściągnąć i usunąć
  * maile z IMAP; MCS widzi wtedy tylko resztki (np. Witamy/test).
@@ -127,6 +130,19 @@ class Plugin implements SourcePluginInterface
             'ok'  => (bool) ($wiersz['health_ok'] ?? false),
             'msg' => (string) ($wiersz['health_msg'] ?? ''),
         ];
+    }
+
+    /**
+     * @return array{
+     *   skrot: string,
+     *   tryb_aktywny: string,
+     *   tryb_etykieta: string,
+     *   pozycje: list<array{nazwa: string, wartosc: string, aktywna: bool, ustawiona: bool}>
+     * }
+     */
+    public function opisPolaczenia(): array
+    {
+        return PluginOpisPolaczenia::imap('mcs.play');
     }
 
     /**

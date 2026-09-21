@@ -4,6 +4,7 @@ namespace McsPluginy\wanguard;
 
 use App\Libraries\ImportKoperta;
 use App\Libraries\IncydentZapis;
+use App\Libraries\PluginOpisPolaczenia;
 use App\Libraries\SourcePluginInterface;
 use App\Libraries\WagaV1;
 use App\Models\PluginModel;
@@ -108,6 +109,39 @@ class Plugin implements SourcePluginInterface
             'ok'  => (bool) ($ok ?? false),
             'msg' => $msg !== '' ? $msg : 'brak przebiegu',
         ];
+    }
+
+    /**
+     * @return array{
+     *   skrot: string,
+     *   tryb_aktywny: string,
+     *   tryb_etykieta: string,
+     *   pozycje: list<array{nazwa: string, wartosc: string, aktywna: bool, ustawiona: bool}>
+     * }
+     */
+    public function opisPolaczenia(): array
+    {
+        $plik   = trim((string) env('mcs.wanguard.fixturePath', ''));
+        $client = $this->apiClient ?? ApiClient::fromEnv();
+        $haslo  = trim((string) env('mcs.wanguard.apiPassword', '')) !== '';
+
+        return PluginOpisPolaczenia::plikIKanal(
+            $plik,
+            'HTTP Wanguard',
+            $client->getApiUrl(),
+            $client->hasAuth(),
+            'http',
+            'HTTP',
+            [
+                PluginOpisPolaczenia::pozycja('Użytkownik', $client->getApiUser(), false),
+                PluginOpisPolaczenia::pozycja(
+                    'Hasło',
+                    PluginOpisPolaczenia::sekret($haslo),
+                    false,
+                    $haslo,
+                ),
+            ],
+        );
     }
 
     public function importujPlik(string $sciezka): int

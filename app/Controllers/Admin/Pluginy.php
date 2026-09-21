@@ -3,29 +3,74 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\PluginOpisPolaczenia;
+use App\Libraries\PluginRegistry;
 use App\Libraries\PobierzSerwis;
 use App\Models\ImportModel;
 use App\Models\PluginModel;
 
 /**
- * Panel stanów wtyczek źródeł + „Pobierz teraz” + historia importów.
- * Chronione filtrem mcsAuth. v1: admin i operator mają ten sam dostęp.
+ * Panel stanów wtyczek źródeł + „Pobierz teraz” + podgląd historii importów.
+ * Chronione filtrami mcsAuth + mcsRola (admin i superadmin).
  */
 class Pluginy extends BaseController
 {
-    private const HISTORIA_LIMIT = 40;
+    private const HISTORIA_PODGLAD = 8;
+
+    private const HISTORIA_NA_STRONE = 25;
 
     public function index()
     {
         return view('admin/pluginy/index', [
             'title'      => 'Wtyczki źródeł — MCS',
             'navAktywny' => 'pluginy',
-            'pluginy'    => model(PluginModel::class)->wszystkie(),
-            'importy'    => model(ImportModel::class)->ostatnie(self::HISTORIA_LIMIT),
+            'pluginy'    => PluginOpisPolaczenia::dolaczDoWierszy(
+                model(PluginModel::class)->wszystkie(),
+                (new PluginRegistry())->zaladuj(),
+            ),
+            'importy'    => model(ImportModel::class)->ostatnie(self::HISTORIA_PODGLAD),
             'email'      => (string) session()->get('mcs_user_email'),
             'rola'       => (string) session()->get('mcs_user_rola'),
             'komunikat'  => session()->getFlashdata('komunikat'),
             'blad'       => session()->getFlashdata('blad'),
+        ]);
+    }
+
+    /**
+     * Pełna historia importów z paginacją i filtrami.
+     */
+    public function historiaImportow()
+    {
+        $zrodlo = trim((string) $this->request->getGet('zrodlo'));
+        $status = trim((string) $this->request->getGet('status'));
+        $q      = trim((string) $this->request->getGet('q'));
+        $od     = trim((string) $this->request->getGet('od'));
+        $do     = trim((string) $this->request->getGet('do'));
+
+        $importModel = model(ImportModel::class);
+        $zrodla      = $importModel->listaZrodel();
+        $importy     = $importModel->szukaj(
+            $zrodlo !== '' ? $zrodlo : null,
+            $status !== '' ? $status : null,
+            $q !== '' ? $q : null,
+            $od !== '' ? $od : null,
+            $do !== '' ? $do : null,
+            self::HISTORIA_NA_STRONE,
+        );
+
+        return view('admin/pluginy/historia_importow', [
+            'title'       => 'Historia importów — MCS',
+            'navAktywny'  => 'pluginy',
+            'importy'     => $importy,
+            'pager'       => $importModel->pager,
+            'zrodla'      => $zrodla,
+            'filtrZrodlo' => $zrodlo,
+            'filtrStatus' => $status,
+            'filtrQ'      => $q,
+            'filtrOd'     => $od,
+            'filtrDo'     => $do,
+            'email'       => (string) session()->get('mcs_user_email'),
+            'rola'        => (string) session()->get('mcs_user_rola'),
         ]);
     }
 
