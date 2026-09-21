@@ -3,12 +3,20 @@
 namespace App\Controllers;
 
 use App\Libraries\Enrichment\AbuseipdbSerwis;
+use App\Libraries\Enrichment\IsmaliciousClient;
+use App\Libraries\Enrichment\IsmaliciousSerwis;
+use App\Libraries\Enrichment\LmsMapowanieSerwis;
+use App\Libraries\Enrichment\SpamratsClient;
+use App\Libraries\Enrichment\SpamratsSerwis;
+use App\Libraries\Enrichment\SpeedtestSerwis;
 use App\Libraries\ProblemyIp;
 use App\Libraries\Siec\As198050Matcher;
+use App\Libraries\Siec\RevDns;
 use App\Models\IncydentModel;
 
 /**
- * Strona podmiotu IP — status + zagregowane problemy, panel enrichment AbuseIPDB.
+ * Strona podmiotu IP — status + zagregowane problemy, panele LMS / AbuseIPDB.
+ * Speedtest: tylko krótka notka /24 (Ookla anonimizuje do *.0) → dashboard agregatów.
  */
 class Ip extends BaseController
 {
@@ -25,11 +33,43 @@ class Ip extends BaseController
             $abuseKomunikat = 'Brak mcs.abuseipdb.apiKey — ustaw w .env albo mcs.abuseipdb.fixturePath do dry-run.';
         }
 
+        $ism = new IsmaliciousSerwis();
+        $ismTryb = $ism->tryb();
+        $ismKomunikat = null;
+        if ($ismTryb === 'brak_klucza') {
+            $ismKomunikat = (new IsmaliciousClient())->brakCredentialsKomunikat();
+            if ($ismKomunikat === '') {
+                $ismKomunikat = 'Brak credentials isMalicious.';
+            }
+        }
+
+        $spamrats = new SpamratsSerwis();
+        $spamratsTryb = $spamrats->tryb();
+        $spamratsKomunikat = null;
+        if ($spamratsTryb === 'brak_klucza') {
+            $spamratsKomunikat = (new SpamratsClient())->brakCredentialsKomunikat();
+            if ($spamratsKomunikat === '') {
+                $spamratsKomunikat = 'Brak credentials SpamRats.';
+            }
+        }
+
+        $lms = new LmsMapowanieSerwis();
+        $lmsTryb = $lms->tryb();
+        $lmsKomunikat = null;
+        if ($lmsTryb === 'brak_konfiguracji') {
+            $lmsKomunikat = 'Brak konfiguracji LMS — ustaw mcs.lms.baseUrl+mapToken, albo db*, albo fixturePath.';
+        }
+
+        $speedtest = new SpeedtestSerwis();
+
         $pustyStatus = [
             'max_waga'         => '',
             'liczba_problemow' => 0,
             'top_tytuly'       => [],
         ];
+
+        $revDnsLib       = new RevDns();
+        $revDnsWlaczone  = $revDnsLib->jestWlaczone();
 
         if ($ip === '' || ! filter_var($ip, FILTER_VALIDATE_IP)) {
             return $this->response->setStatusCode(400)->setBody(
@@ -48,9 +88,24 @@ class Ip extends BaseController
                     'naszeIp'            => false,
                     'email'              => $email,
                     'rola'               => $rola,
+                    'lmsTryb'            => $lmsTryb,
+                    'lmsCache'           => null,
+                    'lmsKomunikat'       => $lmsKomunikat,
                     'abuseipdbTryb'      => $abuseTryb,
                     'abuseipdbCache'     => null,
                     'abuseipdbKomunikat' => $abuseKomunikat,
+                    'ismaliciousTryb'      => $ismTryb,
+                    'ismaliciousCache'     => null,
+                    'ismaliciousKomunikat' => $ismKomunikat,
+                    'spamratsTryb'         => $spamratsTryb,
+                    'spamratsCache'        => null,
+                    'spamratsKomunikat'    => $spamratsKomunikat,
+                    'speedtestCidr'        => null,
+                    'speedtestLiczba24'    => 0,
+                    'flashOk'            => null,
+                    'flashBlad'          => null,
+                    'revDnsWlaczone'     => $revDnsWlaczone,
+                    'revDns'             => null,
                 ]),
             );
         }
@@ -67,7 +122,28 @@ class Ip extends BaseController
         $asMatchWlaczone = $matcher->jestWlaczone();
         $naszeIp         = $asMatchWlaczone && $matcher->czyNaszeIp($ip);
 
-        $abuseCache = $abuse->podgladCache($ip);
+        $abuseCache    = $abuse->podgladCache($ip);
+        $ismCache      = $ism->podgladCache($ip);
+        $spamratsCache = $spamrats->podgladCache($ip);
+        $lmsCache      = $lms->podgladCache($ip);
+        if ($lmsCache === null && $lmsTryb !== 'brak_konfiguracji') {
+            $lmsWynik = $lms->sprawdz($ip, false);
+            if ($lmsWynik['ok'] && is_array($lmsWynik['wynik'] ?? null)) {
+                $lmsCache = $lmsWynik['wynik'];
+                $lmsTryb  = (string) ($lmsWynik['tryb'] ?? $lmsTryb);
+            } elseif (! $lmsWynik['ok'] && $lmsKomunikat === null) {
+                $lmsKomunikat = (string) ($lmsWynik['blad'] ?? 'Błąd mapowania LMS.');
+            }
+        }
+        $revDns        = $revDnsLib->dlaIp($ip);
+
+        $stCidr   = SpeedtestSerwis::cidrZIp($ip);
+        $stLiczba = 0;
+        try {
+            $stLiczba = $speedtest->liczbaTestowDlaCidrZIp($ip, 0);
+        } catch (\Throwable) {
+            $stLiczba = 0;
+        }
 
         return view('ip/show', [
             'title'              => 'IP ' . $ip . ' — MCS',
@@ -84,9 +160,24 @@ class Ip extends BaseController
             'naszeIp'            => $naszeIp,
             'email'              => $email,
             'rola'               => $rola,
+            'lmsTryb'            => $lmsCache !== null ? 'cache' : $lmsTryb,
+            'lmsCache'           => $lmsCache,
+            'lmsKomunikat'       => $lmsKomunikat,
             'abuseipdbTryb'      => $abuseCache !== null ? 'cache' : $abuseTryb,
             'abuseipdbCache'     => $abuseCache,
             'abuseipdbKomunikat' => $abuseKomunikat,
+            'ismaliciousTryb'      => $ismCache !== null ? 'cache' : $ismTryb,
+            'ismaliciousCache'     => $ismCache,
+            'ismaliciousKomunikat' => $ismKomunikat,
+            'spamratsTryb'         => $spamratsCache !== null ? 'cache' : $spamratsTryb,
+            'spamratsCache'        => $spamratsCache,
+            'spamratsKomunikat'    => $spamratsKomunikat,
+            'speedtestCidr'        => $stCidr,
+            'speedtestLiczba24'    => $stLiczba,
+            'flashOk'            => session()->getFlashdata('komunikat'),
+            'flashBlad'          => session()->getFlashdata('blad'),
+            'revDnsWlaczone'     => $revDnsWlaczone,
+            'revDns'             => $revDns,
         ]);
     }
 
@@ -103,6 +194,99 @@ class Ip extends BaseController
 
         if (! $wynik['ok']) {
             $kod = ($wynik['tryb'] === 'brak_klucza') ? 503 : 400;
+
+            return $this->response->setStatusCode($kod)->setJSON([
+                'ok'   => false,
+                'blad' => $wynik['blad'],
+                'ip'   => $wynik['ip'],
+                'tryb' => $wynik['tryb'],
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'ok'      => true,
+            'ip'      => $wynik['ip'],
+            'z_cache' => $wynik['z_cache'],
+            'tryb'    => $wynik['tryb'],
+            'wynik'   => $wynik['wynik'],
+        ]);
+    }
+
+    /**
+     * Enrichment isMalicious pod sesją. Nie pisze do indeksu/badge.
+     */
+    public function ismalicious(string $ip)
+    {
+        $ip = trim($ip);
+        $forceRaw = $this->request->getGet('force');
+        $force    = filter_var($forceRaw, FILTER_VALIDATE_BOOLEAN);
+
+        $wynik = (new IsmaliciousSerwis())->sprawdz($ip, $force);
+
+        if (! $wynik['ok']) {
+            $kod = ($wynik['tryb'] === 'brak_klucza') ? 503 : 400;
+
+            return $this->response->setStatusCode($kod)->setJSON([
+                'ok'   => false,
+                'blad' => $wynik['blad'],
+                'ip'   => $wynik['ip'],
+                'tryb' => $wynik['tryb'],
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'ok'      => true,
+            'ip'      => $wynik['ip'],
+            'z_cache' => $wynik['z_cache'],
+            'tryb'    => $wynik['tryb'],
+            'wynik'   => $wynik['wynik'],
+        ]);
+    }
+
+    /**
+     * Enrichment SpamRats DNSBL pod sesją. Nie pisze do indeksu/badge.
+     */
+    public function spamrats(string $ip)
+    {
+        $ip = trim($ip);
+        $forceRaw = $this->request->getGet('force');
+        $force    = filter_var($forceRaw, FILTER_VALIDATE_BOOLEAN);
+
+        $wynik = (new SpamratsSerwis())->sprawdz($ip, $force);
+
+        if (! $wynik['ok']) {
+            $kod = ($wynik['tryb'] === 'brak_klucza') ? 503 : 400;
+
+            return $this->response->setStatusCode($kod)->setJSON([
+                'ok'   => false,
+                'blad' => $wynik['blad'],
+                'ip'   => $wynik['ip'],
+                'tryb' => $wynik['tryb'],
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'ok'      => true,
+            'ip'      => $wynik['ip'],
+            'z_cache' => $wynik['z_cache'],
+            'tryb'    => $wynik['tryb'],
+            'wynik'   => $wynik['wynik'],
+        ]);
+    }
+
+    /**
+     * Enrichment LMS mapowanie pod sesją. Nie pisze do indeksu/badge.
+     */
+    public function lms(string $ip)
+    {
+        $ip = trim($ip);
+        $forceRaw = $this->request->getGet('force');
+        $force    = filter_var($forceRaw, FILTER_VALIDATE_BOOLEAN);
+
+        $wynik = (new LmsMapowanieSerwis())->sprawdz($ip, $force);
+
+        if (! $wynik['ok']) {
+            $kod = ($wynik['tryb'] === 'brak_konfiguracji') ? 503 : 400;
 
             return $this->response->setStatusCode($kod)->setJSON([
                 'ok'   => false,
