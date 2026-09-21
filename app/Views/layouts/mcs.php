@@ -1,590 +1,236 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="pl" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= esc($title ?? 'MCS') ?></title>
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('mcs-theme');
+                if (t === 'light' || t === 'dark') {
+                    document.documentElement.setAttribute('data-bs-theme', t);
+                } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.setAttribute('data-bs-theme', 'dark');
+                }
+            } catch (e) { /* ignore */ }
+        })();
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+          crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
-        :root {
-            --tlo: #e8eef4;
-            --panel: #f7fafc;
-            --akcent: #1f4e79;
-            --blad: #8b1e1e;
-            --ok: #1e5a3a;
-            --tekst: #1a2332;
-            --kreska: #b8c5d4;
-            --meta: #4a5a6a;
-        }
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: "Segoe UI", "Liberation Sans", sans-serif;
-            color: var(--tekst);
-            background:
-                radial-gradient(ellipse at 10% 0%, #c5d8ea 0%, transparent 50%),
-                linear-gradient(160deg, var(--tlo), #d5dde6);
-            padding: 1.25rem 1rem 2rem;
-        }
-        .shell {
-            max-width: 72rem;
-            margin: 0 auto;
-        }
-        header.top {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            gap: 0.75rem;
-            align-items: baseline;
-            margin-bottom: 0.75rem;
-        }
-        header.top h1 {
-            margin: 0;
-            font-size: 1.35rem;
-            color: var(--akcent);
-        }
-        header.top .meta {
-            font-size: 0.85rem;
-            color: var(--meta);
-        }
-        header.top a { color: var(--akcent); }
-        nav.nav {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.35rem 0.75rem;
-            align-items: center;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-        }
-        nav.nav a {
-            color: var(--akcent);
-            text-decoration: none;
-            padding: 0.25rem 0.5rem;
-            border: 1px solid transparent;
-        }
-        nav.nav a.aktywny {
-            border-color: var(--akcent);
-            background: #e4eef7;
-            font-weight: 600;
-        }
-        nav.nav form {
-            display: flex;
-            gap: 0.35rem;
-            margin-left: auto;
-            align-items: center;
-        }
-        nav.nav input[type="text"] {
-            width: 11rem;
-            max-width: 40vw;
-            padding: 0.3rem 0.45rem;
-            border: 1px solid var(--kreska);
-            background: #fff;
-            font: inherit;
-            font-size: 0.85rem;
-        }
-        nav.nav button {
-            padding: 0.3rem 0.6rem;
-            border: 0;
-            background: var(--akcent);
-            color: #fff;
-            font: inherit;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        nav.nav button:hover { filter: brightness(1.08); }
-        main.panel {
-            background: var(--panel);
-            border: 1px solid var(--kreska);
-            padding: 1.25rem 1.1rem;
-        }
-        main.panel + main.panel { margin-top: 1rem; }
-        h2 {
-            margin: 0 0 0.35rem;
-            font-size: 1.15rem;
-        }
-        h3 {
-            margin: 1.25rem 0 0.5rem;
-            font-size: 1rem;
-            color: var(--akcent);
-        }
-        .podpis {
-            margin: 0 0 1rem;
-            font-size: 0.9rem;
-            color: var(--meta);
-        }
-        .blad, .ok {
-            margin: 0 0 1rem;
-            padding: 0.55rem 0.7rem;
-            font-size: 0.9rem;
-            border: 1px solid;
-        }
-        .blad {
-            background: #f8e8e8;
-            border-color: #d9a0a0;
-            color: var(--blad);
-        }
-        .ok {
-            background: #e8f5ee;
-            border-color: #9bc4ae;
-            color: var(--ok);
-        }
-        .kpi {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
-            gap: 0.65rem;
-            margin: 0 0 1.25rem;
-        }
-        .kpi .pozycja {
-            border: 1px solid var(--kreska);
-            background: #eef3f8;
-            padding: 0.65rem 0.75rem;
-        }
-        .kpi .etykieta {
-            display: block;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            color: var(--meta);
-            margin-bottom: 0.2rem;
-        }
-        .kpi .wartosc {
-            font-size: 1.35rem;
-            font-weight: 700;
-            color: var(--akcent);
-            line-height: 1.2;
-        }
-        .filtry {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.55rem 0.75rem;
-            margin: 0 0 1rem;
-            align-items: end;
-            font-size: 0.9rem;
-        }
-        .filtry label {
-            display: flex;
-            flex-direction: column;
-            gap: 0.2rem;
-            font-size: 0.8rem;
-            color: var(--meta);
-        }
-        .filtry select,
-        .filtry input[type="text"] {
-            padding: 0.3rem 0.45rem;
-            border: 1px solid var(--kreska);
-            background: #fff;
-            font: inherit;
-            font-size: 0.9rem;
-            color: var(--tekst);
-            min-width: 7rem;
-        }
-        .filtry button,
-        .filtry .reset {
-            padding: 0.35rem 0.7rem;
-            border: 0;
-            background: var(--akcent);
-            color: #fff;
-            font: inherit;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .filtry .reset {
-            background: #eef2f6;
-            color: #4a5a6a;
-            border: 1px solid var(--kreska);
-            font-weight: 500;
-        }
-        .filtry button:hover { filter: brightness(1.08); }
-        .filtry a {
-            color: var(--akcent);
-            text-decoration: none;
-            padding: 0.2rem 0.45rem;
-            border: 1px solid transparent;
-            align-self: center;
-        }
-        .filtry a.aktywny {
-            border-color: var(--akcent);
-            background: #e4eef7;
-            font-weight: 600;
-        }
-        .filtry > span {
-            align-self: center;
-            font-size: 0.8rem;
-            color: var(--meta);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-        }
-        th, td {
-            text-align: left;
-            padding: 0.45rem 0.4rem;
-            border-bottom: 1px solid var(--kreska);
-            vertical-align: top;
-        }
-        th {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            color: var(--meta);
-        }
-        td a { color: var(--akcent); }
-        .pusto {
-            margin: 0.5rem 0 0;
-            color: var(--meta);
-            font-size: 0.95rem;
-        }
-        .waga-critical { font-weight: 700; color: #7a1212; }
-        .waga-high { font-weight: 600; color: #9a4a12; }
-        .waga-medium { color: #6a5a10; }
-        .waga-low { color: #3a5a4a; }
-        .zrodla-chip {
-            display: inline-block;
-            margin: 0 0.2rem 0.2rem 0;
-            padding: 0.05rem 0.35rem;
-            border: 1px solid var(--kreska);
-            background: #eef3f8;
-            font-size: 0.78rem;
-            white-space: nowrap;
-        }
-        .komorka-kontekst { min-width: 14rem; max-width: 28rem; }
-        .kontekst-chipy {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.25rem;
-            margin: 0 0 0.25rem;
-        }
-        .kontekst-chip {
-            display: inline-block;
-            padding: 0.08rem 0.4rem;
-            border: 1px solid var(--kreska);
-            background: #eef3f8;
-            font-size: 0.72rem;
-            font-weight: 600;
-            letter-spacing: 0.02em;
-            white-space: nowrap;
-        }
-        .kontekst-chip.waga-critical { color: #7a1212; border-color: #c9a0a0; background: #f7ecec; }
-        .kontekst-chip.waga-high { color: #9a4a12; border-color: #d4b896; background: #f7f0e8; }
-        .kontekst-chip.waga-medium { color: #6a5a10; border-color: #cfc89a; background: #f5f3e6; }
-        .kontekst-chip.waga-low { color: #3a5a4a; border-color: #a8c0b4; background: #eaf2ee; }
-        .kontekst-chip-zrodlo { background: #e4eef7; border-color: #b8cde0; color: var(--akcent); }
-        .kontekst-chip-kat { background: #f0eef6; border-color: #c8c2d8; color: #4a4560; }
-        .kontekst-chip-liczba { font-weight: 500; color: var(--meta); }
-        .kontekst-zdanie {
-            margin: 0;
-            font-size: 0.8rem;
-            color: var(--meta);
-            line-height: 1.35;
-        }
-        .komorka-cta { white-space: nowrap; vertical-align: middle; }
-        a.cta-ip {
-            display: inline-block;
-            padding: 0.2rem 0.55rem;
-            border: 1px solid var(--akcent);
-            background: #e4eef7;
-            color: var(--akcent);
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-decoration: none;
-        }
-        a.cta-ip:hover { filter: brightness(1.05); background: #d7e6f4; }
-        .ip-status {
-            border: 1px solid var(--kreska);
-            background: #f5f8fb;
-            padding: 0.65rem 0.85rem;
-            margin: 0.35rem 0 0.85rem;
-        }
-        .ip-status-wiersz {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.45rem 0.75rem;
-            align-items: center;
-            font-size: 0.92rem;
-        }
-        .ip-status-top {
-            color: var(--meta);
-            font-size: 0.85rem;
-        }
-        .lista-problemow {
-            list-style: none;
-            margin: 0.35rem 0 1rem;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 0.45rem;
-        }
-        .pozycja-problemu {
-            border: 1px solid var(--kreska);
-            background: #f5f8fb;
-        }
-        .pozycja-problemu > details > summary {
-            list-style: none;
-            cursor: pointer;
-            padding: 0.6rem 0.75rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.3rem;
-        }
-        .pozycja-problemu > details > summary::-webkit-details-marker { display: none; }
-        .pozycja-problemu > details[open] > summary {
-            border-bottom: 1px solid var(--kreska);
-            background: #eef3f8;
-        }
-        .problem-naglowek {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.25rem 0.4rem;
-            align-items: center;
-        }
-        .problem-tytul {
-            font-weight: 600;
-            font-size: 0.95rem;
-            line-height: 1.3;
-        }
-        .problem-meta {
-            font-size: 0.78rem;
-            color: var(--meta);
-        }
-        .mini-timeline {
-            display: flex;
-            gap: 2px;
-            align-items: flex-end;
-            height: 1.1rem;
-            margin-top: 0.15rem;
-        }
-        .mini-timeline-slupek {
-            width: 0.45rem;
-            height: 0.35rem;
-            background: #d5dde6;
-        }
-        .mini-timeline-slupek.aktywny {
-            height: 100%;
-            background: var(--akcent);
-        }
-        .lista-czlonkow {
-            list-style: none;
-            margin: 0;
-            padding: 0.45rem 0.75rem 0.65rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.35rem;
-        }
-        .lista-czlonkow li {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.35rem 0.75rem;
-            align-items: baseline;
-            font-size: 0.85rem;
-        }
-        .legenda {
-            margin: 1.25rem 0 0;
-            font-size: 0.85rem;
-            color: var(--meta);
-        }
-        .legenda dt { font-weight: 600; margin-top: 0.4rem; }
-        .legenda dd { margin: 0.15rem 0 0; }
-        .przełączniki {
-            display: flex;
-            flex-direction: column;
-            gap: 0.35rem;
-            font-size: 0.85rem;
-        }
-        .przełączniki label {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            cursor: pointer;
-            flex-direction: row;
-            color: var(--tekst);
-            font-size: 0.85rem;
-        }
-        button[type="submit"] {
-            padding: 0.35rem 0.7rem;
-            border: 0;
-            background: var(--akcent);
-            color: #fff;
-            font: inherit;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        button[type="submit"]:hover { filter: brightness(1.08); }
-        button[disabled],
-        .pozniej {
-            padding: 0.35rem 0.7rem;
-            border: 1px solid var(--kreska);
-            background: #eef2f6;
-            color: #6a7a8a;
-            font: inherit;
-            font-size: 0.85rem;
-            cursor: not-allowed;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .health { font-size: 0.8rem; color: var(--meta); }
-        .health.ok { color: var(--ok); }
-        .health.blad { color: var(--blad); }
-        .badge-nasze {
-            display: inline-block;
-            margin-left: 0.35rem;
-            padding: 0.05rem 0.4rem;
-            font-size: 0.72rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            border: 1px solid #7a9ab8;
-            background: #dce8f4;
-            color: var(--akcent);
-            vertical-align: middle;
-            white-space: nowrap;
-        }
-        .wiersz-nasze td:first-child {
-            box-shadow: inset 3px 0 0 var(--akcent);
-        }
-        tr.wiersz-klik {
-            cursor: pointer;
-        }
-        tr.wiersz-klik:hover td {
-            background: #eef3f8;
-        }
-        .meta-lista {
-            display: grid;
-            grid-template-columns: 10rem 1fr;
-            gap: 0.35rem 0.75rem;
-            margin: 0 0 1rem;
-            font-size: 0.9rem;
-        }
-        .meta-lista dt {
-            margin: 0;
-            color: var(--meta);
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-        }
-        .meta-lista dd {
-            margin: 0;
-        }
-        .meta-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-            margin: 0 0 1rem;
-        }
-        .meta-table th {
-            width: 11rem;
-            text-align: left;
-            color: var(--meta);
-            font-weight: 600;
-            text-transform: none;
-            letter-spacing: 0;
-            font-size: 0.85rem;
-            vertical-align: top;
-        }
-        .payload {
-            margin: 0.35rem 0 0.75rem;
-            padding: 0.55rem 0.65rem;
-            background: #eef3f8;
-            border: 1px solid var(--kreska);
-            font-size: 0.8rem;
-            overflow-x: auto;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-        .timeline {
-            margin: 0;
-            padding: 0 0 0 1.1rem;
-            list-style: decimal;
-        }
-        .timeline li {
-            margin: 0 0 0.85rem;
-            padding-left: 0.25rem;
-        }
-        .timeline-czas {
-            font-weight: 600;
-            color: var(--akcent);
-            font-size: 0.9rem;
-        }
-        .timeline-meta {
-            font-size: 0.8rem;
-            color: var(--meta);
-            margin-top: 0.15rem;
-        }
-        .enrichment-akcje {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            align-items: center;
-            margin: 0 0 1rem;
-        }
-        .enrichment-akcje button {
-            padding: 0.35rem 0.7rem;
-            border: 0;
-            background: var(--akcent);
-            color: #fff;
-            font: inherit;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .enrichment-akcje button.reset {
-            background: #eef2f6;
-            color: #4a5a6a;
-            border: 1px solid var(--kreska);
-            font-weight: 500;
-        }
-        .enrichment-akcje button:hover:not([disabled]) { filter: brightness(1.08); }
-        .enrichment-akcje button[disabled] {
-            background: #eef2f6;
-            color: #6a7a8a;
-            border: 1px solid var(--kreska);
-            cursor: not-allowed;
-        }
-        .enrichment-wynik[hidden] { display: none; }
-        @media (max-width: 640px) {
-            nav.nav form { margin-left: 0; width: 100%; }
-            nav.nav input[type="text"] { flex: 1; max-width: none; }
-            .kpi .wartosc { font-size: 1.2rem; }
-            table { display: block; overflow-x: auto; }
-            .meta-lista { grid-template-columns: 1fr; }
-        }
+        .waga-critical { color: var(--bs-danger); font-weight: 700; }
+        .waga-high { color: #984c0c; font-weight: 650; }
+        .waga-medium { color: #664d03; font-weight: 600; }
+        .waga-low { color: var(--bs-success); font-weight: 550; }
+        [data-bs-theme="dark"] .waga-high { color: var(--bs-warning); }
+        [data-bs-theme="dark"] .waga-medium { color: var(--bs-secondary-color); }
+        .border-waga-critical { border-left: 0.25rem solid var(--bs-danger) !important; }
+        .border-waga-high { border-left: 0.25rem solid var(--bs-warning) !important; }
+        .border-waga-medium { border-left: 0.25rem solid var(--bs-secondary) !important; }
+        .border-waga-low { border-left: 0.25rem solid var(--bs-success) !important; }
+        .mini-timeline { display: flex; gap: 2px; align-items: flex-end; height: 1.05rem; }
+        .mini-timeline-slupek { width: 0.4rem; height: 0.3rem; background: var(--bs-border-color); }
+        .mini-timeline-slupek.aktywny { height: 100%; background: var(--bs-primary); }
+        .payload { max-height: 24rem; overflow: auto; font-size: 0.8rem; }
+        .navbar .form-control { min-width: 10rem; }
+        .mcs-plugin-popover { max-width: 28rem; }
+        body { min-height: 100vh; display: flex; flex-direction: column; }
+        main { flex: 1 0 auto; }
     </style>
 </head>
-<body>
-<div class="shell">
-    <header class="top">
-        <h1>Moja Czysta Sieć</h1>
-        <p class="meta">
-            <?= esc($email ?? '') ?> · <?= esc($rola ?? '') ?>
-            · <a href="<?= site_url('logout') ?>">Wyloguj</a>
-        </p>
-    </header>
+<body class="bg-body-tertiary">
+<?php
+$nav            = $navAktywny ?? '';
+$rolaKod        = (string) ($rola ?? '');
+$rolaEtykieta   = $rolaKod !== '' ? \App\Libraries\Rola::etykieta($rolaKod) : '';
+$mozePanelAdmin = \App\Libraries\Rola::mozePanelAdmin($rolaKod);
+$mozeUzytkownicy = \App\Libraries\Rola::mozeUzytkownicy($rolaKod);
+?>
 
-    <?php
-    $nav = $navAktywny ?? '';
-    ?>
-    <nav class="nav" aria-label="Główne">
-        <a href="<?= site_url('/') ?>" class="<?= $nav === 'dashboard' ? 'aktywny' : '' ?>">Przegląd</a>
-        <a href="<?= site_url('watchlista') ?>" class="<?= $nav === 'watchlista' ? 'aktywny' : '' ?>">Watchlista</a>
-        <a href="<?= site_url('admin/pluginy') ?>" class="<?= $nav === 'pluginy' ? 'aktywny' : '' ?>">Wtyczki</a>
-        <a href="<?= site_url('admin/ustawienia') ?>" class="<?= $nav === 'ustawienia' ? 'aktywny' : '' ?>">Ustawienia</a>
-        <?php if ($nav === 'ip' && ! empty($ipNav)): ?>
-            <a href="<?= site_url('ip/' . $ipNav) ?>" class="aktywny">IP <?= esc($ipNav) ?></a>
-        <?php endif; ?>
-        <form method="get" action="<?= site_url('szukaj') ?>" role="search">
-            <label class="sr-only" for="szukaj-ip" style="position:absolute;left:-9999px">Szukaj IP</label>
-            <input id="szukaj-ip" type="text" name="ip" placeholder="Szukaj IP…"
-                   value="<?= esc($szukajIp ?? '', 'attr') ?>" autocomplete="off">
-            <button type="submit">Otwórz</button>
-        </form>
-    </nav>
+<nav class="navbar navbar-expand-lg bg-body border-bottom shadow-sm sticky-top">
+    <div class="container">
+        <a class="navbar-brand fw-semibold" href="<?= site_url('/') ?>">
+            <i class="bi bi-shield-lock-fill me-1 text-primary" aria-hidden="true"></i>
+            MCS
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mcsNavbar"
+                aria-controls="mcsNavbar" aria-expanded="false" aria-label="Przełącz nawigację">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="mcsNavbar">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <?php
+                $navDashboard = in_array($nav, ['dashboard', 'kolejka', 'problematyczne-ip', 'incydenty', 'speedtest'], true);
+                ?>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle<?= $navDashboard ? ' active' : '' ?>"
+                       <?= $navDashboard ? 'aria-current="page"' : '' ?>
+                       href="<?= site_url('/') ?>" data-bs-toggle="dropdown" aria-expanded="false">
+                        Dashboard
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item<?= $nav === 'dashboard' ? ' active' : '' ?>"
+                               href="<?= site_url('/') ?>">Przegląd</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item<?= $nav === 'kolejka' ? ' active' : '' ?>"
+                               href="<?= site_url('dashboard/kolejka') ?>">Kolejka dnia</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item<?= $nav === 'problematyczne-ip' ? ' active' : '' ?>"
+                               href="<?= site_url('dashboard/problematyczne-ip') ?>">Problematyczne IP</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item<?= $nav === 'incydenty' ? ' active' : '' ?>"
+                               href="<?= site_url('dashboard/incydenty') ?>">Ostatnie incydenty</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item<?= $nav === 'speedtest' ? ' active' : '' ?>"
+                               href="<?= site_url('dashboard/speedtest') ?>">Speedtest</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link<?= $nav === 'watchlista' ? ' active' : '' ?>"
+                       <?= $nav === 'watchlista' ? 'aria-current="page"' : '' ?>
+                       href="<?= site_url('watchlista') ?>">Watchlista</a>
+                </li>
+                <?php if ($mozePanelAdmin): ?>
+                <li class="nav-item">
+                    <a class="nav-link<?= $nav === 'pluginy' ? ' active' : '' ?>"
+                       <?= $nav === 'pluginy' ? 'aria-current="page"' : '' ?>
+                       href="<?= site_url('admin/pluginy') ?>">Wtyczki</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link<?= $nav === 'ustawienia' ? ' active' : '' ?>"
+                       <?= $nav === 'ustawienia' ? 'aria-current="page"' : '' ?>
+                       href="<?= site_url('admin/ustawienia') ?>">Ustawienia</a>
+                </li>
+                <?php endif; ?>
+                <?php if ($mozeUzytkownicy): ?>
+                <li class="nav-item">
+                    <a class="nav-link<?= $nav === 'uzytkownicy' ? ' active' : '' ?>"
+                       <?= $nav === 'uzytkownicy' ? 'aria-current="page"' : '' ?>
+                       href="<?= site_url('admin/uzytkownicy') ?>">Użytkownicy</a>
+                </li>
+                <?php endif; ?>
+                <?php if ($nav === 'ip' && ! empty($ipNav)): ?>
+                    <li class="nav-item">
+                        <a class="nav-link active font-monospace" aria-current="page"
+                           href="<?= site_url('ip/' . $ipNav) ?>">IP <?= esc($ipNav) ?></a>
+                    </li>
+                <?php endif; ?>
+            </ul>
 
+            <form class="d-flex me-lg-2 mb-2 mb-lg-0" method="get" action="<?= site_url('szukaj') ?>" role="search">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
+                    <input class="form-control font-monospace" type="search" name="ip" id="szukaj-ip"
+                           placeholder="Szukaj IP, AS…" aria-label="Szukaj IP"
+                           value="<?= esc($szukajIp ?? '', 'attr') ?>" autocomplete="off">
+                    <button class="btn btn-outline-secondary" type="submit" aria-label="Szukaj">
+                        <i class="bi bi-arrow-return-left" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </form>
+
+            <button type="button" class="btn btn-outline-secondary me-lg-2 mb-2 mb-lg-0" id="themeToggle"
+                    aria-label="Przełącz motyw jasny/ciemny" title="Motyw">
+                <i class="bi bi-moon-stars-fill" id="themeIcon" aria-hidden="true"></i>
+            </button>
+
+            <div class="navbar-text small text-body-secondary d-flex flex-wrap align-items-center gap-1">
+                <?php if (! empty($email)): ?>
+                    <span class="me-1"><?= esc($email) ?><?php if ($rolaEtykieta !== ''): ?> · <?= esc($rolaEtykieta) ?><?php endif; ?></span>
+                <?php endif; ?>
+                <a class="btn btn-sm btn-outline-secondary" href="<?= site_url('logout') ?>">
+                    <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>Wyloguj
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="container py-4 py-lg-5">
     <?= $this->renderSection('content') ?>
-</div>
+</main>
+
+<footer class="border-top bg-body py-4 mt-auto">
+    <div class="container">
+        <div class="row g-3 align-items-center">
+            <div class="col-12 col-md">
+                <div class="fw-semibold mb-1">
+                    <i class="bi bi-shield-lock-fill me-1 text-primary" aria-hidden="true"></i>
+                    MCS
+                </div>
+                <p class="small text-body-secondary mb-0">
+                    Monitoring incydentów i watchlista IP · © <?= date('Y') ?> MCS
+                </p>
+            </div>
+            <div class="col-12 col-md-auto">
+                <nav class="d-flex flex-wrap gap-3 small" aria-label="Stopka">
+                    <a class="link-body-emphasis text-decoration-none" href="<?= site_url('/') ?>">Dashboard</a>
+                    <a class="link-body-emphasis text-decoration-none" href="<?= site_url('watchlista') ?>">Watchlista</a>
+                    <?php if ($mozePanelAdmin): ?>
+                    <a class="link-body-emphasis text-decoration-none" href="<?= site_url('admin/pluginy') ?>">Wtyczki</a>
+                    <a class="link-body-emphasis text-decoration-none" href="<?= site_url('admin/ustawienia') ?>">Ustawienia</a>
+                    <?php endif; ?>
+                    <?php if ($mozeUzytkownicy): ?>
+                    <a class="link-body-emphasis text-decoration-none" href="<?= site_url('admin/uzytkownicy') ?>">Użytkownicy</a>
+                    <?php endif; ?>
+                </nav>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+<script>
+(function () {
+    var root = document.documentElement;
+    var toggle = document.getElementById('themeToggle');
+    var icon = document.getElementById('themeIcon');
+    var storageKey = 'mcs-theme';
+
+    function applyTheme(theme) {
+        root.setAttribute('data-bs-theme', theme);
+        if (icon) {
+            icon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+        }
+        try { localStorage.setItem(storageKey, theme); } catch (e) { /* ignore */ }
+    }
+
+    applyTheme(root.getAttribute('data-bs-theme') === 'dark' ? 'dark' : 'light');
+
+    if (toggle) {
+        toggle.addEventListener('click', function () {
+            var next = root.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+            applyTheme(next);
+        });
+    }
+
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+        bootstrap.Tooltip.getOrCreateInstance(el);
+    });
+    document.querySelectorAll('[data-bs-toggle="popover"]').forEach(function (el) {
+        bootstrap.Popover.getOrCreateInstance(el, {
+            container: 'body',
+            html: true,
+            customClass: 'mcs-plugin-popover',
+            content: function () {
+                var id = el.getAttribute('data-mcs-popover');
+                var src = id ? document.getElementById(id) : null;
+                return src ? src.innerHTML : '';
+            }
+        });
+    });
+})();
+</script>
 </body>
 </html>
