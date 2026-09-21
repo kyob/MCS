@@ -6,6 +6,7 @@ use CodeIgniter\Router\RouteCollection;
 
 $routes->get('/', 'Dashboard::index');
 $routes->get('dashboard', 'Dashboard::index');
+$routes->get('dashboard/kolejka', 'Dashboard::kolejka');
 $routes->get('szukaj', 'Dashboard::szukaj');
 
 $routes->get('login', 'Auth::login');
