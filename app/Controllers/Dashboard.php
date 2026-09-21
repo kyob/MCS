@@ -117,6 +117,10 @@ class Dashboard extends BaseController
         ]);
         $ctx['filtry']       = $filtry;
         $ctx['queryEksport'] = $this->queryEksport($filtry);
+        // CIDR z sesji jest celowo wyzerowany — przebuduj filtr AS, żeby wąski CIDR
+        // z innych widoków nie zawężał kolejki dnia.
+        $matcher           = new As198050Matcher();
+        $ctx['akceptujIp'] = $matcher->filtrAkceptujIp(null);
 
         return view('dashboard/kolejka', $this->daneWidoku(
             'kolejka',
