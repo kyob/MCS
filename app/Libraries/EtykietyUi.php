@@ -9,13 +9,20 @@ class EtykietyUi
 {
     /** @var array<string, string> */
     private const ZRODLA = [
-        'cert_n6'      => 'N6',
-        'shadowserver' => 'Shadowserver',
-        'play'         => 'Play',
-        'snds'         => 'SNDS',
-        'abuseipdb'    => 'AbuseIPDB',
-        'mojecert'     => 'MojeCERT',
-        'wanguard'     => 'Wanguard',
+        'cert_n6'            => 'N6',
+        'shadowserver'       => 'Shadowserver',
+        'play'               => 'Play',
+        'snds'               => 'SNDS',
+        'abuseipdb'          => 'AbuseIPDB',
+        'mojecert'           => 'MojeCERT',
+        'wanguard'           => 'Wanguard',
+        'cloudflare_botnet'  => 'Cloudflare Botnet',
+        'qrator'             => 'Qrator',
+        'lms_mapowanie'      => 'LMS',
+        'ismalicious'        => 'isMalicious',
+        'spamrats'           => 'SpamRats',
+        'spoofer'            => 'CAIDA Spoofer',
+        'speedtest'          => 'Speedtest',
     ];
 
     /** @var array<string, string> */
