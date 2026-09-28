@@ -18,6 +18,7 @@ class KartyZrodel
         'cert_n6'      => ['category', 'name', 'confidence', 'dport', 'product', 'fqdn'],
         'mojecert'     => ['report_type', 'severity', 'target'],
         'wanguard'     => ['anomaly', 'direction', 'severity', 'peak_bits_s', 'mitigated'],
+        'wazuh'        => ['kategoria_wazuh', 'liczba', 'poziom_max', 'hosty_docelowe', 'dzien'],
     ];
 
     private BaseConnection $db;

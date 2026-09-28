@@ -18,6 +18,7 @@ class SzczegolyZrodla
         'cert_n6'      => 'mcs_cert_n6_zdarzenia',
         'mojecert'     => 'mcs_mojecert_skany',
         'wanguard'     => 'mcs_wanguard_anomalie',
+        'wazuh'        => 'mcs_wazuh_wiersze',
     ];
 
     private BaseConnection $db;

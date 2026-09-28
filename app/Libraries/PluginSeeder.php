@@ -55,6 +55,11 @@ class PluginSeeder
             'nazwa'  => 'Speedtest',
             'opis'   => 'Historia testów Speedtest Servers reporting (portal Ookla lub CSV). Filtr CIDR AS198050, agregaty /24 na /dashboard/speedtest (Ookla anonimizuje do *.0), poza indeksem badge.',
         ],
+        [
+            'zrodlo' => 'wazuh',
+            'nazwa'  => 'Wazuh',
+            'opis'   => 'Własna telemetria serwerów (Wazuh SIEM): IP klientów AS198050, które spamują lub atakują nasze serwery (SMTP/SSH/WWW). Eksport przez SSH forced command.',
+        ],
     ];
 
     /** Źródła wymuszane jako wstrzymane + ukryte w UI przy każdym seedzie (np. płatne API). */
