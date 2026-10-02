@@ -1,0 +1,22 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "cidr": "198.51.100.10/32",
+      "date": "2024-05-05T00:00:00Z",
+      "offense_count": 12500
+    },
+    {
+      "cidr": "203.0.113.9/32",
+      "date": "2024-05-06T12:00:00Z",
+      "offense_count": 42
+    },
+    {
+      "cidr": "not-an-ip/32",
+      "date": "2024-05-05T00:00:00Z",
+      "offense_count": 1
+    }
+  ]
+}
