@@ -9,9 +9,14 @@
             oraz domyślne filtry przeglądu.
         </p>
     </div>
-    <span class="badge text-bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle px-3 py-2">
-        AS<?= (int) $asAsn ?>
-    </span>
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+        <a class="btn btn-sm btn-outline-primary" href="<?= site_url('admin/ustawienia/opcje') ?>">
+            <i class="bi bi-sliders me-1" aria-hidden="true"></i>Opcje strojenia
+        </a>
+        <span class="badge text-bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle px-3 py-2">
+            AS<?= (int) $asAsn ?>
+        </span>
+    </div>
 </div>
 
 <?php if (! empty($blad)): ?>

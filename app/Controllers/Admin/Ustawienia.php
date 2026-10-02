@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Libraries\DashboardFiltry;
+use App\Libraries\OpcjeMcs;
 use App\Libraries\Siec\As198050Matcher;
 use App\Libraries\Siec\CidrMatcher;
 use App\Libraries\Siec\RevDns;
@@ -32,7 +33,7 @@ class Ustawienia extends BaseController
             'blad'               => session()->getFlashdata('blad'),
             'asWlaczone'         => $matcher->jestWlaczone(),
             'asCidryTekst'       => $matcher->cidryJakoTekst(),
-            'asAsn'              => As198050Matcher::ASN,
+            'asAsn'              => As198050Matcher::asn(),
             'asDomyslneCidry'    => As198050Matcher::DOMYSLNE_CIDRY,
             'revDnsWlaczone'     => $revDns->jestWlaczone(),
             'dashboardOkno'      => $dash['okno'],
@@ -122,6 +123,45 @@ class Ustawienia extends BaseController
         return redirect()->to('/admin/ustawienia')->with(
             'komunikat',
             'Przywrócono domyślne prefiksy AS198050 (RIPE). Sprawdź listę i kliknij „Zapisz ustawienia”, jeśli zmieniasz też przełącznik.',
+        );
+    }
+
+    /**
+     * Opcje strojenia (progi, limity, TTL, timeouty, ASN). Sekrety tylko w .env.
+     */
+    public function opcje()
+    {
+        OpcjeMcs::ustawModel(model(UstawieniaModel::class));
+
+        return view('admin/ustawienia/opcje', [
+            'title'      => 'Opcje strojenia — MCS',
+            'navAktywny' => 'ustawienia',
+            'email'      => (string) session()->get('mcs_user_email'),
+            'rola'       => (string) session()->get('mcs_user_rola'),
+            'komunikat'  => session()->getFlashdata('komunikat'),
+            'blad'       => session()->getFlashdata('blad'),
+            'bledy'      => session()->getFlashdata('bledyOpcji') ?? [],
+            'grupy'      => OpcjeMcs::doWidoku(),
+        ]);
+    }
+
+    public function zapiszOpcje()
+    {
+        $post     = $this->request->getPost();
+        $post     = is_array($post) ? $post : [];
+        $wartosci = is_array($post['opcja'] ?? null) ? $post['opcja'] : [];
+        $przywroc = is_array($post['przywroc'] ?? null) ? array_values(array_map('strval', array_keys($post['przywroc']))) : [];
+
+        $wynik = OpcjeMcs::zapisz(model(UstawieniaModel::class), $wartosci, $przywroc);
+        if (! $wynik['ok']) {
+            return redirect()->to('/admin/ustawienia/opcje')
+                ->with('blad', 'Nie zapisano opcji — popraw błędy.')
+                ->with('bledyOpcji', $wynik['bledy']);
+        }
+
+        return redirect()->to('/admin/ustawienia/opcje')->with(
+            'komunikat',
+            'Zapisano opcje (zmienionych: ' . $wynik['zmienione'] . ').',
         );
     }
 

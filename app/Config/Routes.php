@@ -37,6 +37,8 @@ $routes->group('admin', ['filter' => 'mcsRola:admin,superadmin'], static functio
     $routes->get('ustawienia', 'Admin\Ustawienia::index');
     $routes->post('ustawienia', 'Admin\Ustawienia::zapisz');
     $routes->post('ustawienia/przywroc-domyslne', 'Admin\Ustawienia::przywrocDomyslne');
+    $routes->get('ustawienia/opcje', 'Admin\Ustawienia::opcje');
+    $routes->post('ustawienia/opcje', 'Admin\Ustawienia::zapiszOpcje');
 });
 
 $routes->group('admin/uzytkownicy', ['filter' => 'mcsRola:superadmin'], static function ($routes) {
