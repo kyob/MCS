@@ -11,7 +11,7 @@ composer install
 cp .env.example .env   # uzupełnić hasło DB i mcs.badgeToken (tylko lokalnie / na CT)
 php spark migrate
 php spark mcs:seed-pluginy
-php spark mcs:create-user admin@example.local 'hasło' admin
+php spark mcs:create-user admin@example.local 'hasło' superadmin
 php spark list
 php spark mcs:hello
 php spark mcs:pobierz all   # ingest; cron: docs/09-cron-pobierz.md

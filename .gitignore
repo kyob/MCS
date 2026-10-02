@@ -67,6 +67,9 @@ scaffold/lms-mcs-badge/config/lms-mcs-import.ini
 /writable/debugbar/*
 !/writable/debugbar/index.html
 
+/writable/speedtest-inbox/*
+!/writable/speedtest-inbox/index.html
+
 php_errors.log
 
 #-------------------------
@@ -128,3 +131,9 @@ _modules/*
 
 /results/
 /phpunit.xml
+
+# Lokalne artefakty (porządek 2026-10-02)
+/.env.bak*
+/writable/cert_n6_state.json
+/.cursor/
+/public/mcs-dashboard-demo.html

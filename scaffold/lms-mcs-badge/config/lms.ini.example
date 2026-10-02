@@ -5,7 +5,7 @@
 ; URL MUSI być osiągalny z hosta LMS (HTTP/HTTPS).
 
 [mcs]
-base_url = https://mcs.example/
+base_url = https://mcs.alfa-system.net/
 badge_token = ZMIEN_TEN_SAM_CO_mcs.badgeToken
 cache_ttl = 120
 timeout = 5

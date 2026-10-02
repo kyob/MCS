@@ -29,7 +29,7 @@ class App extends BaseConfig
      *
      * @var list<string>
      */
-    public array $allowedHostnames = [];
+    public array $allowedHostnames = ['192.0.2.110', 'mcs'];
 
     /**
      * --------------------------------------------------------------------------
@@ -180,7 +180,9 @@ class App extends BaseConfig
      *
      * @var array<string, string>
      */
-    public array $proxyIPs = [];
+    public array $proxyIPs = [
+        '192.0.2.247' => 'X-Forwarded-For',
+    ];
 
     /**
      * --------------------------------------------------------------------------
@@ -199,4 +201,15 @@ class App extends BaseConfig
      * @see http://www.w3.org/TR/CSP/
      */
     public bool $CSPEnabled = false;
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        // Caddy trzyma HTTPS na domenie; wejście po LAN-owym IP zostaje na HTTP.
+        $host = strtolower(explode(':', (string) ($_SERVER['HTTP_HOST'] ?? ''), 2)[0]);
+        if (in_array($host, ['192.0.2.110', 'mcs'], true)) {
+            $this->baseURL = 'http://' . $host . '/';
+        }
+    }
 }
