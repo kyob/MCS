@@ -18,10 +18,20 @@ final class OpcjeMcsTest extends CIUnitTestCase
     /** @var list<string> */
     private array $envUstawione = [];
 
+    /** @var array<string, array{0: mixed, 1: mixed, 2: false|string}> */
+    private array $envKopia = [];
+
     protected function setUp(): void
     {
         parent::setUp();
         OpcjeMcs::ustawModel(null);
+
+        // Izolacja od .env serwera: testy zakładają brak kluczy opcji w środowisku.
+        foreach (array_keys(OpcjeMcs::definicje()) as $k) {
+            $this->envKopia[$k] = [$_SERVER[$k] ?? null, $_ENV[$k] ?? null, getenv($k)];
+            unset($_SERVER[$k], $_ENV[$k]);
+            putenv($k);
+        }
     }
 
     protected function tearDown(): void
@@ -30,7 +40,18 @@ final class OpcjeMcsTest extends CIUnitTestCase
             unset($_SERVER[$k], $_ENV[$k]);
         }
         $this->envUstawione = [];
-        OpcjeMcs::resetuj();
+        foreach ($this->envKopia as $k => [$server, $env, $getenv]) {
+            if ($server !== null) {
+                $_SERVER[$k] = $server;
+            }
+            if ($env !== null) {
+                $_ENV[$k] = $env;
+            }
+            putenv($getenv === false ? $k : $k . '=' . $getenv);
+        }
+        $this->envKopia = [];
+        // Jak w bootstrapie testów: bez DB (zapisz() woła resetuj()).
+        OpcjeMcs::ustawModel(null);
         parent::tearDown();
     }
 
