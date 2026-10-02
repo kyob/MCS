@@ -190,6 +190,16 @@ class Plugin implements SourcePluginInterface
     {
         return ['ok' => true, 'msg' => '{$zrodlo}-ok'];
     }
+
+    public function opisPolaczenia(): array
+    {
+        return [
+            'skrot'         => 'brak konfiguracji',
+            'tryb_aktywny'  => 'brak',
+            'tryb_etykieta' => 'brak konfiguracji',
+            'pozycje'       => [],
+        ];
+    }
 }
 PHP);
     }

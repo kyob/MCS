@@ -254,6 +254,48 @@ final class IncydentModelTest extends CIUnitTestCase
         $this->assertSame(['shadowserver'], $zrodla);
     }
 
+    public function testFiltrKategoriaIPort(): void
+    {
+        $teraz  = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $wOknie = $teraz->modify('-1 days')->format('Y-m-d H:i:s');
+        $ip     = '198.51.100.10';
+
+        $this->wstawIncydent('shadowserver', 'm1', $ip, 'high', $wOknie, false, 'malware', '', 443);
+        $this->wstawIncydent('play', 'e1', $ip, 'medium', $wOknie, false, 'exposure', '', 22);
+        $this->wstawIncydent('shadowserver', 'm2', $ip, 'low', $wOknie, false, 'malware', '', 80);
+
+        $model = model(IncydentModel::class);
+
+        $kpiMalware = $model->kpiPrzegladu(7, null, null, null, 'malware', null);
+        $this->assertSame(2, $kpiMalware['liczba_incydentow']);
+
+        $kpiPort = $model->kpiPrzegladu(7, null, null, null, null, 443);
+        $this->assertSame(1, $kpiPort['liczba_incydentow']);
+
+        $top = $model->topProblematyczneIp(7, null, null, null, 1, 10, null, 'malware', null);
+        $this->assertCount(1, $top);
+        $this->assertSame(2, $top[0]['liczba_incydentow']);
+
+        $ostatnie = $model->ostatnieIncydenty(7, null, null, null, 10, null, null, 22);
+        $this->assertCount(1, $ostatnie);
+        $this->assertSame('exposure', $ostatnie[0]['kategoria']);
+
+        $this->assertSame(['exposure', 'malware'], $model->widoczneKategorie());
+    }
+
+    public function testUkryjWUi(): void
+    {
+        $teraz  = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $wOknie = $teraz->format('Y-m-d H:i:s');
+        $this->wstawIncydent('shadowserver', 'hide-me', '198.51.100.10', 'high', $wOknie);
+        $id = (int) $this->db->insertID();
+
+        $model = model(IncydentModel::class);
+        $this->assertTrue($model->ukryjWUi($id));
+        $this->assertCount(0, $model->dlaPodmiotuIp('198.51.100.10'));
+        $this->assertFalse($model->ukryjWUi(0));
+    }
+
     /**
      * @param bool $ukrytyWUi
      */
@@ -266,6 +308,7 @@ final class IncydentModelTest extends CIUnitTestCase
         bool $ukrytyWUi = false,
         string $kategoria = 'other',
         string $tytul = '',
+        ?int $port = null,
     ): void {
         $this->db->table('mcs_incydenty')->insert([
             'zrodlo'            => $zrodlo,
@@ -277,6 +320,7 @@ final class IncydentModelTest extends CIUnitTestCase
             'waga'              => $waga,
             'kategoria'         => $kategoria,
             'tytul'             => $tytul !== '' ? $tytul : "Test {$klucz}",
+            'port'              => $port,
             'ukryty_w_ui'       => $ukrytyWUi ? 1 : 0,
         ]);
     }

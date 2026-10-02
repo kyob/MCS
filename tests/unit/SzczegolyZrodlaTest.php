@@ -48,6 +48,9 @@ final class SzczegolyZrodlaTest extends CIUnitTestCase
         $svc = new SzczegolyZrodla($this->db);
         $this->assertSame('mcs_shadowserver_wiersze', $svc->tabelaDla('shadowserver'));
         $this->assertSame('mcs_cert_n6_zdarzenia', $svc->tabelaDla('cert_n6'));
+        $this->assertSame('mcs_cloudflare_botnet_wiersze', $svc->tabelaDla('cloudflare_botnet'));
+        $this->assertSame('mcs_spoofer_wiersze', $svc->tabelaDla('spoofer'));
+        $this->assertNull($svc->tabelaDla('qrator'));
         $this->assertNull($svc->tabelaDla('nieznane'));
     }
 
@@ -81,5 +84,45 @@ final class SzczegolyZrodlaTest extends CIUnitTestCase
         $this->assertNull($svc->znajdz('shadowserver', '999'));
         $this->assertNull($svc->znajdz('nieznane', '1'));
         $this->assertNull($svc->znajdz('shadowserver', ''));
+    }
+
+    public function testZnajdzCloudflareBotnet(): void
+    {
+        $tabela = $this->db->prefixTable('mcs_cloudflare_botnet_wiersze');
+        $this->db->query("DROP TABLE IF EXISTS {$tabela}");
+        $this->db->query(
+            "CREATE TABLE {$tabela} (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                import_id INTEGER NULL,
+                zaobserwowano_at TEXT NOT NULL,
+                cidr VARCHAR(64) NOT NULL,
+                ip VARCHAR(45) NULL,
+                report_date TEXT NULL,
+                offense_count INTEGER NULL,
+                klucz_dedupu VARCHAR(255) NOT NULL,
+                payload_json TEXT NULL
+            )",
+        );
+
+        $this->db->table('mcs_cloudflare_botnet_wiersze')->insert([
+            'zaobserwowano_at' => '2026-09-13 10:00:00+00',
+            'cidr'             => '198.51.100.0/24',
+            'ip'               => '198.51.100.10',
+            'report_date'      => '2026-09-13',
+            'offense_count'    => 42,
+            'klucz_dedupu'     => 'cf-1',
+            'payload_json'     => '{"offense_count":42}',
+        ]);
+        $id = (string) $this->db->insertID();
+
+        $svc    = new SzczegolyZrodla($this->db);
+        $wiersz = $svc->znajdz('cloudflare_botnet', $id);
+
+        $this->assertNotNull($wiersz);
+        $this->assertSame('198.51.100.0/24', $wiersz['cidr']);
+        $this->assertSame(42, (int) $wiersz['offense_count']);
+        $this->assertIsArray($wiersz['payload'] ?? null);
+
+        $this->db->query("DROP TABLE IF EXISTS {$tabela}");
     }
 }

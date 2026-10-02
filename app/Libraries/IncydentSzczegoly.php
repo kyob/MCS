@@ -4,6 +4,7 @@ namespace App\Libraries;
 
 use App\Models\IncydentModel;
 use App\Models\ObserwacjaModel;
+use App\Models\PluginModel;
 use CodeIgniter\Database\BaseConnection;
 use Config\Database;
 
@@ -41,9 +42,10 @@ class IncydentSzczegoly
             return null;
         }
 
+        // Postgres zwraca boolean jako 't'/'f' — empty('f') jest fałszywe, więc nie używamy empty().
         if (($incydent['podmiot_typ'] ?? '') !== 'ip'
             || (string) ($incydent['podmiot'] ?? '') !== $ip
-            || ! empty($incydent['ukryty_w_ui'])
+            || PluginModel::jakoBool($incydent['ukryty_w_ui'] ?? false)
         ) {
             return null;
         }
@@ -55,7 +57,7 @@ class IncydentSzczegoly
                 ->where('zrodlo', $zrodlo)
                 ->get()
                 ->getRowArray();
-            if (is_array($plugin) && ! empty($plugin['ukryty_w_ui'])) {
+            if (is_array($plugin) && PluginModel::jakoBool($plugin['ukryty_w_ui'] ?? false)) {
                 return null;
             }
         }

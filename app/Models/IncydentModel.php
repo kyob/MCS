@@ -326,7 +326,46 @@ class IncydentModel extends Model
     }
 
     /**
-     * KPI przeglądu: okno czasowe + opcjonalny filtr źródła / IP.
+     * Distinct kategorie widoczne w indeksie (do filtrów dashboardu).
+     *
+     * @return list<string>
+     */
+    public function widoczneKategorie(): array
+    {
+        $builder = $this->builderWidocznych()
+            ->select('i.kategoria')
+            ->distinct()
+            ->orderBy('i.kategoria', 'ASC');
+
+        $wiersze = $builder->get()->getResultArray();
+        $lista   = [];
+
+        foreach ($wiersze as $wiersz) {
+            $kat = isset($wiersz['kategoria']) ? trim((string) $wiersz['kategoria']) : '';
+            if ($kat !== '') {
+                $lista[] = $kat;
+            }
+        }
+
+        return $lista;
+    }
+
+    /**
+     * Oznacza pojedynczy incydent jako ukryty w UI (triage FP). Nie usuwa obserwacji.
+     */
+    public function ukryjWUi(int $id): bool
+    {
+        if ($id <= 0) {
+            return false;
+        }
+
+        return $this->update($id, ['ukryty_w_ui' => true]) !== false;
+    }
+
+    /**
+     * KPI przeglądu: okno czasowe + opcjonalny filtr źródła / IP / kategorii / portu.
+     *
+     * @param (callable(string): bool)|null $akceptujIp  Gdy podane — licz tylko IP spełniające warunek (np. AS).
      *
      * @return array{
      *   okno_dni: int,
@@ -337,14 +376,21 @@ class IncydentModel extends Model
      *   max_waga: ?string
      * }
      */
-    public function kpiPrzegladu(int $oknoDni = 7, ?string $zrodlo = null, ?string $ip = null): array
-    {
-        $wiersze = $this->wierszeWidoczneWOknie($oknoDni, $zrodlo, $ip, null);
+    public function kpiPrzegladu(
+        int $oknoDni = 7,
+        ?string $zrodlo = null,
+        ?string $ip = null,
+        ?callable $akceptujIp = null,
+        ?string $kategoria = null,
+        ?int $port = null,
+    ): array {
+        $wiersze = $this->wierszeWidoczneWOknie($oknoDni, $zrodlo, $ip, null, $kategoria, $port);
         $poIp    = [];
         $ranga   = self::rangaWag();
         $maxRanga = 0;
         $maxWaga  = null;
         $criticalHigh = 0;
+        $liczbaIncydentow = 0;
 
         foreach ($wiersze as $wiersz) {
             $podmiot = (string) ($wiersz['podmiot'] ?? '');
@@ -353,6 +399,10 @@ class IncydentModel extends Model
             if ($podmiot === '') {
                 continue;
             }
+            if ($akceptujIp !== null && ! $akceptujIp($podmiot)) {
+                continue;
+            }
+            $liczbaIncydentow++;
             if (! isset($poIp[$podmiot])) {
                 $poIp[$podmiot] = [];
             }
@@ -378,7 +428,7 @@ class IncydentModel extends Model
 
         return [
             'okno_dni'           => max(1, $oknoDni),
-            'liczba_incydentow'  => count($wiersze),
+            'liczba_incydentow'  => $liczbaIncydentow,
             'liczba_ip'          => count($poIp),
             'ip_wielozrodlowe'   => $wielozrodlowe,
             'critical_high'      => $criticalHigh,
@@ -401,6 +451,9 @@ class IncydentModel extends Model
      *   ostatnio_widziane: ?string
      * }>
      */
+    /**
+     * @param (callable(string): bool)|null $akceptujIp
+     */
     public function topProblematyczneIp(
         int $oknoDni = 7,
         ?string $zrodlo = null,
@@ -408,16 +461,22 @@ class IncydentModel extends Model
         ?string $minWaga = null,
         int $minZrodel = 1,
         int $limit = 50,
+        ?callable $akceptujIp = null,
+        ?string $kategoria = null,
+        ?int $port = null,
     ): array {
-        $wiersze   = $this->wierszeWidoczneWOknie($oknoDni, $zrodlo, $ip, $minWaga);
+        $wiersze   = $this->wierszeWidoczneWOknie($oknoDni, $zrodlo, $ip, $minWaga, $kategoria, $port);
         $ranga     = self::rangaWag();
         $minZrodel = max(1, $minZrodel);
-        $limit     = max(1, min(200, $limit));
+        $limit     = max(1, min(1000, $limit));
         $poIp      = [];
 
         foreach ($wiersze as $wiersz) {
             $podmiot = (string) ($wiersz['podmiot'] ?? '');
             if ($podmiot === '') {
+                continue;
+            }
+            if ($akceptujIp !== null && ! $akceptujIp($podmiot)) {
                 continue;
             }
             if (! isset($poIp[$podmiot])) {
@@ -497,14 +556,22 @@ class IncydentModel extends Model
      *
      * @return list<array<string, mixed>>
      */
+    /**
+     * @param (callable(string): bool)|null $akceptujIp
+     *
+     * @return list<array<string, mixed>>
+     */
     public function ostatnieIncydenty(
         int $oknoDni = 7,
         ?string $zrodlo = null,
         ?string $ip = null,
         ?string $minWaga = null,
         int $limit = 40,
+        ?callable $akceptujIp = null,
+        ?string $kategoria = null,
+        ?int $port = null,
     ): array {
-        $limit   = max(1, min(200, $limit));
+        $limit   = max(1, min(1000, $limit));
         $builder = $this->builderWidocznych()
             ->select('i.*')
             ->where('i.ostatnio_widziane >=', $this->odDatyOkna($oknoDni));
@@ -514,6 +581,12 @@ class IncydentModel extends Model
         }
         if ($ip !== null && $ip !== '') {
             $builder->where('i.podmiot', $ip);
+        }
+        if ($kategoria !== null && $kategoria !== '') {
+            $builder->where('i.kategoria', $kategoria);
+        }
+        if ($port !== null && $port > 0) {
+            $builder->where('i.port', $port);
         }
         $this->dolaczFiltrMinWagi($builder, $minWaga);
 
@@ -529,11 +602,24 @@ class IncydentModel extends Model
             'DESC',
             false,
         );
-        $builder->limit($limit);
+
+        // Przy filtrze AS pobierz większą próbkę, potem obetnij do limitu.
+        $builder->limit($akceptujIp !== null ? min(2000, $limit * 25) : $limit);
 
         $wiersze = $builder->get()->getResultArray();
+        if (! is_array($wiersze)) {
+            return [];
+        }
 
-        return is_array($wiersze) ? $wiersze : [];
+        if ($akceptujIp !== null) {
+            $wiersze = array_values(array_filter(
+                $wiersze,
+                static fn (array $w): bool => $akceptujIp((string) ($w['podmiot'] ?? '')),
+            ));
+            $wiersze = array_slice($wiersze, 0, $limit);
+        }
+
+        return $wiersze;
     }
 
     /**
@@ -572,6 +658,8 @@ class IncydentModel extends Model
         ?string $zrodlo,
         ?string $ip,
         ?string $minWaga,
+        ?string $kategoria = null,
+        ?int $port = null,
     ): array {
         $builder = $this->builderWidocznych()
             ->select('i.podmiot, i.zrodlo, i.waga, i.kategoria, i.ostatnio_widziane')
@@ -582,6 +670,12 @@ class IncydentModel extends Model
         }
         if ($ip !== null && $ip !== '') {
             $builder->where('i.podmiot', $ip);
+        }
+        if ($kategoria !== null && $kategoria !== '') {
+            $builder->where('i.kategoria', $kategoria);
+        }
+        if ($port !== null && $port > 0) {
+            $builder->where('i.port', $port);
         }
         $this->dolaczFiltrMinWagi($builder, $minWaga);
 

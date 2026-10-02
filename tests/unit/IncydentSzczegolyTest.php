@@ -174,4 +174,57 @@ final class IncydentSzczegolyTest extends CIUnitTestCase
         $this->assertNull($svc->dlaIpIId('203.0.113.1', $id));
         $this->assertNull($svc->dlaIpIId('198.51.100.10', 99999));
     }
+
+    /**
+     * Regresja: driver Postgres oddaje false jako string 'f'; empty('f') === false,
+     * więc !empty('f') mylnie ukrywało wszystkie widoczne incydenty.
+     */
+    public function testAkceptujeWidocznyGdyUkrytyWUiJestLiteraF(): void
+    {
+        $this->db->table('mcs_incydenty')->insert([
+            'zrodlo'            => 'shadowserver',
+            'klucz_dedupu'      => 'k-pg-f',
+            'podmiot_typ'       => 'ip',
+            'podmiot'           => '198.51.100.10',
+            'pierwsze_widziane' => '2026-09-10 08:00:00+00',
+            'ostatnio_widziane' => '2026-09-11 10:00:00+00',
+            'waga'              => 'medium',
+            'kategoria'         => 'exposure',
+            'tytul'             => 'Postgres f',
+            'ukryty_w_ui'       => 0,
+        ]);
+        $id = (int) $this->db->insertID();
+
+        // Wymuszenie stringa jak z pgsql (SQLite przechowa tekst).
+        $this->db->table('mcs_incydenty')->where('id', $id)->update(['ukryty_w_ui' => 'f']);
+        $this->db->table('mcs_pluginy')->where('zrodlo', 'shadowserver')->update(['ukryty_w_ui' => 'f']);
+
+        $svc = new IncydentSzczegoly($this->db);
+        $wynik = $svc->dlaIpIId('198.51.100.10', $id);
+
+        $this->assertNotNull($wynik);
+        $this->assertSame('Postgres f', $wynik['incydent']['tytul']);
+    }
+
+    public function testOdrzucaGdyPluginUkrytyLiteraT(): void
+    {
+        $this->db->table('mcs_incydenty')->insert([
+            'zrodlo'            => 'shadowserver',
+            'klucz_dedupu'      => 'k-pg-t',
+            'podmiot_typ'       => 'ip',
+            'podmiot'           => '198.51.100.10',
+            'pierwsze_widziane' => '2026-09-10 08:00:00+00',
+            'ostatnio_widziane' => '2026-09-11 10:00:00+00',
+            'waga'              => 'low',
+            'kategoria'         => 'other',
+            'tytul'             => 'Plugin ukryty',
+            'ukryty_w_ui'       => 0,
+        ]);
+        $id = (int) $this->db->insertID();
+
+        $this->db->table('mcs_pluginy')->where('zrodlo', 'shadowserver')->update(['ukryty_w_ui' => 't']);
+
+        $svc = new IncydentSzczegoly($this->db);
+        $this->assertNull($svc->dlaIpIId('198.51.100.10', $id));
+    }
 }

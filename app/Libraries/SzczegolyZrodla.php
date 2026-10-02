@@ -12,13 +12,16 @@ class SzczegolyZrodla
 {
     /** @var array<string, string> */
     public const TABELE = [
-        'shadowserver' => 'mcs_shadowserver_wiersze',
-        'play'         => 'mcs_play_wiersze',
-        'snds'         => 'mcs_snds_wiersze',
-        'cert_n6'      => 'mcs_cert_n6_zdarzenia',
-        'mojecert'     => 'mcs_mojecert_skany',
-        'wanguard'     => 'mcs_wanguard_anomalie',
-        'wazuh'        => 'mcs_wazuh_wiersze',
+        'shadowserver'       => 'mcs_shadowserver_wiersze',
+        'play'               => 'mcs_play_wiersze',
+        'snds'               => 'mcs_snds_wiersze',
+        'cert_n6'            => 'mcs_cert_n6_zdarzenia',
+        'mojecert'           => 'mcs_mojecert_skany',
+        'wanguard'           => 'mcs_wanguard_anomalie',
+        'cloudflare_botnet'  => 'mcs_cloudflare_botnet_wiersze',
+        'spoofer'            => 'mcs_spoofer_wiersze',
+        'wazuh'              => 'mcs_wazuh_wiersze',
+        // qrator: brak mapowania — API płatne / źródło wstrzymane (nie inwestujemy w live drill-down).
     ];
 
     private BaseConnection $db;

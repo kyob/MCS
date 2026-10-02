@@ -18,6 +18,8 @@ final class IncydentViewTest extends CIUnitTestCase
             'email'      => 'op@example.com',
             'rola'       => 'operator',
             'blad'       => null,
+            'flashOk'    => null,
+            'flashBlad'  => null,
             'szczegoly'  => [
                 'incydent' => [
                     'id'                => 7,
@@ -61,5 +63,8 @@ final class IncydentViewTest extends CIUnitTestCase
         $this->assertStringContainsString('mcs_shadowserver_wiersze', $html);
         $this->assertStringContainsString('open', $html);
         $this->assertStringContainsString('ip/198.51.100.10', $html);
+        $this->assertStringContainsString('Ukryj w UI', $html);
+        $this->assertStringContainsString('incydent/7/ukryj', $html);
+        $this->assertStringContainsString('csrf_test_name', $html);
     }
 }
