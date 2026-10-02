@@ -27,6 +27,25 @@ class UstawieniaModel extends Model
         return (string) ($wiersz['wartosc'] ?? $domyslnie);
     }
 
+    /**
+     * @param list<string> $klucze
+     *
+     * @return array<string, string> klucz → wartość (tylko istniejące wiersze)
+     */
+    public function pobierzWiele(array $klucze): array
+    {
+        if ($klucze === []) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($this->whereIn('klucz', $klucze)->findAll() as $wiersz) {
+            $out[(string) $wiersz['klucz']] = (string) ($wiersz['wartosc'] ?? '');
+        }
+
+        return $out;
+    }
+
     public function ustaw(string $klucz, string $wartosc): bool
     {
         $klucz = trim($klucz);
