@@ -172,7 +172,7 @@ $badgeWaga = static function (string $waga): string {
                    class="btn <?= $filtrZrodlo === null ? 'btn-primary' : 'btn-outline-secondary' ?>">wszystkie</a>
                 <?php foreach ($zrodla as $z): ?>
                     <a href="<?= site_url('ip/' . $ip) . '?zrodlo=' . rawurlencode($z) ?>"
-                       class="btn <?= $filtrZrodlo === $z ? 'btn-primary' : 'btn-outline-secondary' ?>"><?= esc($z) ?></a>
+                       class="btn <?= $filtrZrodlo === $z ? 'btn-primary' : 'btn-outline-secondary' ?>"><?= esc((new \App\Libraries\EtykietyUi())->zrodlo((string) $z)) ?></a>
                 <?php endforeach; ?>
             </div>
         </div>
@@ -457,6 +457,10 @@ $badgeWaga = static function (string $waga): string {
             <a class="btn btn-outline-secondary" href="https://www.spamrats.com/bl?<?= rawurlencode((string) $ip) ?>"
                target="_blank" rel="noopener noreferrer">
                 SpamRats BL
+            </a>
+            <a class="btn btn-outline-secondary" href="https://check.spamhaus.org/results?query=<?= rawurlencode((string) $ip) ?>"
+               target="_blank" rel="noopener noreferrer">
+                Spamhaus Check
             </a>
             <span class="small text-body-secondary" id="spamrats-status">
                 tryb: <?= esc((string) ($spamratsTryb ?? '—')) ?>
