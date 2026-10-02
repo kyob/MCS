@@ -176,11 +176,11 @@ class Plugin implements SourcePluginInterface
             throw new RuntimeException('MojeCert: mcs.mojecert.apiToken is not set');
         }
 
-        $syncDaysBack = (int) env('mcs.mojecert.syncDaysBack', 14);
+        $syncDaysBack = \App\Libraries\OpcjeMcs::int('mcs.mojecert.syncDaysBack');
         if ($syncDaysBack < 0) {
             $syncDaysBack = 0;
         }
-        $maxPages = (int) env('mcs.mojecert.syncMaxPagesPerSubnet', 100);
+        $maxPages = \App\Libraries\OpcjeMcs::int('mcs.mojecert.syncMaxPagesPerSubnet');
         if ($maxPages < 1) {
             $maxPages = 100;
         }

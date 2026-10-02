@@ -19,6 +19,7 @@ class ApiClient
         private readonly int $oknoGodzin = 48,
         private readonly int $timeout = 60,
         ?callable $runner = null,
+        private readonly int $connectTimeout = 10,
     ) {
         $this->runner = $runner;
     }
@@ -30,9 +31,10 @@ class ApiClient
             trim((string) env('mcs.wazuh.sshUser', 'mcs-export')),
             trim((string) env('mcs.wazuh.sshKey', '/etc/mcs/ssh/wazuh_ed25519')),
             trim((string) env('mcs.wazuh.knownHosts', '/etc/mcs/ssh/known_hosts')),
-            max(1, min(168, (int) env('mcs.wazuh.oknoGodzin', 48))),
-            max(5, (int) env('mcs.wazuh.timeout', 60)),
+            max(1, min(168, \App\Libraries\OpcjeMcs::int('mcs.wazuh.oknoGodzin'))),
+            max(5, \App\Libraries\OpcjeMcs::int('mcs.wazuh.timeout')),
             $runner,
+            max(1, \App\Libraries\OpcjeMcs::int('mcs.wazuh.connectTimeout')),
         );
     }
 
@@ -68,7 +70,7 @@ class ApiClient
             '-o', 'IdentitiesOnly=yes',
             '-o', 'StrictHostKeyChecking=yes',
             '-o', 'UserKnownHostsFile=' . $this->knownHosts,
-            '-o', 'ConnectTimeout=10',
+            '-o', 'ConnectTimeout=' . $this->connectTimeout,
             '-i', $this->keyPath,
             $this->user . '@' . $this->host,
             (string) $this->oknoGodzin,

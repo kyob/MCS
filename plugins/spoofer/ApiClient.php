@@ -91,7 +91,7 @@ class ApiClient
         $pages    = 0;
         $lastCode = 0;
 
-        while ($url !== null && $pages < self::MAX_PAGES) {
+        while ($url !== null && $pages < max(1, \App\Libraries\OpcjeMcs::int('mcs.spoofer.maxPages'))) {
             $res = $this->get($url);
             $lastCode = $res['http_code'];
             $bodies[] = $res['body'];
@@ -196,8 +196,8 @@ class ApiClient
             CURLOPT_SSL_VERIFYHOST => $this->tlsVerifyPeer ? 2 : 0,
             CURLOPT_USERAGENT      => 'MCS-Spoofer/1.0',
             CURLOPT_URL            => $url,
-            CURLOPT_TIMEOUT        => 60,
-            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_TIMEOUT        => max(1, \App\Libraries\OpcjeMcs::int('mcs.spoofer.httpTimeout')),
+            CURLOPT_CONNECTTIMEOUT => max(1, \App\Libraries\OpcjeMcs::int('mcs.spoofer.httpConnectTimeout')),
             CURLOPT_HTTPHEADER     => [
                 'Accept: application/ld+json, application/json',
             ],

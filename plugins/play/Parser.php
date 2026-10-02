@@ -16,6 +16,24 @@ final class Parser
     public const FROM_PLAY = 'antyddos@play.pl';
 
     /**
+     * Adres nadawcy alertów (opcja mcs.play.fromAddress; domyślnie FROM_PLAY).
+     */
+    public static function nadawca(): string
+    {
+        $v = strtolower(trim(\App\Libraries\OpcjeMcs::tekst('mcs.play.fromAddress')));
+
+        return str_contains($v, '@') ? $v : self::FROM_PLAY;
+    }
+
+    /**
+     * Domena nadawcy z „@” (np. „@play.pl”).
+     */
+    public static function domenaNadawcy(): string
+    {
+        return (string) strstr(self::nadawca(), '@');
+    }
+
+    /**
      * @return list<array{
      *   message_type: string,
      *   event_id: ?string,

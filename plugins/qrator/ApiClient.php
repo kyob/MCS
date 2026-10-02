@@ -319,8 +319,8 @@ class ApiClient
             CURLOPT_SSL_VERIFYHOST => $this->tlsVerifyPeer ? 2 : 0,
             CURLOPT_USERAGENT      => 'MCS-QratorRadar/1.0',
             CURLOPT_URL            => $url,
-            CURLOPT_TIMEOUT        => 60,
-            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_TIMEOUT        => max(1, \App\Libraries\OpcjeMcs::int('mcs.qrator.httpTimeout')),
+            CURLOPT_CONNECTTIMEOUT => max(1, \App\Libraries\OpcjeMcs::int('mcs.qrator.httpConnectTimeout')),
             CURLOPT_HTTPHEADER     => [
                 'QRADAR-API-KEY: ' . $this->apiKey,
                 'Accept: application/json',

@@ -41,8 +41,8 @@ class ApiClient
 
     public static function fromEnv(?callable $httpRequest = null): self
     {
-        $limit = (int) env('mcs.wanguard.apiListLimit', 500);
-        $conc  = (int) env('mcs.wanguard.concurrency', 15);
+        $limit = \App\Libraries\OpcjeMcs::int('mcs.wanguard.apiListLimit');
+        $conc  = \App\Libraries\OpcjeMcs::int('mcs.wanguard.concurrency');
 
         return new self(
             trim((string) env('mcs.wanguard.apiUrl', '')),
@@ -249,8 +249,8 @@ class ApiClient
             CURLOPT_SSL_VERIFYHOST => $this->tlsVerifyPeer ? 2 : 0,
             CURLOPT_USERAGENT      => 'MCS-Wanguard/1.0',
             CURLOPT_URL            => $url,
-            CURLOPT_TIMEOUT        => 60,
-            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_TIMEOUT        => max(1, \App\Libraries\OpcjeMcs::int('mcs.wanguard.httpTimeout')),
+            CURLOPT_CONNECTTIMEOUT => max(1, \App\Libraries\OpcjeMcs::int('mcs.wanguard.httpConnectTimeout')),
             CURLOPT_USERPWD        => $this->apiUser . ':' . $this->apiPassword,
             CURLOPT_HTTPAUTH       => CURLAUTH_BASIC,
             CURLOPT_HTTPHEADER     => ['Accept: application/json'],
@@ -310,8 +310,8 @@ class ApiClient
                     CURLOPT_SSL_VERIFYHOST => $this->tlsVerifyPeer ? 2 : 0,
                     CURLOPT_USERAGENT      => 'MCS-Wanguard/1.0',
                     CURLOPT_URL            => $this->apiUrl . 'anomalies/' . $anomalyId,
-                    CURLOPT_TIMEOUT        => 60,
-                    CURLOPT_CONNECTTIMEOUT => 10,
+                    CURLOPT_TIMEOUT        => max(1, \App\Libraries\OpcjeMcs::int('mcs.wanguard.httpTimeout')),
+                    CURLOPT_CONNECTTIMEOUT => max(1, \App\Libraries\OpcjeMcs::int('mcs.wanguard.httpConnectTimeout')),
                     CURLOPT_USERPWD        => $this->apiUser . ':' . $this->apiPassword,
                     CURLOPT_HTTPAUTH       => CURLAUTH_BASIC,
                     CURLOPT_HTTPHEADER     => ['Accept: application/json'],

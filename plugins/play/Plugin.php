@@ -101,10 +101,11 @@ class Plugin implements SourcePluginInterface
             // Historyczne maile mogły zniknąć po FreeScout; to nie jest awaria credentials.
             if ($stats['ddos'] === 0) {
                 $msg = $stats['wiadomosci'] === 0
-                    ? 'Play IMAP OK — skrzynka pusta; tor gotowy, czekam na powiadomienia DDoS (antyddos@play.pl).'
+                    ? 'Play IMAP OK — skrzynka pusta; tor gotowy, czekam na powiadomienia DDoS (' . Parser::nadawca() . ').'
                     : sprintf(
-                        'Play IMAP OK — %d wiadomości, 0× DDoS od antyddos@play.pl; tor gotowy, czekam na kolejne alerty.',
+                        'Play IMAP OK — %d wiadomości, 0× DDoS od %s; tor gotowy, czekam na kolejne alerty.',
                         $stats['wiadomosci'],
+                        Parser::nadawca(),
                     );
                 $this->aktualizujHealth(true, $msg);
 
@@ -153,7 +154,7 @@ class Plugin implements SourcePluginInterface
         $fallback = false;
         $uidy     = $klient->listujUid(true);
         if ($uidy === []) {
-            $limit     = max(1, (int) env('mcs.play.imapRecentLimit', 100));
+            $limit     = max(1, \App\Libraries\OpcjeMcs::int('mcs.play.imapRecentLimit'));
             $wszystkie = $klient->listujUid(false);
             rsort($wszystkie, SORT_NUMERIC);
             $uidy     = array_slice($wszystkie, 0, $limit);
@@ -171,8 +172,8 @@ class Plugin implements SourcePluginInterface
             $tresc     = (string) ($wiadomosc['tresc'] ?? '');
 
             $wygladaNaDdos = $this->parser->toPowiadomienieDdos($subject, $tresc)
-                || $from === Parser::FROM_PLAY
-                || str_contains($from, '@play.pl');
+                || $from === Parser::nadawca()
+                || str_contains($from, Parser::domenaNadawcy());
 
             if (! $wygladaNaDdos) {
                 continue;

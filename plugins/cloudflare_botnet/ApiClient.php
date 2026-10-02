@@ -330,8 +330,8 @@ class ApiClient
             CURLOPT_SSL_VERIFYHOST => $this->tlsVerifyPeer ? 2 : 0,
             CURLOPT_USERAGENT      => 'MCS-CloudflareBotnet/1.0',
             CURLOPT_URL            => $url,
-            CURLOPT_TIMEOUT        => 60,
-            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_TIMEOUT        => max(1, \App\Libraries\OpcjeMcs::int('mcs.cloudflare_botnet.httpTimeout')),
+            CURLOPT_CONNECTTIMEOUT => max(1, \App\Libraries\OpcjeMcs::int('mcs.cloudflare_botnet.httpConnectTimeout')),
             CURLOPT_HTTPHEADER     => [
                 'Authorization: Bearer ' . $this->apiToken,
                 'Accept: application/json',

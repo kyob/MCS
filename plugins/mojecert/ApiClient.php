@@ -162,8 +162,8 @@ class ApiClient
         try {
             $client   = Services::curlrequest(['http_errors' => false]);
             $options  = [
-                'timeout'         => 60,
-                'connect_timeout' => 15,
+                'timeout'         => max(1, \App\Libraries\OpcjeMcs::int('mcs.mojecert.httpTimeout')),
+                'connect_timeout' => max(1, \App\Libraries\OpcjeMcs::int('mcs.mojecert.httpConnectTimeout')),
                 'headers'         => $headers,
                 'verify'          => ! $this->tlsSkipVerify,
             ];

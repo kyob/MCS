@@ -163,8 +163,8 @@ class ApiClient
             CURLOPT_SSL_VERIFYHOST => $this->tlsVerifyPeer ? 2 : 0,
             CURLOPT_USERAGENT      => 'MCS-CertN6/1.0 (n6 REST API)',
             CURLOPT_URL            => $url,
-            CURLOPT_TIMEOUT        => 120,
-            CURLOPT_CONNECTTIMEOUT => 30,
+            CURLOPT_TIMEOUT        => max(1, \App\Libraries\OpcjeMcs::int('mcs.cert_n6.httpTimeout')),
+            CURLOPT_CONNECTTIMEOUT => max(1, \App\Libraries\OpcjeMcs::int('mcs.cert_n6.httpConnectTimeout')),
         ];
 
         if ($useCert) {

@@ -81,7 +81,7 @@ class Plugin implements SourcePluginInterface
             throw new RuntimeException($msg);
         }
 
-        $lookback = max(1, (int) env('mcs.snds.lookbackDays', 3));
+        $lookback = max(1, \App\Libraries\OpcjeMcs::int('mcs.snds.lookbackDays'));
         $daty     = $this->datyLookback($lookback);
         $okDni    = 0;
         $suma     = 0;
@@ -155,7 +155,7 @@ class Plugin implements SourcePluginInterface
         }
         $urlWidok = str_replace('%s', '…', $template);
         $kluczOk  = $this->kluczApi() !== '';
-        $lookback = (string) max(1, (int) env('mcs.snds.lookbackDays', 3));
+        $lookback = (string) max(1, \App\Libraries\OpcjeMcs::int('mcs.snds.lookbackDays'));
 
         return PluginOpisPolaczenia::plikIKanal(
             $plik,
@@ -409,8 +409,8 @@ class Plugin implements SourcePluginInterface
         $client   = Services::curlrequest();
         $response = $client->get($url, [
             'http_errors'     => false,
-            'timeout'         => 60,
-            'connect_timeout' => 15,
+            'timeout'         => max(1, \App\Libraries\OpcjeMcs::int('mcs.snds.httpTimeout')),
+            'connect_timeout' => max(1, \App\Libraries\OpcjeMcs::int('mcs.snds.httpConnectTimeout')),
             'headers'         => [
                 'Accept'     => 'text/csv,text/plain,*/*',
                 'User-Agent' => 'MCS-SNDS/1.0',
@@ -488,7 +488,7 @@ class Plugin implements SourcePluginInterface
             return 'konfiguracja: tryb fixturePath (jeszcze bez przebiegu)';
         }
         if ($this->kluczApi() !== '') {
-            $lookback = max(1, (int) env('mcs.snds.lookbackDays', 3));
+            $lookback = max(1, \App\Libraries\OpcjeMcs::int('mcs.snds.lookbackDays'));
 
             return "konfiguracja: DataKey key gotowy (lookbackDays={$lookback}, jeszcze bez przebiegu)";
         }

@@ -312,8 +312,8 @@ class PortalClient
             CURLOPT_USERAGENT      => 'MCS-Speedtest/1.0',
             CURLOPT_URL            => $url,
             CURLOPT_CUSTOMREQUEST  => $method,
-            CURLOPT_TIMEOUT        => 120,
-            CURLOPT_CONNECTTIMEOUT => 15,
+            CURLOPT_TIMEOUT        => max(1, \App\Libraries\OpcjeMcs::int('mcs.speedtest.httpTimeout')),
+            CURLOPT_CONNECTTIMEOUT => max(1, \App\Libraries\OpcjeMcs::int('mcs.speedtest.httpConnectTimeout')),
             CURLOPT_HTTPHEADER     => $headers,
             CURLOPT_HEADERFUNCTION => static function ($ch, string $line) use (&$headerLines): int {
                 $len = strlen($line);

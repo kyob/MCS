@@ -157,8 +157,8 @@ class Plugin implements SourcePluginInterface
         }
 
         $db   = Database::connect();
-        $min  = max(1, (int) env('mcs.wazuh.minZdarzen', 5));
-        $high = max($min, (int) env('mcs.wazuh.progHigh', 20));
+        $min  = max(1, \App\Libraries\OpcjeMcs::int('mcs.wazuh.minZdarzen'));
+        $high = max($min, \App\Libraries\OpcjeMcs::int('mcs.wazuh.progHigh'));
 
         try {
             foreach ($nasze as $m) {

@@ -374,7 +374,7 @@ class Plugin implements SourcePluginInterface
             return $explicit;
         }
 
-        $days = (int) env('mcs.cert_n6.lookbackDays', 90);
+        $days = \App\Libraries\OpcjeMcs::int('mcs.cert_n6.lookbackDays');
         if ($days < 1) {
             $days = 90;
         }

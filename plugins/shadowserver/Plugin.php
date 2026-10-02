@@ -139,7 +139,7 @@ class Plugin implements SourcePluginInterface
         $host = trim((string) env('mcs.shadowserver.imapHost', ''));
         $user = trim((string) env('mcs.shadowserver.imapUser', ''));
         if ($host !== '' && $user !== '') {
-            $limit = max(1, (int) env('mcs.shadowserver.imapRecentLimit', 40));
+            $limit = max(1, \App\Libraries\OpcjeMcs::int('mcs.shadowserver.imapRecentLimit'));
 
             return "konfiguracja: IMAP gotowy (imapRecentLimit={$limit}, jeszcze bez przebiegu)";
         }
@@ -175,7 +175,7 @@ class Plugin implements SourcePluginInterface
         if ($uidy === []) {
             // Skrzynka produkcyjna Shadowserver bywa cala SEEN; bierzemy ostatnie UID
             // i polegamy na checksum/id_wiadomosci w kopercie (bez podwojnego importu).
-            $limit = max(1, (int) env('mcs.shadowserver.imapRecentLimit', 40));
+            $limit = max(1, \App\Libraries\OpcjeMcs::int('mcs.shadowserver.imapRecentLimit'));
             $wszystkie = $klient->listujUid(false);
             rsort($wszystkie, SORT_NUMERIC);
             $uidy     = array_slice($wszystkie, 0, $limit);
