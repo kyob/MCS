@@ -25,7 +25,7 @@ $filtrCidr      = (string) ($filtrCidr ?? '');
                     <option value="">wszystkie</option>
                     <?php foreach ($zrodla as $z): ?>
                         <option value="<?= esc($z, 'attr') ?>" <?= $filtrZrodlo === $z ? 'selected' : '' ?>>
-                            <?= esc($z) ?>
+                            <?= esc((new \App\Libraries\EtykietyUi())->zrodlo((string) $z)) ?>
                         </option>
                     <?php endforeach; ?>
                 </select>

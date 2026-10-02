@@ -64,8 +64,9 @@ final class Parser
                 $messageType,
                 $eventId,
                 $mitId,
-                $cel['podmiot_typ'],
-                $cel['podmiot'],
+                // Klucz z CIDR (także /32) — zgodny z importami sprzed zmiany typu podmiotu.
+                $cel['cidr'] !== null ? 'cidr' : $cel['podmiot_typ'],
+                $cel['cidr'] ?? $cel['podmiot'],
             ], static fn ($v) => $v !== null && $v !== ''));
 
             $wynik[] = [
@@ -228,10 +229,14 @@ final class Parser
                     continue;
                 }
                 $seen[$k] = true;
-                $cele[]   = [
-                    'podmiot_typ' => 'cidr',
-                    'podmiot'     => $cidr,
-                    'ip'          => null,
+                // Host (/32, /128) = pojedynczy IP — dashboard i watchlista filtrują po podmiot_typ='ip'.
+                [$adres, $maska] = explode('/', $cidr, 2);
+                $host            = ($maska === '32' && filter_var($adres, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false)
+                    || ($maska === '128' && filter_var($adres, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false);
+                $cele[] = [
+                    'podmiot_typ' => $host ? 'ip' : 'cidr',
+                    'podmiot'     => $host ? strtolower($adres) : $cidr,
+                    'ip'          => $host ? strtolower($adres) : null,
                     'cidr'        => $cidr,
                 ];
             }

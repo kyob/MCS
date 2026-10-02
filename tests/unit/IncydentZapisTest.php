@@ -133,4 +133,33 @@ final class IncydentZapisTest extends CIUnitTestCase
         $ile = model(ObserwacjaModel::class)->where('incydent_id', $a['incydent_id'])->countAllResults();
         $this->assertSame(2, $ile);
     }
+
+    public function testPowtorzenieAktualizujePodmiotTypZCidrNaIp(): void
+    {
+        $zapis = new IncydentZapis($this->db);
+        $a     = $zapis->zapisz([
+            'zrodlo'           => 'spoofer',
+            'klucz_dedupu'     => 'session|1|v4',
+            'podmiot_typ'      => 'cidr',
+            'podmiot'          => '91.231.70.0/24',
+            'zaobserwowano_at' => '2026-09-14 18:19:47+00',
+            'waga'             => 'low',
+            'kategoria'        => 'other',
+            'tytul'            => 'Spoofer',
+        ]);
+        $zapis->zapisz([
+            'zrodlo'           => 'spoofer',
+            'klucz_dedupu'     => 'session|1|v4',
+            'podmiot_typ'      => 'ip',
+            'podmiot'          => '91.231.70.0',
+            'zaobserwowano_at' => '2026-09-14 18:19:47+00',
+            'waga'             => 'low',
+            'kategoria'        => 'other',
+            'tytul'            => 'Spoofer IPv4: routed blocked (91.231.70.0/24)',
+        ]);
+
+        $inc = model(IncydentModel::class)->find($a['incydent_id']);
+        $this->assertSame('ip', $inc['podmiot_typ']);
+        $this->assertSame('91.231.70.0', $inc['podmiot']);
+    }
 }

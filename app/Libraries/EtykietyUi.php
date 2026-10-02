@@ -11,7 +11,7 @@ class EtykietyUi
     private const ZRODLA = [
         'cert_n6'            => 'N6',
         'shadowserver'       => 'Shadowserver',
-        'play'               => 'Play',
+        'play'               => 'Play Scrubbing',
         'snds'               => 'SNDS',
         'abuseipdb'          => 'AbuseIPDB',
         'mojecert'           => 'MojeCERT',

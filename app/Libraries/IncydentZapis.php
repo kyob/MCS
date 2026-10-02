@@ -76,6 +76,12 @@ class IncydentZapis
                 if (array_key_exists('protokol', $dane)) {
                     $update['protokol'] = $dane['protokol'];
                 }
+                if (array_key_exists('podmiot_typ', $dane) && $dane['podmiot_typ'] !== '') {
+                    $update['podmiot_typ'] = (string) $dane['podmiot_typ'];
+                }
+                if (array_key_exists('podmiot', $dane) && $dane['podmiot'] !== '') {
+                    $update['podmiot'] = (string) $dane['podmiot'];
+                }
                 $ok = $this->db->table('mcs_incydenty')
                     ->where('id', $incydentId)
                     ->update($update);

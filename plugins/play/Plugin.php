@@ -251,7 +251,7 @@ class Plugin implements SourcePluginInterface
                 ]);
                 $idWZrodle = (string) $db->insertID();
 
-                $tytul = 'Play DDoS — ' . $w['message_type'];
+                $tytul = 'Play Scrubbing DDoS — ' . $w['message_type'];
                 if (! empty($w['event_id'])) {
                     $tytul .= ' #' . $w['event_id'];
                 }

@@ -212,7 +212,7 @@ $qs             = $queryEksport !== '' ? '?' . $queryEksport : '';
                                 ?>
                                 <li class="list-group-item bg-transparent px-0">
                                     <div class="d-flex justify-content-between small mb-1">
-                                        <span><?= esc((string) $zKod) ?></span>
+                                        <span><?= esc((new \App\Libraries\EtykietyUi())->zrodlo((string) $zKod)) ?></span>
                                         <span class="fw-semibold"><?= (int) $zCnt ?></span>
                                     </div>
                                     <div class="progress" style="height:0.4rem">

@@ -107,7 +107,7 @@ $pagerQuery  = ['okno', 'zrodlo', 'ip', 'waga', 'min_zrodel', 'kategoria', 'port
                                         <span class="badge <?= esc($badgeWaga($waga), 'attr') ?>"><?= esc($waga) ?></span>
                                     <?php endif; ?>
                                 </td>
-                                <td><?= esc((string) ($wiersz['zrodlo'] ?? '')) ?></td>
+                                <td><?= esc((new \App\Libraries\EtykietyUi())->zrodlo((string) ($wiersz['zrodlo'] ?? ''))) ?></td>
                                 <td>
                                     <?php if ($incId > 0 && $ipWiersz !== ''): ?>
                                         <a class="text-decoration-none" href="<?= site_url('ip/' . $ipWiersz . '/incydent/' . $incId) ?>">

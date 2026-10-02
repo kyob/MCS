@@ -129,7 +129,7 @@ $pagerQuery   = ['okno', 'zrodlo', 'ip', 'waga', 'min_zrodel', 'kategoria', 'por
                                         </div>
                                     <?php else: ?>
                                         <?php foreach (($wiersz['zrodla'] ?? []) as $z): ?>
-                                            <span class="badge text-bg-light text-dark border"><?= esc((string) $z) ?></span>
+                                            <span class="badge text-bg-light text-dark border"><?= esc((new \App\Libraries\EtykietyUi())->zrodlo((string) $z)) ?></span>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
                                 </td>

@@ -17,7 +17,7 @@ class PluginSeeder
         ['zrodlo' => 'shadowserver', 'nazwa' => 'Shadowserver'],
         [
             'zrodlo' => 'play',
-            'nazwa'  => 'Play',
+            'nazwa'  => 'Play Scrubbing',
             'opis'   => 'Play Ochrona Anty-DDoS — MCS importuje alerty e-mail (IMAP) jako incydenty.',
         ],
         ['zrodlo' => 'snds', 'nazwa' => 'SNDS'],
