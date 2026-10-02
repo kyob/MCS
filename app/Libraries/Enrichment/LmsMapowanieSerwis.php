@@ -29,7 +29,7 @@ class LmsMapowanieSerwis
         $this->http            = $http ?? LmsMapowanieClient::fromEnv();
         $this->db              = $db ?? LmsMapowanieDbClient::fromEnv();
         $this->model           = $model ?? model(EnrichmentLmsModel::class);
-        $ttl                   = $cacheTtl ?? (int) env('mcs.lms.cacheTtl', 86400);
+        $ttl                   = $cacheTtl ?? \App\Libraries\OpcjeMcs::int('mcs.lms.cacheTtl');
         $this->cacheTtl        = max(0, $ttl);
         $this->fixturePath     = $fixturePath ?? trim((string) env('mcs.lms.fixturePath', ''));
         $this->nodeUrlTemplate = $nodeUrlTemplate

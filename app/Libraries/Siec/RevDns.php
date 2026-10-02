@@ -44,7 +44,7 @@ final class RevDns
     ) {
         $this->ustawienia = $ustawienia;
         $this->resolver   = $resolver;
-        $this->ttl        = max(60, $ttl ?? (int) env('mcs.revDns.cacheTtl', 3600));
+        $this->ttl        = max(60, $ttl ?? \App\Libraries\OpcjeMcs::int('mcs.revDns.cacheTtl'));
 
         if (is_array($cache)) {
             $this->cacheArr = $cache;

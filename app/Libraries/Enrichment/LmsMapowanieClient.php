@@ -27,7 +27,7 @@ class LmsMapowanieClient
         $base = rtrim(trim((string) env('mcs.lms.baseUrl', '')), '/');
         $tok  = trim((string) env('mcs.lms.mapToken', ''));
         $path = trim((string) env('mcs.lms.apiPath', 'plugins/LMSMcsMapowaniePlugin/api.php'));
-        $ttl  = (int) env('mcs.lms.httpTimeout', 60);
+        $ttl  = \App\Libraries\OpcjeMcs::int('mcs.lms.httpTimeout');
         $tls  = filter_var(env('mcs.lms.tlsVerifyPeer', true), FILTER_VALIDATE_BOOLEAN);
 
         return new self(
@@ -114,11 +114,11 @@ class LmsMapowanieClient
             ];
         }
 
-        $limit   = 2000;
+        $limit   = max(1, \App\Libraries\OpcjeMcs::int('mcs.lms.syncPageSize'));
         $offset  = 0;
         $all     = [];
         $last    = null;
-        $maxPage = 100;
+        $maxPage = max(1, \App\Libraries\OpcjeMcs::int('mcs.lms.syncMaxPages'));
 
         for ($page = 0; $page < $maxPage; $page++) {
             $url  = $this->endpointUrl([

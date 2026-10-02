@@ -38,7 +38,7 @@ class AbuseipdbClient
     {
         $key     = trim((string) env('mcs.abuseipdb.apiKey', ''));
         $base    = trim((string) env('mcs.abuseipdb.baseUrl', 'https://api.abuseipdb.com/api/v2'));
-        $maxAge  = (int) env('mcs.abuseipdb.maxAgeInDays', 90);
+        $maxAge  = \App\Libraries\OpcjeMcs::int('mcs.abuseipdb.maxAgeInDays');
         $verbose = filter_var(env('mcs.abuseipdb.verbose', true), FILTER_VALIDATE_BOOLEAN);
 
         return new self(
@@ -133,7 +133,7 @@ class AbuseipdbClient
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER     => $headerLines,
-            CURLOPT_TIMEOUT        => 30,
+            CURLOPT_TIMEOUT        => max(1, \App\Libraries\OpcjeMcs::int('mcs.abuseipdb.httpTimeout')),
             CURLOPT_FOLLOWLOCATION => false,
         ]);
 

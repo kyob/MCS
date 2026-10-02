@@ -201,7 +201,7 @@ class IsmaliciousClient
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER     => $headerLines,
-            CURLOPT_TIMEOUT        => 30,
+            CURLOPT_TIMEOUT        => max(1, \App\Libraries\OpcjeMcs::int('mcs.ismalicious.httpTimeout')),
             CURLOPT_FOLLOWLOCATION => false,
         ]);
 

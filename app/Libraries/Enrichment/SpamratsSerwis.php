@@ -25,7 +25,7 @@ class SpamratsSerwis
     ) {
         $this->client      = $client ?? SpamratsClient::fromEnv();
         $this->model       = $model ?? model(EnrichmentSpamratsModel::class);
-        $ttl               = $cacheTtl ?? (int) env('mcs.spamrats.cacheTtl', 86400);
+        $ttl               = $cacheTtl ?? \App\Libraries\OpcjeMcs::int('mcs.spamrats.cacheTtl');
         $this->cacheTtl    = max(0, $ttl);
         $this->fixturePath = $fixturePath ?? trim((string) env('mcs.spamrats.fixturePath', ''));
     }
