@@ -20,7 +20,7 @@ use DateTimeZone;
  */
 class PortalClient
 {
-    public const AUTH0_TOKEN_URL = 'https://ookla.auth0.com/oauth/token';
+    public const AUTH0_TOKEN_URL = 'https://auth.ookla.com/oauth/token';
     public const AUTH0_CLIENT_ID = 'qZ22rLQ3HmY102QN05DIQGqFkz3AHdFr';
     public const AUTH0_AUDIENCE  = 'https://api.st-connect.com';
     public const AUTH0_REALM     = 'OOKLA-AUTH';

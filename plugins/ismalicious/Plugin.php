@@ -39,6 +39,14 @@ class Plugin implements SourcePluginInterface
 
     public function pobierz(): void
     {
+        // Cron nie odpytuje API: smoke co 15 min zjadał limit 500 req/mies. (wrzesień 2026).
+        // Lookup tylko ręcznie z panelu /ip/{ip} (cache TTL).
+        if (! $this->serwis->hasFixture() && $this->serwis->hasCredentials()) {
+            $this->aktualizujHealth(true, 'isMalicious: credentials ustawione; cron nie odpytuje API (limit 500/mies.), lookup ręczny w /ip/{ip}');
+
+            return;
+        }
+
         $importId = $this->koperta->rozpocznij($this->zrodlo(), null, null, [
             'opis' => 'smoke isMalicious /check',
         ]);
