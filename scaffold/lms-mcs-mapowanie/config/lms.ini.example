@@ -1,0 +1,11 @@
+; Sekcja MCS — mapowanie IP (MCS→LMS API)
+; SKOPIUJ ręcznie do /etc/lms/lms.ini — NIE commituj prawdziwego tokenu.
+;
+; map_token MUSI być identyczny z MCS .env: mcs.lms.mapToken
+; Użyj OSOBNEGO sekretu (nie badge_token) — api.php NIE robi fallbacku.
+
+[mcs]
+; base_url / badge_token — już używane przez LMSMcsBadgePlugin (LMS→MCS)
+; base_url = https://mcs.example/
+; badge_token = ZMIEN
+map_token = ZMIEN_TEN_SAM_CO_mcs.lms.mapToken
