@@ -47,6 +47,14 @@ final class As198050Matcher
         $this->ustawienia  = $ustawienia;
     }
 
+    /**
+     * ASN globalny (opcja mcs.as198050.asn: DB → .env → 198050).
+     */
+    public static function asn(): int
+    {
+        return \App\Libraries\OpcjeMcs::int('mcs.as198050.asn');
+    }
+
     public function jestWlaczone(): bool
     {
         if ($this->cacheWlaczone !== null) {

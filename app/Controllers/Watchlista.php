@@ -30,7 +30,7 @@ class Watchlista extends BaseController
             'komunikat'  => session()->getFlashdata('komunikat'),
             'blad'       => session()->getFlashdata('blad'),
             'lista'      => $lista,
-            'asAsn'      => As198050Matcher::ASN,
+            'asAsn'      => As198050Matcher::asn(),
         ]);
     }
 

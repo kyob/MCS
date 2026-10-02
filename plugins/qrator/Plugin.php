@@ -125,7 +125,7 @@ class Plugin implements SourcePluginInterface
     {
         $plik   = trim((string) env('mcs.qrator.fixturePath', ''));
         $client = $this->apiClient ?? ApiClient::fromEnv();
-        $asn    = trim((string) env('mcs.qrator.asn', '198050'));
+        $asn    = (string) $this->resolveAsn();
         $feeds  = trim((string) env('mcs.qrator.feeds', ''));
         $tokOk  = $client->hasKey();
 
@@ -360,13 +360,13 @@ class Plugin implements SourcePluginInterface
 
     public function resolveAsn(): int
     {
-        $explicit = trim((string) env('mcs.qrator.asn', ''));
+        $explicit = \App\Libraries\OpcjeMcs::tekst('mcs.qrator.asn');
         if ($explicit !== '' && ctype_digit($explicit)) {
             return (int) $explicit;
         }
 
-        // Domyślnie AS Alfa-System (jak As198050Matcher / CF Botnet).
-        return 198050;
+        // Domyślnie ASN globalny (mcs.as198050.asn, jak CF Botnet).
+        return \App\Libraries\Siec\As198050Matcher::asn();
     }
 
     private function opisKonfiguracji(): string

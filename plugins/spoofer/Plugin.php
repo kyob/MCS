@@ -342,17 +342,17 @@ class Plugin implements SourcePluginInterface
 
     public function resolveAsn(): int
     {
-        $explicit = trim((string) env('mcs.spoofer.asn', ''));
+        $explicit = \App\Libraries\OpcjeMcs::tekst('mcs.spoofer.asn');
         if ($explicit !== '' && ctype_digit($explicit)) {
             return (int) $explicit;
         }
 
-        return 198050;
+        return \App\Libraries\Siec\As198050Matcher::asn();
     }
 
     private function timestampAfter(): ?string
     {
-        $days = trim((string) env('mcs.spoofer.lookbackDays', ''));
+        $days = \App\Libraries\OpcjeMcs::tekst('mcs.spoofer.lookbackDays');
         if ($days === '' || ! ctype_digit($days) || (int) $days < 1) {
             return null;
         }

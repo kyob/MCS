@@ -125,7 +125,7 @@ class Plugin implements SourcePluginInterface
     {
         $plik   = trim((string) env('mcs.cloudflare_botnet.fixturePath', ''));
         $client = $this->apiClient ?? ApiClient::fromEnv();
-        $asn    = trim((string) env('mcs.cloudflare_botnet.asn', '198050'));
+        $asn    = self::asnDoOpisu();
         $tokOk  = $client->hasToken();
 
         return PluginOpisPolaczenia::plikIKanal(
@@ -361,9 +361,19 @@ class Plugin implements SourcePluginInterface
         return 1;
     }
 
+    /**
+     * ASN do opisu w UI bez zapytania do API (jawny albo globalny).
+     */
+    private static function asnDoOpisu(): string
+    {
+        $explicit = \App\Libraries\OpcjeMcs::tekst('mcs.cloudflare_botnet.asn');
+
+        return $explicit !== '' ? $explicit : (string) \App\Libraries\Siec\As198050Matcher::asn();
+    }
+
     public function resolveAsn(?ApiClient $client = null): int
     {
-        $explicit = trim((string) env('mcs.cloudflare_botnet.asn', ''));
+        $explicit = \App\Libraries\OpcjeMcs::tekst('mcs.cloudflare_botnet.asn');
         if ($explicit !== '' && ctype_digit($explicit)) {
             return (int) $explicit;
         }
@@ -374,8 +384,8 @@ class Plugin implements SourcePluginInterface
             return $listed['asns'][0];
         }
 
-        // Domyślnie AS Alfa-System (jak As198050Matcher).
-        return 198050;
+        // Domyślnie ASN globalny (mcs.as198050.asn).
+        return \App\Libraries\Siec\As198050Matcher::asn();
     }
 
     private function opisKonfiguracji(): string
@@ -393,7 +403,7 @@ class Plugin implements SourcePluginInterface
 
         return 'konfiguracja: API Bearer gotowe (jeszcze bez przebiegu); account='
             . $client->getAccountId()
-            . ' asn=' . trim((string) env('mcs.cloudflare_botnet.asn', '198050'));
+            . ' asn=' . self::asnDoOpisu();
     }
 
     private function aktualizujHealth(bool $ok, string $msg): void
