@@ -13,6 +13,14 @@ class ProblemyIp
 {
     public const OKNO_TIMELINE_DNI = 14;
 
+    /**
+     * Okno mini-osi czasu (opcja mcs.problemyIp.oknoTimelineDni; domyślnie 14).
+     */
+    public static function oknoTimelineDni(): int
+    {
+        return max(1, \App\Libraries\OpcjeMcs::int('mcs.problemyIp.oknoTimelineDni'));
+    }
+
     private BaseConnection $db;
     private EtykietyUi $etykiety;
 
@@ -110,7 +118,7 @@ class ProblemyIp
                 $wszystkieIds[] = $c['id'];
             }
         }
-        $dniAktywne = $this->dniAktywneObserwacji($wszystkieIds, self::OKNO_TIMELINE_DNI);
+        $dniAktywne = $this->dniAktywneObserwacji($wszystkieIds, self::oknoTimelineDni());
 
         $problemy = [];
         foreach ($grupy as $g) {
@@ -124,7 +132,7 @@ class ProblemyIp
             $timeline = $this->miniTimeline(
                 $dniAktywne,
                 $ids,
-                self::OKNO_TIMELINE_DNI,
+                self::oknoTimelineDni(),
                 $g['czlonkowie'],
             );
 

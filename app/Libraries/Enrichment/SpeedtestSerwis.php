@@ -321,6 +321,21 @@ class SpeedtestSerwis
      *   wszystkie: bool
      * }
      */
+    /**
+     * Domyślne top N (opcja mcs.speedtest.topN; domyślnie DOMYSLNY_TOP_N).
+     */
+    public static function domyslnyTopN(): int
+    {
+        return max(1, min(100, \App\Libraries\OpcjeMcs::int('mcs.speedtest.topN')));
+    }
+
+    private static function opcjaNieujemna(string $klucz, int $domyslna): int
+    {
+        $v = \App\Libraries\OpcjeMcs::int($klucz);
+
+        return $v >= 0 ? $v : $domyslna;
+    }
+
     public static function parsujFiltry(array $get): array
     {
         $oknoRaw = $get['okno'] ?? 7;
@@ -329,10 +344,12 @@ class SpeedtestSerwis
             $okno = 7;
         }
 
-        $minDown = self::normalizujMbps($get['min_download_mbps'] ?? self::DOMYSLNY_MIN_DOWNLOAD_MBPS, self::DOMYSLNY_MIN_DOWNLOAD_MBPS);
+        $domDown = self::opcjaNieujemna('mcs.speedtest.minDownloadMbps', self::DOMYSLNY_MIN_DOWNLOAD_MBPS);
+        $domUp   = self::opcjaNieujemna('mcs.speedtest.minUploadMbps', self::DOMYSLNY_MIN_UPLOAD_MBPS);
+        $minDown = self::normalizujMbps($get['min_download_mbps'] ?? $domDown, $domDown);
         // Alias literówki mbbs → mbps (form/query).
-        $minUpRaw = $get['min_upload_mbps'] ?? $get['min_upload_mbbs'] ?? self::DOMYSLNY_MIN_UPLOAD_MBPS;
-        $minUp    = self::normalizujMbps($minUpRaw, self::DOMYSLNY_MIN_UPLOAD_MBPS);
+        $minUpRaw = $get['min_upload_mbps'] ?? $get['min_upload_mbbs'] ?? $domUp;
+        $minUp    = self::normalizujMbps($minUpRaw, $domUp);
 
         $cidr = trim((string) ($get['cidr'] ?? ''));
         if (mb_strlen($cidr) > 64) {
@@ -350,7 +367,7 @@ class SpeedtestSerwis
             $wszystkie = true;
         }
 
-        $topNDefault = $wszystkie ? 100 : self::DOMYSLNY_TOP_N;
+        $topNDefault = $wszystkie ? 100 : self::domyslnyTopN();
         $topNMax     = $wszystkie ? 500 : 100;
         $topN        = is_numeric($get['top_n'] ?? null) ? (int) $get['top_n'] : $topNDefault;
         $topN        = max(1, min($topNMax, $topN));
@@ -581,7 +598,7 @@ class SpeedtestSerwis
         $wszystkie = (bool) ($filtry['wszystkie'] ?? false)
             || ($minDown === 0 && $minUp === 0);
         $topNMax   = $wszystkie ? 500 : 100;
-        $topN      = max(1, min($topNMax, (int) ($filtry['top_n'] ?? ($wszystkie ? 100 : self::DOMYSLNY_TOP_N))));
+        $topN      = max(1, min($topNMax, (int) ($filtry['top_n'] ?? ($wszystkie ? 100 : self::domyslnyTopN()))));
         $minDownK  = $minDown > 0 ? $minDown * 1000 : 0;
         $minUpK    = $minUp > 0 ? $minUp * 1000 : 0;
 

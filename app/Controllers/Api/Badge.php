@@ -16,6 +16,14 @@ class Badge extends BaseController
     /** Limit adresów w jednym żądaniu zbiorczym. */
     public const MAX_IPS_BATCH = 100;
 
+    /**
+     * Limit IP w batchu (opcja mcs.badge.maxIpsBatch; domyślnie MAX_IPS_BATCH).
+     */
+    public static function maxIpsBatch(): int
+    {
+        return max(1, \App\Libraries\OpcjeMcs::int('mcs.badge.maxIpsBatch'));
+    }
+
     public function index()
     {
         $ips = $this->parsujListeIp();
@@ -87,13 +95,13 @@ class Badge extends BaseController
         if ($lista === []) {
             return $this->response->setStatusCode(400)->setJSON([
                 'blad' => 'Wymagany prawidłowy parametr ip albo ips (1–'
-                    . self::MAX_IPS_BATCH . ' adresów).',
+                    . self::maxIpsBatch() . ' adresów).',
             ]);
         }
 
-        if (count($lista) > self::MAX_IPS_BATCH) {
+        if (count($lista) > self::maxIpsBatch()) {
             return $this->response->setStatusCode(400)->setJSON([
-                'blad' => 'Maksymalnie ' . self::MAX_IPS_BATCH . ' adresów IP w jednym żądaniu.',
+                'blad' => 'Maksymalnie ' . self::maxIpsBatch() . ' adresów IP w jednym żądaniu.',
             ]);
         }
 

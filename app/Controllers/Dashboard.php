@@ -102,7 +102,7 @@ class Dashboard extends BaseController
     }
 
     /**
-     * Kolejka dnia — preset 48h / high+; GET okno/waga są ignorowane.
+     * Kolejka dnia — preset okno/min. waga z opcji (domyślnie 48h / high+); GET okno/waga są ignorowane.
      */
     public function kolejka()
     {

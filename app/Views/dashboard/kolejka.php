@@ -14,6 +14,9 @@ $badgeWaga = static function (string $waga): string {
 $queryEksport = (string) ($queryEksport ?? 'okno=' . (int) $okno);
 $listaTotal   = (int) ($listaTotal ?? 0);
 $pagerQuery   = ['okno', 'zrodlo', 'ip', 'waga', 'min_zrodel', 'kategoria', 'port', 'cidr', 'podsiec'];
+$kolejkaMinWaga = \App\Libraries\KolejkaDnia::minWaga();
+$kolejkaWagi    = array_slice(['low', 'medium', 'high', 'critical'], (int) array_search($kolejkaMinWaga, ['low', 'medium', 'high', 'critical'], true));
+$kolejkaGodzin  = (int) $okno * 24;
 ?>
 
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
@@ -26,16 +29,16 @@ $pagerQuery   = ['okno', 'zrodlo', 'ip', 'waga', 'min_zrodel', 'kategoria', 'por
         </nav>
         <h1 class="h3 mb-1">Kolejka dnia</h1>
         <p class="text-body-secondary mb-0">
-            IP z wagą high/critical z ostatnich 48h (AS198050 gdy filtr włączony).
+            IP z wagą <?= esc(implode('/', $kolejkaWagi)) ?> z ostatnich <?= $kolejkaGodzin ?>h (AS198050 gdy filtr włączony).
             <a href="<?= site_url('dashboard/problematyczne-ip') ?>">Pełne filtry → problematyczne IP</a>
         </p>
     </div>
     <div class="d-flex flex-wrap gap-2">
         <span class="badge text-bg-primary-subtle text-primary-emphasis border border-primary-subtle px-3 py-2">
-            Okno: <?= (int) $okno ?> <?= (int) $okno === 1 ? 'dzień' : 'dni' ?> (48h)
+            Okno: <?= (int) $okno ?> <?= (int) $okno === 1 ? 'dzień' : 'dni' ?> (<?= $kolejkaGodzin ?>h)
         </span>
         <span class="badge text-bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2">
-            Min. waga: high
+            Min. waga: <?= esc($kolejkaMinWaga) ?>
         </span>
         <?php if (! empty($asMatchWlaczone)): ?>
             <span class="badge text-bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle px-3 py-2">
