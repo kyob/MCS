@@ -686,8 +686,8 @@ class Dashboard extends BaseController
      *   okno_dni: int,
      *   dni: list,
      *   zrodla_suma: array,
-     *   max_obserwacje: int,
-     *   suma_obserwacji: int
+     *   max_incydenty: int,
+     *   suma_incydentow: int
      * }
      */
     private function pusteTrendy(int $okno): array
@@ -696,8 +696,8 @@ class Dashboard extends BaseController
             'okno_dni'        => $okno,
             'dni'             => [],
             'zrodla_suma'     => [],
-            'max_obserwacje'  => 0,
-            'suma_obserwacji' => 0,
+            'max_incydenty'   => 0,
+            'suma_incydentow' => 0,
         ];
     }
 }

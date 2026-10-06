@@ -12,7 +12,7 @@ final class DashboardViewTest extends CIUnitTestCase
         $html = view('dashboard/index', $this->danePrzegladu());
 
         $this->assertStringContainsString('Przegląd zagrożeń', $html);
-        $this->assertStringContainsString('Trendy dzienne z obserwacji', $html);
+        $this->assertStringContainsString('Trendy dzienne z incydentów', $html);
         $this->assertStringContainsString('name="kategoria"', $html);
         $this->assertStringContainsString('name="port"', $html);
         $this->assertStringContainsString('name="podsiec"', $html);
@@ -45,13 +45,14 @@ final class DashboardViewTest extends CIUnitTestCase
             ],
             'trendy' => [
                 'okno_dni'        => 7,
-                'suma_obserwacji' => 0,
-                'max_obserwacje'  => 0,
+                'suma_incydentow' => 0,
+                'max_incydenty'   => 0,
                 'zrodla_suma'     => [],
                 'dni'             => [],
             ],
         ]));
 
+        $this->assertStringNotContainsString('Trendy dzienne z incydentów', $html);
         $this->assertStringNotContainsString('Trendy dzienne z obserwacji', $html);
         $this->assertStringContainsString('dashboard/problematyczne-ip', $html);
     }
@@ -92,13 +93,13 @@ final class DashboardViewTest extends CIUnitTestCase
             ],
             'trendy' => [
                 'okno_dni'        => 7,
-                'suma_obserwacji' => 5,
-                'max_obserwacje'  => 3,
+                'suma_incydentow' => 5,
+                'max_incydenty'   => 3,
                 'zrodla_suma'     => ['shadowserver' => 3, 'cert_n6' => 2],
                 'dni'             => [
                     [
                         'dzien'        => '2026-09-12',
-                        'obserwacje'   => 3,
+                        'incydenty'    => 3,
                         'nowe'         => 1,
                         'powtarzajace' => 2,
                         'zrodla'       => ['shadowserver' => 3],

@@ -5,8 +5,8 @@
 $trendy         = is_array($trendy ?? null) ? $trendy : [];
 $trendyDni      = is_array($trendy['dni'] ?? null) ? $trendy['dni'] : [];
 $trendyZrodla   = is_array($trendy['zrodla_suma'] ?? null) ? $trendy['zrodla_suma'] : [];
-$maxObs         = max(1, (int) ($trendy['max_obserwacje'] ?? 0));
-$sumaObs        = (int) ($trendy['suma_obserwacji'] ?? 0);
+$maxObs         = max(1, (int) ($trendy['max_incydenty'] ?? 0));
+$sumaObs        = (int) ($trendy['suma_incydentow'] ?? 0);
 $queryEksport   = (string) ($queryEksport ?? 'okno=' . (int) $okno);
 $qs             = $queryEksport !== '' ? '?' . $queryEksport : '';
 ?>
@@ -143,9 +143,9 @@ $qs             = $queryEksport !== '' ? '?' . $queryEksport : '';
 <section class="mb-4" aria-label="Trendy dzienne">
     <div class="card border-0 shadow-sm rounded-3">
         <div class="card-header bg-transparent border-0 pt-3 px-3 pb-0">
-            <h2 class="h5 mb-1">Trendy dzienne z obserwacji</h2>
+            <h2 class="h5 mb-1">Trendy dzienne z incydentów</h2>
             <p class="small text-body-secondary mb-0">
-                Wolumen obserwacji w oknie <?= (int) $okno ?> <?= (int) $okno === 1 ? 'dnia' : 'dni' ?>
+                Wolumen incydentów aktywnych w oknie <?= (int) $okno ?> <?= (int) $okno === 1 ? 'dnia' : 'dni' ?>
                 — <strong>nowe</strong> (pierwszy dzień incydentu) vs <strong>powtarzające</strong>, plus rozkład źródeł.
             </p>
         </div>
@@ -166,7 +166,7 @@ $qs             = $queryEksport !== '' ? '?' . $queryEksport : '';
                             <tbody>
                             <?php foreach ($trendyDni as $dzien): ?>
                                 <?php
-                                $obs  = (int) ($dzien['obserwacje'] ?? 0);
+                                $obs  = (int) ($dzien['incydenty'] ?? 0);
                                 $nowe = (int) ($dzien['nowe'] ?? 0);
                                 $powt = (int) ($dzien['powtarzajace'] ?? 0);
                                 $pct  = $obs > 0 ? (int) round(100 * $obs / $maxObs) : 0;
@@ -177,7 +177,7 @@ $qs             = $queryEksport !== '' ? '?' . $queryEksport : '';
                                     <td class="small text-nowrap font-monospace"><?= esc((string) ($dzien['dzien'] ?? '')) ?></td>
                                     <td>
                                         <div class="progress" style="height:1.1rem" role="img"
-                                             aria-label="<?= $obs ?> obserwacji (<?= $nowe ?> nowych)">
+                                             aria-label="<?= $obs ?> incydentów (<?= $nowe ?> nowych)">
                                             <?php if ($pctN > 0): ?>
                                                 <div class="progress-bar bg-primary" style="width:<?= $pctN ?>%"></div>
                                             <?php endif; ?>
