@@ -3,6 +3,7 @@
 namespace App\Libraries;
 
 use DateTimeImmutable;
+use DateTimeZone;
 use Throwable;
 
 /**
@@ -17,7 +18,7 @@ final class CzasUi
             return '';
         }
 
-        return $dt->format('Y-m-d H:i');
+        return $dt->setTimezone(new DateTimeZone(app_timezone()))->format('Y-m-d H:i:s');
     }
 
     public static function wzglednie(string $at, ?int $terazTs = null): string

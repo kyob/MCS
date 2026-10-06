@@ -14,9 +14,10 @@ final class CzasUiTest extends CIUnitTestCase
         $this->assertSame('', CzasUi::wzglednie(''));
     }
 
-    public function testDataGodzinaBezSekund(): void
+    public function testDataGodzinaWStrefieAplikacji(): void
     {
-        $this->assertSame('2026-09-18 07:30', CzasUi::dataGodzina('2026-09-18 07:30:05+00'));
+        // Europe/Warsaw = CEST (UTC+2) w wrześniu.
+        $this->assertSame('2026-09-18 09:30:05', CzasUi::dataGodzina('2026-09-18 07:30:05+00'));
     }
 
     public function testWzglednieSekundyMinutyGodzinyDni(): void

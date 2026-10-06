@@ -23,13 +23,17 @@ if ($szczegoly === '' && ! empty($imp['checksum'])) {
 $szczegolySkrot = $szczegoly !== '' && mb_strlen($szczegoly) > 80
     ? mb_substr($szczegoly, 0, 80) . '…'
     : $szczegoly;
+$startAt = trim((string) ($imp['rozpoczeto_at'] ?? ''));
+$koniecAt = trim((string) ($imp['zakonczono_at'] ?? ''));
+$startUi = $startAt !== '' ? \App\Libraries\CzasUi::dataGodzina($startAt) : '';
+$koniecUi = $koniecAt !== '' ? \App\Libraries\CzasUi::dataGodzina($koniecAt) : '—';
 ?>
 <tr>
     <td class="font-monospace"><?= (int) ($imp['id'] ?? 0) ?></td>
     <td><code class="small"><?= esc((string) ($imp['zrodlo'] ?? '')) ?></code></td>
     <td><span class="badge <?= esc($badgeSt, 'attr') ?>"><?= esc($etykietaSt) ?></span></td>
-    <td class="small text-nowrap"><?= esc((string) ($imp['rozpoczeto_at'] ?? '')) ?></td>
-    <td class="small text-nowrap"><?= esc((string) ($imp['zakonczono_at'] ?? '—')) ?></td>
+    <td class="small text-nowrap"><?= esc($startUi) ?></td>
+    <td class="small text-nowrap"><?= esc($koniecUi) ?></td>
     <td class="small text-body-secondary text-truncate" style="max-width:20rem"
         <?= $szczegoly !== '' ? 'title="' . esc($szczegoly, 'attr') . '"' : '' ?>>
         <?= $szczegoly !== '' ? esc($szczegolySkrot) : '—' ?>
