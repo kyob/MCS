@@ -63,6 +63,9 @@ final class IpShowViewTest extends CIUnitTestCase
             'spamratsTryb'         => 'brak_klucza',
             'spamratsCache'        => null,
             'spamratsKomunikat'    => null,
+            'dnsblTryb'            => 'dns',
+            'dnsblCache'           => null,
+            'dnsblKomunikat'       => null,
             'lmsTryb'            => 'brak_konfiguracji',
             'lmsCache'           => null,
             'lmsKomunikat'       => 'Brak konfiguracji LMS — ustaw mcs.lms.baseUrl+mapToken.',
@@ -90,6 +93,8 @@ final class IpShowViewTest extends CIUnitTestCase
         $this->assertStringContainsString('isMalicious', $html);
         $this->assertStringContainsString('SpamRats', $html);
         $this->assertStringContainsString('Sprawdź SpamRats', $html);
+        $this->assertStringContainsString('DNSBL (AS)', $html);
+        $this->assertStringContainsString('Sprawdź DNSBL', $html);
         $this->assertStringContainsString('mcs.abuseipdb.apiKey', $html);
         $this->assertStringContainsString('Sprawdź AbuseIPDB', $html);
         $this->assertStringNotContainsString('id="panel-speedtest"', $html);
@@ -144,6 +149,9 @@ final class IpShowViewTest extends CIUnitTestCase
             'spamratsTryb'         => 'brak_klucza',
             'spamratsCache'        => null,
             'spamratsKomunikat'    => null,
+            'dnsblTryb'            => 'dns',
+            'dnsblCache'           => null,
+            'dnsblKomunikat'       => null,
             'flashOk'            => null,
             'flashBlad'          => null,
             'revDnsWlaczone'     => false,
@@ -191,6 +199,9 @@ final class IpShowViewTest extends CIUnitTestCase
             'spamratsTryb'         => 'brak_klucza',
             'spamratsCache'        => null,
             'spamratsKomunikat'    => null,
+            'dnsblTryb'            => 'dns',
+            'dnsblCache'           => null,
+            'dnsblKomunikat'       => null,
             'speedtestCidr'        => '91.231.80.0/24',
             'speedtestLiczba24'    => 8,
             'flashOk'            => null,
@@ -240,6 +251,9 @@ final class IpShowViewTest extends CIUnitTestCase
             'spamratsTryb'         => 'brak_klucza',
             'spamratsCache'        => null,
             'spamratsKomunikat'    => null,
+            'dnsblTryb'            => 'dns',
+            'dnsblCache'           => null,
+            'dnsblKomunikat'       => null,
             'speedtestCidr'        => null,
             'speedtestLiczba24'    => 0,
             'flashOk'            => null,
@@ -285,6 +299,9 @@ final class IpShowViewTest extends CIUnitTestCase
             'spamratsTryb'         => 'brak_klucza',
             'spamratsCache'        => null,
             'spamratsKomunikat'    => null,
+            'dnsblTryb'            => 'dns',
+            'dnsblCache'           => null,
+            'dnsblKomunikat'       => null,
             'flashOk'            => null,
             'flashBlad'          => null,
             'revDnsWlaczone'     => true,
@@ -328,6 +345,9 @@ final class IpShowViewTest extends CIUnitTestCase
             'spamratsTryb'         => 'brak_klucza',
             'spamratsCache'        => null,
             'spamratsKomunikat'    => null,
+            'dnsblTryb'            => 'dns',
+            'dnsblCache'           => null,
+            'dnsblKomunikat'       => null,
             'flashOk'            => null,
             'flashBlad'          => null,
             'revDnsWlaczone'     => false,
@@ -393,6 +413,9 @@ final class IpShowViewTest extends CIUnitTestCase
             'spamratsTryb'         => 'brak_klucza',
             'spamratsCache'        => null,
             'spamratsKomunikat'    => null,
+            'dnsblTryb'            => 'dns',
+            'dnsblCache'           => null,
+            'dnsblKomunikat'       => null,
             'lmsTryb'      => 'cache',
             'lmsCache'     => [
                 'trafiony'     => true,

@@ -63,7 +63,7 @@ $mozeUzytkownicy = \App\Libraries\Rola::mozeUzytkownicy($rolaKod);
         <div class="collapse navbar-collapse" id="mcsNavbar">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <?php
-                $navDashboard = in_array($nav, ['dashboard', 'kolejka', 'problematyczne-ip', 'incydenty', 'speedtest'], true);
+                $navDashboard = in_array($nav, ['dashboard', 'kolejka', 'problematyczne-ip', 'incydenty', 'speedtest', 'dnsbl'], true);
                 ?>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle<?= $navDashboard ? ' active' : '' ?>"
@@ -91,6 +91,10 @@ $mozeUzytkownicy = \App\Libraries\Rola::mozeUzytkownicy($rolaKod);
                         <li>
                             <a class="dropdown-item<?= $nav === 'speedtest' ? ' active' : '' ?>"
                                href="<?= site_url('dashboard/speedtest') ?>">Speedtest</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item<?= $nav === 'dnsbl' ? ' active' : '' ?>"
+                               href="<?= site_url('dashboard/dnsbl') ?>">DNSBL</a>
                         </li>
                     </ul>
                 </li>

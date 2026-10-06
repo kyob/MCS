@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Libraries\Enrichment\AbuseipdbSerwis;
+use App\Libraries\Enrichment\DnsblSerwis;
 use App\Libraries\Enrichment\IsmaliciousClient;
 use App\Libraries\Enrichment\IsmaliciousSerwis;
 use App\Libraries\Enrichment\LmsMapowanieSerwis;
@@ -53,6 +54,10 @@ class Ip extends BaseController
             }
         }
 
+        $dnsbl         = new DnsblSerwis();
+        $dnsblTryb     = $dnsbl->tryb();
+        $dnsblKomunikat = null;
+
         $lms = new LmsMapowanieSerwis();
         $lmsTryb = $lms->tryb();
         $lmsKomunikat = null;
@@ -100,6 +105,9 @@ class Ip extends BaseController
                     'spamratsTryb'         => $spamratsTryb,
                     'spamratsCache'        => null,
                     'spamratsKomunikat'    => $spamratsKomunikat,
+                    'dnsblTryb'            => $dnsblTryb,
+                    'dnsblCache'           => null,
+                    'dnsblKomunikat'       => $dnsblKomunikat,
                     'speedtestCidr'        => null,
                     'speedtestLiczba24'    => 0,
                     'flashOk'            => null,
@@ -125,6 +133,7 @@ class Ip extends BaseController
         $abuseCache    = $abuse->podgladCache($ip);
         $ismCache      = $ism->podgladCache($ip);
         $spamratsCache = $spamrats->podgladCache($ip);
+        $dnsblCache    = $dnsbl->podgladCache($ip);
         $lmsCache      = $lms->podgladCache($ip);
         if ($lmsCache === null && $lmsTryb !== 'brak_konfiguracji') {
             $lmsWynik = $lms->sprawdz($ip, false);
@@ -172,6 +181,9 @@ class Ip extends BaseController
             'spamratsTryb'         => $spamratsCache !== null ? 'cache' : $spamratsTryb,
             'spamratsCache'        => $spamratsCache,
             'spamratsKomunikat'    => $spamratsKomunikat,
+            'dnsblTryb'            => $dnsblCache !== null ? 'cache' : $dnsblTryb,
+            'dnsblCache'           => $dnsblCache,
+            'dnsblKomunikat'       => $dnsblKomunikat,
             'speedtestCidr'        => $stCidr,
             'speedtestLiczba24'    => $stLiczba,
             'flashOk'            => session()->getFlashdata('komunikat'),
@@ -258,6 +270,35 @@ class Ip extends BaseController
             $kod = ($wynik['tryb'] === 'brak_klucza') ? 503 : 400;
 
             return $this->response->setStatusCode($kod)->setJSON([
+                'ok'   => false,
+                'blad' => $wynik['blad'],
+                'ip'   => $wynik['ip'],
+                'tryb' => $wynik['tryb'],
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'ok'      => true,
+            'ip'      => $wynik['ip'],
+            'z_cache' => $wynik['z_cache'],
+            'tryb'    => $wynik['tryb'],
+            'wynik'   => $wynik['wynik'],
+        ]);
+    }
+
+    /**
+     * Enrichment multi-DNSBL pod sesją (może też zaktualizować incydenty przy force).
+     */
+    public function dnsbl(string $ip)
+    {
+        $ip = trim($ip);
+        $forceRaw = $this->request->getGet('force');
+        $force    = filter_var($forceRaw, FILTER_VALIDATE_BOOLEAN);
+
+        $wynik = (new DnsblSerwis())->sprawdz($ip, $force);
+
+        if (! $wynik['ok']) {
+            return $this->response->setStatusCode(400)->setJSON([
                 'ok'   => false,
                 'blad' => $wynik['blad'],
                 'ip'   => $wynik['ip'],

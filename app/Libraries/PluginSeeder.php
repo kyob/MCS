@@ -46,6 +46,11 @@ class PluginSeeder
             'opis'   => 'Enrichment DNSBL RATS-All (dyna/noptr/spam/auth). Wymaga mcs.spamrats.apiKey. Panel na /ip/{ip}; poza indeksem badge.',
         ],
         [
+            'zrodlo' => 'dnsbl',
+            'nazwa'  => 'DNSBL (AS)',
+            'opis'   => 'Skan DNSBL własnych IP: codziennie LMS∩AS, raz/tydzień pełne AS. Listy i skan regulujesz w /admin/ustawienia/opcje (grupa DNSBL). UCEPROTECT+SpamCop (+opcjonalny Spamhaus DQS w .env). Incydenty + /dashboard/dnsbl + /ip/{ip}.',
+        ],
+        [
             'zrodlo' => 'spoofer',
             'nazwa'  => 'CAIDA Spoofer',
             'opis'   => 'Pomiary BCP38 (czy sieć przepuszcza spoofing). Publiczne API CAIDA, filtr ASN (domyślnie AS198050), prefiksy — poza badge hosta.',

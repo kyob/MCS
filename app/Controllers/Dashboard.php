@@ -221,6 +221,75 @@ class Dashboard extends BaseController
     }
 
     /**
+     * Zbiorczy widok DNSBL — IP z AS aktualnie na listach spam.
+     */
+    public function dnsbl()
+    {
+        $lista = trim((string) ($this->request->getGet('lista') ?? ''));
+        $cidr  = trim((string) ($this->request->getGet('cidr') ?? ''));
+
+        $matcher    = new As198050Matcher();
+        $akceptujIp = $matcher->filtrAkceptujIp($cidr !== '' ? $cidr : null);
+
+        $model = model(\App\Models\EnrichmentDnsblModel::class);
+        $lms   = model(\App\Models\EnrichmentLmsModel::class);
+
+        $wiersze = [];
+        $blad    = null;
+        try {
+            $raw = $model->listedAktualne($akceptujIp, $lista !== '' ? $lista : null, 500);
+            foreach ($raw as $row) {
+                $ip   = (string) ($row['ip'] ?? '');
+                $listy = $row['listy_json'] ?? [];
+                if (is_string($listy)) {
+                    $decoded = json_decode($listy, true);
+                    $listy   = is_array($decoded) ? $decoded : [];
+                }
+                if (! is_array($listy)) {
+                    $listy = [];
+                }
+                $hit = [];
+                foreach ($listy as $id => $info) {
+                    if (is_array($info) && ! empty($info['listed'])) {
+                        $hit[] = (string) $id;
+                    }
+                }
+                $lmsRow = $ip !== '' ? $lms->znajdzPoIp($ip) : null;
+                $wiersze[] = [
+                    'ip'           => $ip,
+                    'listy'        => $hit,
+                    'checked_at'   => $row['checked_at'] ?? null,
+                    'zakres_skanu' => $row['zakres_skanu'] ?? null,
+                    'abonent'      => is_array($lmsRow) ? (string) ($lmsRow['abonent'] ?? '') : '',
+                    'komputer'     => is_array($lmsRow) ? (string) ($lmsRow['komputer'] ?? '') : '',
+                ];
+            }
+        } catch (\Throwable $e) {
+            $blad = 'Nie udało się odczytać cache DNSBL (czy migracje są uruchomione?).';
+            $wiersze = [];
+        }
+
+        $kpiListy = [];
+        foreach ($wiersze as $w) {
+            foreach ($w['listy'] as $l) {
+                $kpiListy[$l] = true;
+            }
+        }
+        $kpi = [
+            'listed'     => count($wiersze),
+            'listy_uniq' => count($kpiListy),
+        ];
+
+        return view('dashboard/dnsbl', $this->daneWidoku('dnsbl', [
+            'blad'   => $blad,
+            'kpi'    => $kpi,
+            'wiersze'=> $wiersze,
+            'lista'  => $lista,
+            'cidr'   => $cidr,
+        ]));
+    }
+
+    /**
      * CSV ranking problematycznych IP — te same filtry co lista.
      */
     public function eksportCsv()
@@ -576,6 +645,7 @@ class Dashboard extends BaseController
             'kolejka'           => 'Kolejka dnia — MCS',
             'incydenty'         => 'Ostatnie incydenty — MCS',
             'speedtest'         => 'Speedtest — MCS',
+            'dnsbl'             => 'DNSBL AS — MCS',
             default             => 'Przegląd — MCS',
         };
 

@@ -159,4 +159,51 @@ final class CidrMatcher
 
         return $zle;
     }
+
+    /**
+     * Enumerator IPv4 w CIDR (włącznie z adresem sieci i broadcast).
+     * Odrzuca maski szersze niż /16 (bezpieczeństwo skanów).
+     *
+     * @return \Generator<int, string>
+     */
+    public function enumerujIpv4(string $cidr): \Generator
+    {
+        $cidr = trim($cidr);
+        if ($cidr === '' || ! $this->czyPoprawnyCidr($cidr)) {
+            return;
+        }
+
+        if (! str_contains($cidr, '/')) {
+            if (filter_var($cidr, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                yield $cidr;
+            }
+
+            return;
+        }
+
+        [$subnet, $mask] = explode('/', $cidr, 2);
+        $subnet          = trim($subnet);
+        $mask            = (int) trim($mask);
+
+        if (! filter_var($subnet, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            return;
+        }
+        if ($mask < 16 || $mask > 32) {
+            return;
+        }
+
+        $subnetLong = ip2long($subnet);
+        if ($subnetLong === false) {
+            return;
+        }
+        $subnetLong = $subnetLong & 0xFFFFFFFF;
+        $hostBits   = 32 - $mask;
+        $count      = 1 << $hostBits;
+        $maskLong   = $mask === 0 ? 0 : (~((1 << $hostBits) - 1) & 0xFFFFFFFF);
+        $base       = $subnetLong & $maskLong;
+
+        for ($i = 0; $i < $count; $i++) {
+            yield long2ip($base + $i);
+        }
+    }
 }

@@ -63,6 +63,9 @@ $etykietaZrodla = static function (string $zrodlo): array {
                         <label class="col-md-5 col-form-label" for="<?= esc($id, 'attr') ?>">
                             <?= esc((string) $o['etykieta']) ?>
                             <br><code class="small"><?= esc((string) $klucz) ?></code>
+                            <?php if (! empty($o['opis'])): ?>
+                                <br><span class="small text-body-secondary"><?= esc((string) $o['opis']) ?></span>
+                            <?php endif; ?>
                         </label>
                         <div class="col-md-3">
                             <?php if ($typ === 'enum'): ?>

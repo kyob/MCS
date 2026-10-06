@@ -112,6 +112,40 @@ final class OpcjeMcs
 
         $d['mcs.spamrats.cacheTtl'] = $ttl('SpamRats', self::DOBA);
 
+        $takNie = ['tak', 'nie'];
+        $d['mcs.dnsbl.listaUceprotect'] = [
+            'grupa' => 'DNSBL', 'etykieta' => 'Lista UCEPROTECT Level 1', 'typ' => 'enum', 'domyslna' => 'tak', 'opcje' => $takNie,
+            'opis' => 'dnsbl-1.uceprotect.net',
+        ];
+        $d['mcs.dnsbl.listaSpamcop'] = [
+            'grupa' => 'DNSBL', 'etykieta' => 'Lista SpamCop', 'typ' => 'enum', 'domyslna' => 'tak', 'opcje' => $takNie,
+            'opis' => 'bl.spamcop.net',
+        ];
+        $d['mcs.dnsbl.listaSpamhaus'] = [
+            'grupa' => 'DNSBL', 'etykieta' => 'Lista Spamhaus DQS', 'typ' => 'enum', 'domyslna' => 'nie', 'opcje' => $takNie,
+            'opis' => 'Wymaga mcs.dnsbl.spamhausDqsKey w .env (klucz komercyjny).',
+        ];
+        $d['mcs.dnsbl.skanLms'] = [
+            'grupa' => 'DNSBL', 'etykieta' => 'Skan codzienny — IP z LMS ∩ AS', 'typ' => 'enum', 'domyslna' => 'tak', 'opcje' => $takNie,
+        ];
+        $d['mcs.dnsbl.skanAs'] = [
+            'grupa' => 'DNSBL', 'etykieta' => 'Skan tygodniowy — całe AS (IPv4)', 'typ' => 'enum', 'domyslna' => 'tak', 'opcje' => $takNie,
+        ];
+        $d['mcs.dnsbl.forceZakres'] = [
+            'grupa' => 'DNSBL', 'etykieta' => 'Wymuś zakres skanu', 'typ' => 'enum', 'domyslna' => 'auto',
+            'opcje' => ['auto', 'lms', 'as'],
+            'opis' => 'auto = wg dnia tygodnia; lms/as = zawsze ten zakres (gdy włączony).',
+        ];
+        $d['mcs.dnsbl.asScanWeekday'] = [
+            'grupa' => 'DNSBL', 'etykieta' => 'Dzień skanu całego AS (UTC)', 'typ' => 'enum', 'domyslna' => '0',
+            'opcje' => ['0', '1', '2', '3', '4', '5', '6'],
+            'opis' => '0=niedziela, 1=poniedziałek, … 6=sobota (UTC).',
+        ];
+        $d['mcs.dnsbl.cacheTtl'] = $ttl('DNSBL', self::DOBA);
+        $d['mcs.dnsbl.rateLimitQps'] = [
+            'grupa' => 'DNSBL', 'etykieta' => 'Limit zapytań DNS (QPS)', 'typ' => 'int', 'domyslna' => '25', 'min' => 1, 'max' => 500,
+        ];
+
         // --- Źródła IMAP ---
         $d['mcs.shadowserver.imapRecentLimit'] = [
             'grupa' => 'Shadowserver', 'etykieta' => 'IMAP — ile ostatnich UID gdy brak UNSEEN', 'typ' => 'int', 'domyslna' => '40', 'min' => 1, 'max' => 5000,
@@ -252,6 +286,16 @@ final class OpcjeMcs
     public static function int(string $klucz): int
     {
         return (int) self::odczyt($klucz)['wartosc'];
+    }
+
+    /**
+     * Enum tak/nie (oraz 1/true/yes/on) — przełączniki w opcjach WWW.
+     */
+    public static function jestTak(string $klucz): bool
+    {
+        $v = strtolower(trim(self::tekst($klucz)));
+
+        return in_array($v, ['tak', '1', 'true', 'yes', 'on'], true);
     }
 
     /**

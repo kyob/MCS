@@ -21,6 +21,7 @@ class SzczegolyZrodla
         'cloudflare_botnet'  => 'mcs_cloudflare_botnet_wiersze',
         'spoofer'            => 'mcs_spoofer_wiersze',
         'wazuh'              => 'mcs_wazuh_wiersze',
+        'dnsbl'              => 'mcs_dnsbl_wiersze',
         // qrator: brak mapowania — API płatne / źródło wstrzymane (nie inwestujemy w live drill-down).
     ];
 

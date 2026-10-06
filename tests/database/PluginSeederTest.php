@@ -46,11 +46,11 @@ final class PluginSeederTest extends CIUnitTestCase
         $wynik = (new PluginSeeder())->zapisz();
 
         $this->assertSame(
-            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'qrator', 'lms_mapowanie', 'ismalicious', 'spamrats', 'spoofer', 'speedtest'],
+            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'qrator', 'lms_mapowanie', 'ismalicious', 'spamrats', 'dnsbl', 'spoofer', 'speedtest', 'wazuh'],
             $wynik['nowe'],
         );
         $this->assertSame([], $wynik['juz_byly']);
-        $this->seeNumRecords(13, 'mcs_pluginy', []);
+        $this->seeNumRecords(15, 'mcs_pluginy', []);
         $this->seeInDatabase('mcs_pluginy', [
             'zrodlo'            => 'shadowserver',
             'nazwa'             => 'Shadowserver',
@@ -59,7 +59,7 @@ final class PluginSeederTest extends CIUnitTestCase
         ]);
         $this->seeInDatabase('mcs_pluginy', [
             'zrodlo'            => 'play',
-            'nazwa'             => 'Play',
+            'nazwa'             => 'Play Scrubbing',
             'import_wstrzymany' => 1,
         ]);
         $play = $this->db->table('mcs_pluginy')->where('zrodlo', 'play')->get()->getRowArray();
@@ -100,6 +100,12 @@ final class PluginSeederTest extends CIUnitTestCase
             'ukryty_w_ui'       => 1,
         ]);
         $this->seeInDatabase('mcs_pluginy', [
+            'zrodlo'            => 'dnsbl',
+            'nazwa'             => 'DNSBL (AS)',
+            'import_wstrzymany' => 1,
+            'ukryty_w_ui'       => 0,
+        ]);
+        $this->seeInDatabase('mcs_pluginy', [
             'zrodlo'            => 'spoofer',
             'nazwa'             => 'CAIDA Spoofer',
             'import_wstrzymany' => 1,
@@ -136,11 +142,11 @@ final class PluginSeederTest extends CIUnitTestCase
 
         $this->assertSame([], $wynik['nowe']);
         $this->assertSame(
-            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'qrator', 'lms_mapowanie', 'ismalicious', 'spamrats', 'spoofer', 'speedtest'],
+            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'qrator', 'lms_mapowanie', 'ismalicious', 'spamrats', 'dnsbl', 'spoofer', 'speedtest', 'wazuh'],
             $wynik['juz_byly'],
         );
         $this->assertContains('play', $wynik['opis_zaktualizowany']);
-        $this->seeNumRecords(13, 'mcs_pluginy', []);
+        $this->seeNumRecords(15, 'mcs_pluginy', []);
         $this->seeInDatabase('mcs_pluginy', [
             'zrodlo'            => 'play',
             'import_wstrzymany' => 0,

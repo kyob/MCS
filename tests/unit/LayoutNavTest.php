@@ -52,6 +52,8 @@ final class LayoutNavTest extends CIUnitTestCase
         $this->assertStringContainsString('dashboard/incydenty', $html);
         $this->assertStringContainsString('Speedtest', $html);
         $this->assertStringContainsString('dashboard/speedtest', $html);
+        $this->assertStringContainsString('DNSBL', $html);
+        $this->assertStringContainsString('dashboard/dnsbl', $html);
     }
 
     private function html(string $rola): string

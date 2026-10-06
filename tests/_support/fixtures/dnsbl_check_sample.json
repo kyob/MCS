@@ -1,0 +1,15 @@
+{
+  "listed_any": true,
+  "listy": {
+    "uceprotect1": {
+      "listed": true,
+      "kody": ["127.0.0.2"],
+      "error": ""
+    },
+    "spamcop": {
+      "listed": false,
+      "kody": [],
+      "error": ""
+    }
+  }
+}

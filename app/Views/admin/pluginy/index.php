@@ -70,6 +70,10 @@
                         if ($opis !== '') {
                             $szczegolyHtml .= '<p class="mb-2">' . esc($opis) . '</p>';
                         }
+                        if ($zrodlo === 'dnsbl') {
+                            $szczegolyHtml .= '<p class="mb-2"><a href="' . site_url('admin/ustawienia/opcje')
+                                . '">Konfiguracja list i skanu DNSBL</a> (Ustawienia → Opcje strojenia → grupa DNSBL)</p>';
+                        }
                         if ($polSkrot !== '') {
                             $szczegolyHtml .= '<p class="mb-2"><span class="text-body-secondary">Połączenie:</span> '
                                 . '<code>' . esc($polSkrot) . '</code></p>';

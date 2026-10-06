@@ -517,6 +517,98 @@ $badgeWaga = static function (string $waga): string {
     </div>
 </div>
 
+<div class="card border-0 shadow-sm rounded-3 mt-4" id="panel-dnsbl">
+    <div class="card-header bg-transparent border-0 pt-3 px-3 pb-0">
+        <h2 class="h5 mb-0">
+            <i class="bi bi-shield-exclamation me-1 text-danger" aria-hidden="true"></i>
+            Enrichment — DNSBL (AS)
+        </h2>
+    </div>
+    <div class="card-body">
+        <p class="card-text text-body-secondary small">
+            Multi-list DNSBL (UCEPROTECT, SpamCop, opcjonalnie Spamhaus DQS) — skan cron AS / LMS
+            oraz lookup na żądanie. Trafienia trafiają też do indeksu incydentów (źródło dnsbl).
+            <a href="<?= site_url('dashboard/dnsbl') ?>">Zbiorczy widok AS</a>.
+        </p>
+
+        <?php if (! empty($dnsblKomunikat)): ?>
+            <div class="alert alert-danger border-0 rounded-3 py-2" id="dnsbl-komunikat" role="alert"><?= esc($dnsblKomunikat) ?></div>
+        <?php else: ?>
+            <div class="alert alert-danger border-0 rounded-3 py-2" id="dnsbl-komunikat" role="alert" hidden></div>
+        <?php endif; ?>
+
+        <?php
+        $dnsblIpv6 = filter_var((string) $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false;
+        ?>
+        <?php if ($dnsblIpv6): ?>
+            <div class="alert alert-warning border-0 rounded-3 py-2" role="status">
+                DNSBL w MCS obsługuje tylko IPv4.
+            </div>
+        <?php endif; ?>
+
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+            <button type="button" class="btn btn-primary" id="dnsbl-sprawdz"
+                data-url="<?= site_url('ip/' . $ip . '/enrichment/dnsbl') ?>"
+                <?= $dnsblIpv6 ? 'disabled' : '' ?>>
+                Sprawdź DNSBL
+            </button>
+            <button type="button" class="btn btn-outline-secondary" id="dnsbl-force"
+                data-url="<?= site_url('ip/' . $ip . '/enrichment/dnsbl?force=1') ?>"
+                <?= $dnsblIpv6 ? 'disabled' : '' ?>>
+                Odśwież (force)
+            </button>
+            <a class="btn btn-outline-secondary" href="<?= site_url('dashboard/dnsbl') ?>">
+                Dashboard DNSBL
+            </a>
+            <span class="small text-body-secondary" id="dnsbl-status">
+                tryb: <?= esc((string) ($dnsblTryb ?? '—')) ?>
+            </span>
+        </div>
+
+        <div id="dnsbl-wynik" class="enrichment-wynik" <?= empty($dnsblCache) ? 'hidden' : '' ?>>
+            <?php $dbCache = is_array($dnsblCache ?? null) ? $dnsblCache : []; ?>
+            <?php
+            $dbListed = $dbCache['listed_any'] ?? null;
+            if (is_string($dbListed) || is_int($dbListed)) {
+                $dbListed = \App\Models\PluginModel::jakoBool($dbListed);
+            }
+            $dbListy = $dbCache['listy'] ?? [];
+            if (is_string($dbListy)) {
+                $decoded = json_decode($dbListy, true);
+                $dbListy = is_array($decoded) ? $decoded : [];
+            }
+            if (! is_array($dbListy)) {
+                $dbListy = [];
+            }
+            ?>
+            <dl class="row mb-0 small">
+                <dt class="col-sm-3 col-md-2 text-body-secondary">Na liście</dt>
+                <dd class="col-sm-9 col-md-10" id="dnsbl-listed"><?= $dbListed === null ? '—' : ($dbListed ? 'tak' : 'nie') ?></dd>
+                <dt class="col-sm-3 col-md-2 text-body-secondary">Listy</dt>
+                <dd class="col-sm-9 col-md-10" id="dnsbl-listy">
+                    <?php if ($dbListy === []): ?>
+                        <span class="text-body-secondary">—</span>
+                    <?php else: ?>
+                        <?php foreach ($dbListy as $listaId => $info): ?>
+                            <?php
+                            $hit = is_array($info) && ! empty($info['listed']);
+                            $cls = $hit ? 'text-bg-danger' : 'text-bg-secondary';
+                            ?>
+                            <span class="badge <?= $cls ?> me-1 dnsbl-lista-badge" data-lista="<?= esc((string) $listaId, 'attr') ?>">
+                                <?= esc((string) $listaId) ?>
+                            </span>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </dd>
+                <dt class="col-sm-3 col-md-2 text-body-secondary">Checked at</dt>
+                <dd class="col-sm-9 col-md-10" id="dnsbl-checked"><?= esc((string) (($dbCache['checked_at'] ?? '') !== '' ? $dbCache['checked_at'] : '—')) ?></dd>
+                <dt class="col-sm-3 col-md-2 text-body-secondary">Źródło danych</dt>
+                <dd class="col-sm-9 col-md-10" id="dnsbl-zrodlo"><?= esc((string) (($dbCache['zrodlo_danych'] ?? '') !== '' ? $dbCache['zrodlo_danych'] : '—')) ?></dd>
+            </dl>
+        </div>
+    </div>
+</div>
+
 <?php
 $stCidr   = isset($speedtestCidr) && is_string($speedtestCidr) && $speedtestCidr !== '' ? $speedtestCidr : null;
 $stLiczba = (int) ($speedtestLiczba24 ?? 0);
@@ -665,6 +757,74 @@ $stLiczba = (int) ($speedtestLiczba24 ?? 0);
         var b = document.getElementById(id);
         if (b && !b.disabled) {
             b.addEventListener('click', function () { odpytajSr(b); });
+        }
+    });
+})();
+</script>
+
+<script>
+(function () {
+    function tekst(v) {
+        return (v === null || v === undefined || v === '') ? '—' : String(v);
+    }
+    function takNie(v) {
+        if (v === true || v === 1 || v === '1' || v === 't' || v === 'true') return 'tak';
+        if (v === false || v === 0 || v === '0' || v === 'f' || v === 'false') return 'nie';
+        return '—';
+    }
+    function pokazDnsbl(dane) {
+        var box = document.getElementById('dnsbl-wynik');
+        if (!box) return;
+        box.hidden = false;
+        var w = dane.wynik || {};
+        document.getElementById('dnsbl-listed').textContent = takNie(w.listed_any);
+        var listyEl = document.getElementById('dnsbl-listy');
+        if (listyEl) {
+            var listy = w.listy || {};
+            var html = '';
+            Object.keys(listy).forEach(function (id) {
+                var info = listy[id] || {};
+                var hit = !!(info.listed);
+                var cls = hit ? 'text-bg-danger' : 'text-bg-secondary';
+                html += '<span class="badge ' + cls + ' me-1">' + String(id).replace(/[<>&]/g, '') + '</span>';
+            });
+            listyEl.innerHTML = html || '<span class="text-body-secondary">—</span>';
+        }
+        document.getElementById('dnsbl-checked').textContent = tekst(w.checked_at);
+        document.getElementById('dnsbl-zrodlo').textContent = tekst(w.zrodlo_danych);
+        var st = document.getElementById('dnsbl-status');
+        if (st) {
+            st.textContent = 'tryb: ' + tekst(dane.tryb) + (dane.z_cache ? ' (z cache)' : '');
+        }
+    }
+    function pokazDnsblBlad(msg) {
+        var el = document.getElementById('dnsbl-komunikat');
+        if (!el) return;
+        el.hidden = false;
+        el.textContent = msg || 'Błąd enrichment DNSBL.';
+    }
+    function odpytajDnsbl(btn) {
+        var url = btn.getAttribute('data-url');
+        if (!url) return;
+        btn.disabled = true;
+        fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (x) {
+                if (!x.j || !x.j.ok) {
+                    pokazDnsblBlad((x.j && x.j.blad) ? x.j.blad : 'Błąd enrichment DNSBL.');
+                    return;
+                }
+                var el = document.getElementById('dnsbl-komunikat');
+                if (el) { el.hidden = true; el.textContent = ''; }
+                pokazDnsbl(x.j);
+            })
+            .catch(function () { pokazDnsblBlad('Nie udało się połączyć z MCS.'); })
+            .finally(function () { btn.disabled = false; });
+    }
+    ['dnsbl-sprawdz', 'dnsbl-force'].forEach(function (id) {
+        var b = document.getElementById(id);
+        if (b && !b.disabled) {
+            b.addEventListener('click', function () { odpytajDnsbl(b); });
         }
     });
 })();

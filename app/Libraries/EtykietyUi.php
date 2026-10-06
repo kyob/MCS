@@ -21,6 +21,7 @@ class EtykietyUi
         'lms_mapowanie'      => 'LMS',
         'ismalicious'        => 'isMalicious',
         'spamrats'           => 'SpamRats',
+        'dnsbl'              => 'DNSBL',
         'spoofer'            => 'CAIDA Spoofer',
         'speedtest'          => 'Speedtest',
     ];

@@ -44,4 +44,16 @@ final class CidrMatcherTest extends CIUnitTestCase
         $this->assertFalse($m->ipWLiscie('8.8.8.8', $cidry));
         $this->assertFalse($m->ipWLiscie('nie-ip', $cidry));
     }
+
+    public function testEnumerujIpv4(): void
+    {
+        $m   = new CidrMatcher();
+        $ips = iterator_to_array($m->enumerujIpv4('198.51.100.0/30'), false);
+        $this->assertSame(
+            ['198.51.100.0', '198.51.100.1', '198.51.100.2', '198.51.100.3'],
+            $ips,
+        );
+        $this->assertSame([], iterator_to_array($m->enumerujIpv4('10.0.0.0/8'), false));
+        $this->assertSame(['203.0.113.9'], iterator_to_array($m->enumerujIpv4('203.0.113.9'), false));
+    }
 }

@@ -100,6 +100,15 @@ final class OpcjeMcsTest extends CIUnitTestCase
             'mcs.ismalicious.cacheTtl'              => 86400,
             'mcs.ismalicious.httpTimeout'           => 30,
             'mcs.spamrats.cacheTtl'                 => 86400,
+            'mcs.dnsbl.listaUceprotect'             => 'tak',
+            'mcs.dnsbl.listaSpamcop'                => 'tak',
+            'mcs.dnsbl.listaSpamhaus'               => 'nie',
+            'mcs.dnsbl.skanLms'                     => 'tak',
+            'mcs.dnsbl.skanAs'                      => 'tak',
+            'mcs.dnsbl.forceZakres'                 => 'auto',
+            'mcs.dnsbl.asScanWeekday'               => '0',
+            'mcs.dnsbl.cacheTtl'                    => 86400,
+            'mcs.dnsbl.rateLimitQps'                => 25,
             'mcs.shadowserver.imapRecentLimit'      => 40,
             'mcs.play.imapRecentLimit'              => 100,
             'mcs.snds.lookbackDays'                 => 3,
@@ -134,10 +143,16 @@ final class OpcjeMcsTest extends CIUnitTestCase
             if (env($klucz) !== null) {
                 continue; // środowisko testowe nadpisuje — pomiń
             }
-            $this->assertSame($wartosc, OpcjeMcs::int($klucz), $klucz);
+            if (is_string($wartosc) && ! preg_match('/^-?\d+$/', $wartosc)) {
+                $this->assertSame($wartosc, OpcjeMcs::tekst($klucz), $klucz);
+            } else {
+                $this->assertSame((int) $wartosc, OpcjeMcs::int($klucz), $klucz);
+            }
             $this->assertSame(OpcjeMcs::ZRODLO_DOMYSLNA, OpcjeMcs::odczyt($klucz)['zrodlo'], $klucz);
         }
 
+        $this->assertTrue(OpcjeMcs::jestTak('mcs.dnsbl.listaUceprotect'));
+        $this->assertFalse(OpcjeMcs::jestTak('mcs.dnsbl.listaSpamhaus'));
         $this->assertSame('high', OpcjeMcs::tekst('mcs.kolejkaDnia.minWaga'));
         $this->assertSame('antyddos@play.pl', OpcjeMcs::tekst('mcs.play.fromAddress'));
         $this->assertSame('', OpcjeMcs::tekst('mcs.spoofer.lookbackDays'));
