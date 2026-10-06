@@ -56,9 +56,9 @@ class ObserwacjaModel extends Model
     }
 
     /**
-     * Trendy dzienne z mcs_obserwacje (widoczne incydenty): wolumen, nowe vs powtarzające, per źródło.
+     * Trendy dzienne: unikalne widoczne incydenty aktywne w dniu (po obserwacjach).
      *
-     * „Nowe” = obserwacja w dniu pierwszego widzenia incydentu; „powtarzające” = pozostałe.
+     * „Nowe” = dzień pierwszego widzenia; „powtarzające” = aktywne, znane wcześniej.
      *
      * @param (callable(string): bool)|null $akceptujIp
      *
@@ -66,14 +66,14 @@ class ObserwacjaModel extends Model
      *   okno_dni: int,
      *   dni: list<array{
      *     dzien: string,
-     *     obserwacje: int,
+     *     incydenty: int,
      *     nowe: int,
      *     powtarzajace: int,
      *     zrodla: array<string, int>
      *   }>,
      *   zrodla_suma: array<string, int>,
-     *   max_obserwacje: int,
-     *   suma_obserwacji: int
+     *   max_incydenty: int,
+     *   suma_incydentow: int
      * }
      */
     public function trendyDzienne(
@@ -90,7 +90,7 @@ class ObserwacjaModel extends Model
             ->format('Y-m-d H:i:s');
 
         $builder = $this->db->table($this->table . ' AS o')
-            ->select('o.zaobserwowano_at, i.pierwsze_widziane, i.zrodlo, i.podmiot')
+            ->select('o.zaobserwowano_at, o.incydent_id, i.pierwsze_widziane, i.zrodlo, i.podmiot')
             ->join('mcs_incydenty AS i', 'i.id = o.incydent_id', 'inner')
             ->join('mcs_pluginy AS p', 'p.zrodlo = i.zrodlo', 'left')
             ->where('i.podmiot_typ', 'ip')
@@ -119,10 +119,12 @@ class ObserwacjaModel extends Model
             $wiersze = [];
         }
 
-        /** @var array<string, array{obserwacje: int, nowe: int, powtarzajace: int, zrodla: array<string, int>}> $poDniu */
-        $poDniu     = [];
-        $zrodlaSuma = [];
-        $suma       = 0;
+        /** @var array<string, array{ids: array<int, bool>, noweIds: array<int, bool>, zrodlaIds: array<string, array<int, bool>>}> $poDniu */
+        $poDniu = [];
+        /** @var array<int, string> $incydentDoZrodla */
+        $incydentDoZrodla = [];
+        /** @var array<int, bool> $incydentyWOknie */
+        $incydentyWOknie = [];
 
         foreach ($wiersze as $wiersz) {
             $podmiot = (string) ($wiersz['podmiot'] ?? '');
@@ -130,6 +132,11 @@ class ObserwacjaModel extends Model
                 continue;
             }
             if ($akceptujIp !== null && ! $akceptujIp($podmiot)) {
+                continue;
+            }
+
+            $incydentId = (int) ($wiersz['incydent_id'] ?? 0);
+            if ($incydentId <= 0) {
                 continue;
             }
 
@@ -144,56 +151,61 @@ class ObserwacjaModel extends Model
 
             if (! isset($poDniu[$dzienObs])) {
                 $poDniu[$dzienObs] = [
-                    'obserwacje'    => 0,
-                    'nowe'          => 0,
-                    'powtarzajace'  => 0,
-                    'zrodla'        => [],
+                    'ids'       => [],
+                    'noweIds'   => [],
+                    'zrodlaIds' => [],
                 ];
             }
-            $poDniu[$dzienObs]['obserwacje']++;
+            $poDniu[$dzienObs]['ids'][$incydentId] = true;
+            $incydentyWOknie[$incydentId]          = true;
             if ($nowe) {
-                $poDniu[$dzienObs]['nowe']++;
-            } else {
-                $poDniu[$dzienObs]['powtarzajace']++;
+                $poDniu[$dzienObs]['noweIds'][$incydentId] = true;
             }
             if ($z !== '') {
-                $poDniu[$dzienObs]['zrodla'][$z] = ($poDniu[$dzienObs]['zrodla'][$z] ?? 0) + 1;
-                $zrodlaSuma[$z]                  = ($zrodlaSuma[$z] ?? 0) + 1;
+                $poDniu[$dzienObs]['zrodlaIds'][$z][$incydentId] = true;
+                $incydentDoZrodla[$incydentId]                   = $z;
             }
-            $suma++;
+        }
+
+        $zrodlaSuma = [];
+        foreach ($incydentDoZrodla as $z) {
+            $zrodlaSuma[$z] = ($zrodlaSuma[$z] ?? 0) + 1;
         }
 
         // Wypełnij ciągłe okno (UTC), także dni bez obserwacji — bez pustego „vanity chart”.
         $dzisiaj = new \DateTimeImmutable('today', new \DateTimeZone('UTC'));
         $dni     = [];
-        $maxObs  = 0;
+        $maxInc  = 0;
         for ($i = $oknoDni - 1; $i >= 0; $i--) {
             $dzien = $dzisiaj->modify("-{$i} days")->format('Y-m-d');
-            $dane  = $poDniu[$dzien] ?? [
-                'obserwacje'   => 0,
-                'nowe'         => 0,
-                'powtarzajace' => 0,
-                'zrodla'       => [],
-            ];
-            $maxObs = max($maxObs, $dane['obserwacje']);
-            ksort($dane['zrodla']);
-            $dni[] = [
-                'dzien'         => $dzien,
-                'obserwacje'    => $dane['obserwacje'],
-                'nowe'          => $dane['nowe'],
-                'powtarzajace'  => $dane['powtarzajace'],
-                'zrodla'        => $dane['zrodla'],
+            $raw   = $poDniu[$dzien] ?? ['ids' => [], 'noweIds' => [], 'zrodlaIds' => []];
+            $ids   = $raw['ids'];
+            $noweN = count($raw['noweIds']);
+            $incN  = count($ids);
+            $powtN = max(0, $incN - $noweN);
+            $zrodlaDnia = [];
+            foreach ($raw['zrodlaIds'] as $kod => $idSet) {
+                $zrodlaDnia[$kod] = count($idSet);
+            }
+            ksort($zrodlaDnia);
+            $maxInc = max($maxInc, $incN);
+            $dni[]  = [
+                'dzien'        => $dzien,
+                'incydenty'    => $incN,
+                'nowe'         => $noweN,
+                'powtarzajace' => $powtN,
+                'zrodla'       => $zrodlaDnia,
             ];
         }
 
         arsort($zrodlaSuma, SORT_NUMERIC);
 
         return [
-            'okno_dni'         => $oknoDni,
-            'dni'              => $dni,
-            'zrodla_suma'      => $zrodlaSuma,
-            'max_obserwacje'   => $maxObs,
-            'suma_obserwacji'  => $suma,
+            'okno_dni'        => $oknoDni,
+            'dni'             => $dni,
+            'zrodla_suma'     => $zrodlaSuma,
+            'max_incydenty'   => $maxInc,
+            'suma_incydentow' => count($incydentyWOknie),
         ];
     }
 
