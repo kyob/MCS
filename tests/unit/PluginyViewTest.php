@@ -36,6 +36,20 @@ final class PluginyViewTest extends CIUnitTestCase
                     'health_msg'        => '',
                     'health_at'         => '',
                 ],
+                [
+                    'zrodlo'            => 'snds',
+                    'nazwa'             => 'SNDS',
+                    'import_wstrzymany' => false,
+                    'ukryty_w_ui'       => false,
+                    'health_ok'         => false,
+                    'health_msg'        => 'SNDS HTTP 404',
+                    'health_at'         => '2026-10-06 07:15:00+00',
+                ],
+            ],
+            'sndsKlucz' => [
+                'ustawiony' => true,
+                'zrodlo'    => 'env',
+                'skrot'     => 'a1b2…7890',
             ],
             'importy' => [
                 [
@@ -71,6 +85,16 @@ final class PluginyViewTest extends CIUnitTestCase
         $this->assertStringContainsString('shadowserver', $html);
         $this->assertStringContainsString('Play Ochrona Anty-DDoS', $html);
         $this->assertStringContainsString('disabled', $html);
+        $this->assertStringContainsString('bi-key me-1', $html);
+        $this->assertStringContainsString('admin/pluginy/snds-klucz', $html);
+        $this->assertStringContainsString('name="mcs_snds_key"', $html);
+        $this->assertStringContainsString('a1b2…7890', $html);
+        $this->assertStringContainsString('modalSndsKlucz', $html);
+        $this->assertStringContainsString('Zapisz klucz', $html);
+        $this->assertStringContainsString('Pobierz klucz z portalu Auto', $html);
+        $this->assertStringContainsString('https://substrate.office.com/ip-domain-management-snds/SNDS/Auto', $html);
+        // Przycisk Klucz tylko przy SNDS (jeden modal + jeden przycisk w wierszu).
+        $this->assertSame(1, substr_count($html, 'data-bs-target="#modalSndsKlucz"'));
 
         $this->assertStringContainsString('>Lp.</th>', $html);
         $this->assertStringContainsString('>Nazwa</th>', $html);
@@ -194,5 +218,9 @@ final class PluginyViewTest extends CIUnitTestCase
         $this->assertStringContainsString('selected', $html);
         $this->assertStringContainsString('zły CSV', $html);
         $this->assertStringContainsString('admin/pluginy', $html);
+        // UTC 18:00 → Europe/Warsaw CEST 20:00 (bez sufiksu +00).
+        $this->assertStringContainsString('2026-09-11 20:00:00', $html);
+        $this->assertStringContainsString('2026-09-11 20:00:30', $html);
+        $this->assertStringNotContainsString('18:00:00+00', $html);
     }
 }

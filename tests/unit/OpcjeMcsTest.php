@@ -252,13 +252,48 @@ final class OpcjeMcsTest extends CIUnitTestCase
 
     public function testNieMaSekretowAniSciezekWWww(): void
     {
-        foreach (array_keys(OpcjeMcs::definicje()) as $klucz) {
+        foreach (OpcjeMcs::definicje() as $klucz => $def) {
+            if (($def['typ'] ?? '') === 'secret') {
+                continue; // edycja poza formularzem Opcji (np. modal SNDS)
+            }
             $this->assertDoesNotMatchRegularExpression(
                 '/(token|key|pass|secret|user|host|url|path|file|dir|tls|verify|credential|email|mailbox|ssh)/i',
                 str_replace(['fromAddress'], [''], $klucz),
                 $klucz,
             );
         }
+
+        $this->assertSame('secret', OpcjeMcs::definicje()['mcs.snds.key']['typ'] ?? null);
+        foreach (OpcjeMcs::doWidoku() as $opcje) {
+            $this->assertArrayNotHasKey('mcs.snds.key', $opcje);
+        }
+    }
+
+    public function testSekretSndsUuidIPierwszenstwoDb(): void
+    {
+        $uuid = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+        $this->assertTrue(OpcjeMcs::waliduj('mcs.snds.key', $uuid)['ok']);
+        $this->assertSame($uuid, OpcjeMcs::waliduj('mcs.snds.key', strtoupper($uuid))['wartosc']);
+        $this->assertTrue(OpcjeMcs::waliduj('mcs.snds.key', '')['ok']);
+        $this->assertFalse(OpcjeMcs::waliduj('mcs.snds.key', 'nie-uuid')['ok']);
+        $this->assertSame('a1b2…7890', OpcjeMcs::skrotSekretu($uuid));
+
+        $this->ustawEnv('mcs.snds.key', '11111111-2222-3333-4444-555555555555');
+        OpcjeMcs::ustawModel($this->modelZ(['mcs.snds.key' => $uuid]));
+        $this->assertSame($uuid, OpcjeMcs::tekst('mcs.snds.key'));
+        $this->assertSame(OpcjeMcs::ZRODLO_DB, OpcjeMcs::odczyt('mcs.snds.key')['zrodlo']);
+    }
+
+    public function testZapiszPustySekretUsuwaWierszDb(): void
+    {
+        $model = $this->modelZ(['mcs.snds.key' => 'a1b2c3d4-e5f6-7890-abcd-ef1234567890']);
+        $model->expects($this->once())->method('delete')
+            ->with('mcs.snds.key')->willReturn(true);
+        $model->expects($this->never())->method('ustaw');
+
+        $wynik = OpcjeMcs::zapisz($model, ['mcs.snds.key' => '']);
+        $this->assertTrue($wynik['ok']);
+        $this->assertSame(1, $wynik['zmienione']);
     }
 
     public function testZapiszWszystkoAlboNic(): void
@@ -311,5 +346,7 @@ final class OpcjeMcsTest extends CIUnitTestCase
         $this->assertStringContainsString('name="opcja[mcs.kolejkaDnia.minWaga]"', $html);
         $this->assertStringContainsString('csrf', $html);
         $this->assertStringNotContainsString('apiKey', $html);
+        $this->assertStringNotContainsString('mcs.snds.key', $html);
+        $this->assertStringNotContainsString('name="opcja[mcs.snds.key]"', $html);
     }
 }

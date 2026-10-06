@@ -10,8 +10,8 @@ use App\Models\UstawieniaModel;
  * Kolejność odczytu: wiersz w mcs_ustawienia (klucz = nazwa klucza .env) → .env → domyślna.
  * Domyślna = wartość wcześniej zahardkodowana w kodzie. Brak wiersza w DB = bez zmian.
  *
- * Sekrety, hasła, tokeny, hosty/URL-e z poświadczeniami, TLS i ścieżki plików
- * NIE są tu zdefiniowane — zostają tylko w .env (bez edycji z WWW).
+ * Typ `secret` (np. mcs.snds.key): edycja z dedykowanego UI (nie z formularza Opcji).
+ * Pozostałe hasła/tokeny/hosty/ścieżki — nadal tylko w .env.
  */
 final class OpcjeMcs
 {
@@ -31,7 +31,7 @@ final class OpcjeMcs
     private static ?array $wierszeDb = null;
 
     /**
-     * Definicje opcji. typ: int | int? (puste dozwolone) | asn | asn? | email | enum.
+     * Definicje opcji. typ: int | int? (puste dozwolone) | asn | asn? | email | enum | secret.
      *
      * @return array<string, array{grupa: string, etykieta: string, typ: string, domyslna: string, min?: int, max?: int, opcje?: list<string>, opis?: string}>
      */
@@ -158,6 +158,13 @@ final class OpcjeMcs
         ];
 
         // --- SNDS ---
+        $d['mcs.snds.key'] = [
+            'grupa'    => 'SNDS',
+            'etykieta' => 'Klucz Automated Data Access (UUID)',
+            'typ'      => 'secret',
+            'domyslna' => '',
+            'opis'     => 'Edycja: Wtyczki źródeł → SNDS → Klucz. Puste w DB = wartość z .env.',
+        ];
         $d['mcs.snds.lookbackDays'] = [
             'grupa' => 'SNDS', 'etykieta' => 'Ile dni wstecz', 'typ' => 'int', 'domyslna' => '3', 'min' => 1, 'max' => 90,
         ];
@@ -354,13 +361,40 @@ final class OpcjeMcs
                 }
 
                 return $ok($v);
+
+            case 'secret':
+                if ($v === '') {
+                    return $ok('');
+                }
+                if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $v) !== 1) {
+                    return $err('wymagany UUID (Automated Data Access)');
+                }
+
+                return $ok(strtolower($v));
         }
 
         return $err('nieobsługiwany typ');
     }
 
     /**
-     * Definicje pogrupowane z efektywną wartością (do widoku).
+     * Skrót sekretu do UI (bez pełnej wartości).
+     */
+    public static function skrotSekretu(string $wartosc): string
+    {
+        $v = trim($wartosc);
+        if ($v === '') {
+            return '';
+        }
+        if (strlen($v) < 10) {
+            return '••••';
+        }
+
+        return substr($v, 0, 4) . '…' . substr($v, -4);
+    }
+
+    /**
+     * Definicje pogrupowane z efektywną wartością (do widoku Opcji).
+     * Typ `secret` pomijany — edycja tylko z dedykowanego UI.
      *
      * @return array<string, array<string, array<string, mixed>>>
      */
@@ -368,7 +402,10 @@ final class OpcjeMcs
     {
         $out = [];
         foreach (self::definicje() as $klucz => $def) {
-            $odczyt                         = self::odczyt($klucz);
+            if (($def['typ'] ?? '') === 'secret') {
+                continue;
+            }
+            $odczyt                     = self::odczyt($klucz);
             $out[$def['grupa']][$klucz] = $def + $odczyt;
         }
 
@@ -406,6 +443,14 @@ final class OpcjeMcs
             $wal = self::waliduj($klucz, $wartosci[$klucz]);
             if (! $wal['ok']) {
                 $bledy[$klucz] = $def['grupa'] . ' / ' . $def['etykieta'] . ': ' . $wal['blad'];
+
+                continue;
+            }
+            // Sekret pusty = usuń override DB (nie zapisuj pustego wiersza nad .env).
+            if (($def['typ'] ?? '') === 'secret' && $wal['wartosc'] === '') {
+                if (array_key_exists($klucz, $db)) {
+                    $plan[$klucz] = null;
+                }
 
                 continue;
             }

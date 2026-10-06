@@ -36,6 +36,7 @@ $routes->group('admin', ['filter' => 'mcsRola:admin,superadmin'], static functio
     $routes->get('pluginy/historia-importow', 'Admin\Pluginy::historiaImportow');
     $routes->post('pluginy', 'Admin\Pluginy::zapisz');
     $routes->post('pluginy/pobierz', 'Admin\Pluginy::pobierz');
+    $routes->post('pluginy/snds-klucz', 'Admin\Pluginy::zapiszKluczSnds');
     $routes->get('ustawienia', 'Admin\Ustawienia::index');
     $routes->post('ustawienia', 'Admin\Ustawienia::zapisz');
     $routes->post('ustawienia/przywroc-domyslne', 'Admin\Ustawienia::przywrocDomyslne');

@@ -3,11 +3,13 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\OpcjeMcs;
 use App\Libraries\PluginOpisPolaczenia;
 use App\Libraries\PluginRegistry;
 use App\Libraries\PobierzSerwis;
 use App\Models\ImportModel;
 use App\Models\PluginModel;
+use App\Models\UstawieniaModel;
 
 /**
  * Panel stanów wtyczek źródeł + „Pobierz teraz” + podgląd historii importów.
@@ -21,6 +23,9 @@ class Pluginy extends BaseController
 
     public function index()
     {
+        OpcjeMcs::ustawModel(model(UstawieniaModel::class));
+        $sndsOdczyt = OpcjeMcs::odczyt('mcs.snds.key');
+
         return view('admin/pluginy/index', [
             'title'      => 'Wtyczki źródeł — MCS',
             'navAktywny' => 'pluginy',
@@ -33,6 +38,11 @@ class Pluginy extends BaseController
             'rola'       => (string) session()->get('mcs_user_rola'),
             'komunikat'  => session()->getFlashdata('komunikat'),
             'blad'       => session()->getFlashdata('blad'),
+            'sndsKlucz'  => [
+                'ustawiony' => $sndsOdczyt['wartosc'] !== '',
+                'zrodlo'    => $sndsOdczyt['zrodlo'],
+                'skrot'     => OpcjeMcs::skrotSekretu($sndsOdczyt['wartosc']),
+            ],
         ]);
     }
 
@@ -96,6 +106,38 @@ class Pluginy extends BaseController
         return redirect()->to('/admin/pluginy')->with(
             'komunikat',
             'Zapisano stany wtyczki: ' . $zrodlo,
+        );
+    }
+
+    /**
+     * Zapis UUID Automated Data Access SNDS (override w mcs_ustawienia).
+     * Puste pole = usuń override (wraca mcs.snds.key z .env).
+     */
+    public function zapiszKluczSnds()
+    {
+        $klucz = trim((string) $this->request->getPost('mcs_snds_key'));
+        $wynik = OpcjeMcs::zapisz(
+            model(UstawieniaModel::class),
+            ['mcs.snds.key' => $klucz],
+        );
+
+        if (! $wynik['ok']) {
+            $blad = $wynik['bledy']['mcs.snds.key']
+                ?? ($wynik['bledy']['_'] ?? 'Nie udało się zapisać klucza SNDS.');
+
+            return redirect()->to('/admin/pluginy')->with('blad', $blad);
+        }
+
+        if ($klucz === '') {
+            return redirect()->to('/admin/pluginy')->with(
+                'komunikat',
+                'Usunięto klucz SNDS z bazy — obowiązuje wartość z .env (jeśli jest). Uruchom „Pobierz teraz”, żeby sprawdzić import.',
+            );
+        }
+
+        return redirect()->to('/admin/pluginy')->with(
+            'komunikat',
+            'Zapisano klucz SNDS. Uruchom „Pobierz teraz”, żeby sprawdzić import.',
         );
     }
 

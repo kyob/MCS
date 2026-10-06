@@ -170,6 +170,13 @@
                             </td>
                             <td class="pe-3">
                                 <div class="d-inline-flex align-items-center gap-1 text-nowrap">
+                                    <?php if ($zrodlo === 'snds'): ?>
+                                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                                data-bs-toggle="modal" data-bs-target="#modalSndsKlucz"
+                                                title="Klucz Automated Data Access (UUID)">
+                                            <i class="bi bi-key me-1" aria-hidden="true"></i>Klucz
+                                        </button>
+                                    <?php endif; ?>
                                     <form method="post" action="<?= site_url('admin/pluginy/pobierz') ?>" class="mb-0"
                                           onsubmit="return confirm('Uruchomić pobieranie dla <?= esc($zrodlo, 'js') ?>? Może potrwać dłużej.');">
                                         <?= csrf_field() ?>
@@ -191,6 +198,84 @@
         </div>
     </div>
 <?php endif; ?>
+
+<?php
+$sndsKlucz = is_array($sndsKlucz ?? null) ? $sndsKlucz : [];
+$sndsUstawiony = (bool) ($sndsKlucz['ustawiony'] ?? false);
+$sndsZrodlo = (string) ($sndsKlucz['zrodlo'] ?? '');
+$sndsSkrot = (string) ($sndsKlucz['skrot'] ?? '');
+$sndsZrodloEtykieta = match ($sndsZrodlo) {
+    \App\Libraries\OpcjeMcs::ZRODLO_DB  => 'z bazy',
+    \App\Libraries\OpcjeMcs::ZRODLO_ENV => 'z .env',
+    default                             => 'brak',
+};
+?>
+<div class="modal fade" id="modalSndsKlucz" tabindex="-1" aria-labelledby="modalSndsKluczLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" action="<?= site_url('admin/pluginy/snds-klucz') ?>" class="modal-content">
+            <?= csrf_field() ?>
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="modalSndsKluczLabel">Klucz SNDS (Auto Data Access)</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-body-secondary mb-3">
+                    Status:
+                    <?php if ($sndsUstawiony): ?>
+                        <span class="badge text-bg-success"><?= esc($sndsZrodloEtykieta) ?></span>
+                        <code class="ms-1"><?= esc($sndsSkrot) ?></code>
+                    <?php else: ?>
+                        <span class="badge text-bg-secondary">brak</span>
+                    <?php endif; ?>
+                </p>
+                <div class="mb-3">
+                    <a class="btn btn-sm btn-outline-secondary"
+                       href="https://substrate.office.com/ip-domain-management-snds/SNDS/Auto"
+                       target="_blank" rel="noopener noreferrer">
+                        <i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>Pobierz klucz z portalu Auto
+                    </a>
+                    <div class="form-text text-break mt-1">
+                        <a href="https://substrate.office.com/ip-domain-management-snds/SNDS/Auto"
+                           target="_blank" rel="noopener noreferrer">https://substrate.office.com/ip-domain-management-snds/SNDS/Auto</a>
+                        — klucz wygasa zwykle po ~30 dniach.
+                    </div>
+                </div>
+                <label class="form-label" for="mcs_snds_key">Nowy klucz (UUID)</label>
+                <div class="input-group">
+                    <input type="password" class="form-control font-monospace" id="mcs_snds_key"
+                           name="mcs_snds_key" autocomplete="off"
+                           placeholder="<?= $sndsUstawiony ? '••••••••-••••-••••-••••-••••••••••••' : 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' ?>">
+                    <button type="button" class="btn btn-outline-secondary" id="mcs_snds_key_toggle"
+                            title="Pokaż / ukryj" aria-label="Pokaż lub ukryj klucz">
+                        <i class="bi bi-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <div class="form-text">
+                    Puste pole + Zapisz usuwa wartość z bazy (wraca <code>mcs.snds.key</code> z .env).
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1" aria-hidden="true"></i>Zapisz klucz
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+(function () {
+    var btn = document.getElementById('mcs_snds_key_toggle');
+    var inp = document.getElementById('mcs_snds_key');
+    if (!btn || !inp) return;
+    btn.addEventListener('click', function () {
+        var show = inp.type === 'password';
+        inp.type = show ? 'text' : 'password';
+        btn.querySelector('i')?.classList.toggle('bi-eye', !show);
+        btn.querySelector('i')?.classList.toggle('bi-eye-slash', show);
+    });
+})();
+</script>
 
 <section class="mb-4">
     <div class="card border-0 shadow-sm rounded-3">

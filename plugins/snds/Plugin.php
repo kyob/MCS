@@ -76,7 +76,7 @@ class Plugin implements SourcePluginInterface
 
         $key = $this->kluczApi();
         if ($key === '') {
-            $msg = 'SNDS: ustaw mcs.snds.key (UUID Auto Data Access) albo mcs.snds.fixturePath w .env';
+            $msg = 'SNDS: ustaw klucz Auto (Wtyczki → SNDS → Klucz) albo mcs.snds.key / fixturePath w .env';
             $this->aktualizujHealth(false, $msg);
             throw new RuntimeException($msg);
         }
@@ -99,7 +99,9 @@ class Plugin implements SourcePluginInterface
         }
 
         if ($okDni === 0) {
-            $msg = 'SNDS: import nieudany dla wszystkich ' . count($daty) . ' dni. '
+            $msg = 'SNDS: brak CSV dla wszystkich ' . count($daty) . ' dni lookback. '
+                . 'Klucz może być OK — często po prostu brak aktywności / lag. '
+                . 'Spróbuj większego mcs.snds.lookbackDays albo nowy UUID w portalu Auto. '
                 . implode('; ', array_slice($bledy, 0, 3));
             $this->aktualizujHealth(false, $msg);
             throw new RuntimeException($msg);
@@ -279,8 +281,8 @@ class Plugin implements SourcePluginInterface
 
         if ($code === 404) {
             throw new RuntimeException(
-                'SNDS HTTP 404 date=' . $mmddyy . ' (brak danych / lag / wygasly klucz ~30 dni). '
-                . self::AUTO_PORTAL_URL,
+                'SNDS HTTP 404 date=' . $mmddyy
+                . ' (brak danych na ten dzień albo lag publikacji; przy samym 404 klucz nie musi być zły)',
             );
         }
 
@@ -425,7 +427,7 @@ class Plugin implements SourcePluginInterface
 
     private function kluczApi(): string
     {
-        $key = trim((string) env('mcs.snds.key', ''));
+        $key = trim(\App\Libraries\OpcjeMcs::tekst('mcs.snds.key'));
         if ($key !== '') {
             return $key;
         }
@@ -493,7 +495,7 @@ class Plugin implements SourcePluginInterface
             return "konfiguracja: DataKey key gotowy (lookbackDays={$lookback}, jeszcze bez przebiegu)";
         }
 
-        return 'brak mcs.snds.key i fixturePath (uzupelnij .env)';
+        return 'brak klucza SNDS i fixturePath (Wtyczki → Klucz albo .env)';
     }
 
     private function normalizujCzas(string $timestamp): string

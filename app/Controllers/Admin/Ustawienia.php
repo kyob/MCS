@@ -127,7 +127,8 @@ class Ustawienia extends BaseController
     }
 
     /**
-     * Opcje strojenia (progi, limity, TTL, timeouty, ASN). Sekrety tylko w .env.
+     * Opcje strojenia (progi, limity, TTL, timeouty, ASN).
+     * Typ secret (np. klucz SNDS) nie jest w tym formularzu — osobny UI.
      */
     public function opcje()
     {
