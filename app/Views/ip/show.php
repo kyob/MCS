@@ -458,7 +458,7 @@ $badgeWaga = static function (string $waga): string {
                target="_blank" rel="noopener noreferrer">
                 SpamRats BL
             </a>
-            <a class="btn btn-outline-secondary" href="https://check.spamhaus.org/results?query=<?= rawurlencode((string) $ip) ?>"
+            <a class="btn btn-outline-secondary" href="https://check.spamhaus.org/results/?query=<?= rawurlencode((string) $ip) ?>"
                target="_blank" rel="noopener noreferrer">
                 Spamhaus Check
             </a>
@@ -526,7 +526,7 @@ $badgeWaga = static function (string $waga): string {
     </div>
     <div class="card-body">
         <p class="card-text text-body-secondary small">
-            Multi-list DNSBL (UCEPROTECT, SpamCop, opcjonalnie Spamhaus DQS) — skan cron AS / LMS
+            Multi-list DNSBL (UCEPROTECT, SpamCop, DroneBL, opcjonalnie Spamhaus DQS) — skan cron AS / LMS
             oraz lookup na żądanie. Trafienia trafiają też do indeksu incydentów (źródło dnsbl).
             <a href="<?= site_url('dashboard/dnsbl') ?>">Zbiorczy widok AS</a>.
         </p>
@@ -559,6 +559,10 @@ $badgeWaga = static function (string $waga): string {
             </button>
             <a class="btn btn-outline-secondary" href="<?= site_url('dashboard/dnsbl') ?>">
                 Dashboard DNSBL
+            </a>
+            <a class="btn btn-outline-secondary" href="https://check.spamhaus.org/results/?query=<?= rawurlencode((string) $ip) ?>"
+               target="_blank" rel="noopener noreferrer" title="Lookup w Spamhaus Check (bez DQS w MCS)">
+                <i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>Spamhaus Check
             </a>
             <span class="small text-body-secondary" id="dnsbl-status">
                 tryb: <?= esc((string) ($dnsblTryb ?? '—')) ?>

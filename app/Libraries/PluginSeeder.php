@@ -48,7 +48,7 @@ class PluginSeeder
         [
             'zrodlo' => 'dnsbl',
             'nazwa'  => 'DNSBL (AS)',
-            'opis'   => 'Skan DNSBL własnych IP: codziennie LMS∩AS, raz/tydzień pełne AS. Listy i skan regulujesz w /admin/ustawienia/opcje (grupa DNSBL). UCEPROTECT+SpamCop (+opcjonalny Spamhaus DQS w .env). Incydenty + /dashboard/dnsbl + /ip/{ip}.',
+            'opis'   => 'Skan DNSBL własnych IP: codziennie LMS∩AS, raz/tydzień pełne AS. Listy i skan regulujesz w /admin/ustawienia/opcje (grupa DNSBL). UCEPROTECT+SpamCop+DroneBL (+opcjonalny Spamhaus DQS w .env). Incydenty + /dashboard/dnsbl + /ip/{ip}.',
         ],
         [
             'zrodlo' => 'spoofer',

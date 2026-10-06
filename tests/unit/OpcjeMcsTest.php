@@ -102,6 +102,7 @@ final class OpcjeMcsTest extends CIUnitTestCase
             'mcs.spamrats.cacheTtl'                 => 86400,
             'mcs.dnsbl.listaUceprotect'             => 'tak',
             'mcs.dnsbl.listaSpamcop'                => 'tak',
+            'mcs.dnsbl.listaDronebl'                => 'tak',
             'mcs.dnsbl.listaSpamhaus'               => 'nie',
             'mcs.dnsbl.skanLms'                     => 'tak',
             'mcs.dnsbl.skanAs'                      => 'tak',

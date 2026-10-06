@@ -119,10 +119,21 @@ final class DnsblClientTest extends CIUnitTestCase
 
     public function testParsujStrefy(): void
     {
-        $strefy = DnsblClient::parsujStrefy('uceprotect1=dnsbl-1.uceprotect.net,spamcop=bl.spamcop.net');
+        $strefy = DnsblClient::parsujStrefy(
+            'uceprotect1=dnsbl-1.uceprotect.net,spamcop=bl.spamcop.net,dronebl=dnsbl.dronebl.org',
+        );
 
         $this->assertSame('dnsbl-1.uceprotect.net', $strefy['uceprotect1']);
         $this->assertSame('bl.spamcop.net', $strefy['spamcop']);
+        $this->assertSame('dnsbl.dronebl.org', $strefy['dronebl']);
+    }
+
+    public function testDroneblWDomyslnychStrefach(): void
+    {
+        $strefy = DnsblClient::domyslneStrefy();
+
+        $this->assertSame('dnsbl.dronebl.org', $strefy['dronebl']);
+        $this->assertSame('dronebl', DnsblClient::idZeStrefy('dnsbl.dronebl.org'));
     }
 
     public function testPusteStrefyBezDomyslnych(): void

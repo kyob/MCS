@@ -3,7 +3,7 @@
 namespace App\Libraries\Enrichment;
 
 /**
- * Multi-zone DNSBL client (IPv4) — UCEPROTECT, SpamCop, opcjonalnie Spamhaus DQS.
+ * Multi-zone DNSBL client (IPv4) — UCEPROTECT, SpamCop, DroneBL; opcjonalnie Spamhaus DQS.
  *
  * Zapytanie: {odwrócone-IPv4}.{strefa}
  * Listed: A w 127.0.0.0/8 poza kodami błędów Spamhaus 127.255.255.*.
@@ -13,6 +13,8 @@ class DnsblClient
     public const LISTA_UCEPROTECT1 = 'uceprotect1';
 
     public const LISTA_SPAMCOP = 'spamcop';
+
+    public const LISTA_DRONEBL = 'dronebl';
 
     public const LISTA_SPAMHAUS = 'spamhaus';
 
@@ -101,12 +103,18 @@ class DnsblClient
             $out[self::LISTA_SPAMCOP] = self::domyslneStrefy()[self::LISTA_SPAMCOP];
         }
 
-        // Pozostałe strefy z .env zones (niestandardowe), poza trójką znaną
+        if ($wlacz('mcs.dnsbl.listaDronebl', true) && isset($baza[self::LISTA_DRONEBL])) {
+            $out[self::LISTA_DRONEBL] = $baza[self::LISTA_DRONEBL];
+        } elseif ($wlacz('mcs.dnsbl.listaDronebl', true)) {
+            $out[self::LISTA_DRONEBL] = self::domyslneStrefy()[self::LISTA_DRONEBL];
+        }
+
+        // Pozostałe strefy z .env zones (niestandardowe), poza znanymi id
         foreach ($baza as $id => $host) {
             if (isset($out[$id])) {
                 continue;
             }
-            if (in_array($id, [self::LISTA_UCEPROTECT1, self::LISTA_SPAMCOP, self::LISTA_SPAMHAUS], true)) {
+            if (in_array($id, [self::LISTA_UCEPROTECT1, self::LISTA_SPAMCOP, self::LISTA_DRONEBL, self::LISTA_SPAMHAUS], true)) {
                 continue;
             }
             $out[$id] = $host;
@@ -123,6 +131,7 @@ class DnsblClient
         return [
             self::LISTA_UCEPROTECT1 => 'dnsbl-1.uceprotect.net',
             self::LISTA_SPAMCOP     => 'bl.spamcop.net',
+            self::LISTA_DRONEBL     => 'dnsbl.dronebl.org',
         ];
     }
 
@@ -164,6 +173,9 @@ class DnsblClient
         }
         if (str_contains($host, 'spamcop')) {
             return self::LISTA_SPAMCOP;
+        }
+        if (str_contains($host, 'dronebl')) {
+            return self::LISTA_DRONEBL;
         }
         if (str_contains($host, 'spamhaus')) {
             return self::LISTA_SPAMHAUS;
