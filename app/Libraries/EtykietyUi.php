@@ -24,6 +24,7 @@ class EtykietyUi
         'dnsbl'              => 'DNSBL',
         'spoofer'            => 'CAIDA Spoofer',
         'speedtest'          => 'Speedtest',
+        'abusix'             => 'Abusix',
     ];
 
     /** @var array<string, string> */

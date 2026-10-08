@@ -46,11 +46,11 @@ final class PluginSeederTest extends CIUnitTestCase
         $wynik = (new PluginSeeder())->zapisz();
 
         $this->assertSame(
-            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'qrator', 'lms_mapowanie', 'ismalicious', 'spamrats', 'dnsbl', 'spoofer', 'speedtest', 'wazuh'],
+            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'qrator', 'lms_mapowanie', 'ismalicious', 'spamrats', 'dnsbl', 'spoofer', 'speedtest', 'abusix', 'wazuh'],
             $wynik['nowe'],
         );
         $this->assertSame([], $wynik['juz_byly']);
-        $this->seeNumRecords(15, 'mcs_pluginy', []);
+        $this->seeNumRecords(16, 'mcs_pluginy', []);
         $this->seeInDatabase('mcs_pluginy', [
             'zrodlo'            => 'shadowserver',
             'nazwa'             => 'Shadowserver',
@@ -142,11 +142,11 @@ final class PluginSeederTest extends CIUnitTestCase
 
         $this->assertSame([], $wynik['nowe']);
         $this->assertSame(
-            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'qrator', 'lms_mapowanie', 'ismalicious', 'spamrats', 'dnsbl', 'spoofer', 'speedtest', 'wazuh'],
+            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'qrator', 'lms_mapowanie', 'ismalicious', 'spamrats', 'dnsbl', 'spoofer', 'speedtest', 'abusix', 'wazuh'],
             $wynik['juz_byly'],
         );
         $this->assertContains('play', $wynik['opis_zaktualizowany']);
-        $this->seeNumRecords(15, 'mcs_pluginy', []);
+        $this->seeNumRecords(16, 'mcs_pluginy', []);
         $this->seeInDatabase('mcs_pluginy', [
             'zrodlo'            => 'play',
             'import_wstrzymany' => 0,

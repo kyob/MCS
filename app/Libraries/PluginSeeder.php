@@ -61,6 +61,11 @@ class PluginSeeder
             'opis'   => 'Historia testów Speedtest Servers reporting (portal Ookla lub CSV). Filtr CIDR AS198050, agregaty /24 na /dashboard/speedtest (Ookla anonimizuje do *.0), poza indeksem badge.',
         ],
         [
+            'zrodlo' => 'abusix',
+            'nazwa'  => 'Abusix',
+            'opis'   => 'Abusix Guardian Ops API (sprawy i klienci). Wymaga mcs.abusix.apiKey. Podsumowanie w health; poza indeksem badge.',
+        ],
+        [
             'zrodlo' => 'wazuh',
             'nazwa'  => 'Wazuh',
             'opis'   => 'Własna telemetria serwerów (Wazuh SIEM): IP klientów AS198050, które spamują lub atakują nasze serwery (SMTP/SSH/WWW). Eksport przez SSH forced command.',
