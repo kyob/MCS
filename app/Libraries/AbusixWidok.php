@@ -10,6 +10,8 @@ use Config\Database;
  */
 class AbusixWidok
 {
+    public const ADNOTACJA = 'Wymaga płatnej subskrypcji Abusix (AbuseHQ / Guardian Ops). Na planie free konto nie dostaje spraw.';
+
     private BaseConnection $db;
 
     public function __construct(?BaseConnection $db = null)

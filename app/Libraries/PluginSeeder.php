@@ -63,7 +63,7 @@ class PluginSeeder
         [
             'zrodlo' => 'abusix',
             'nazwa'  => 'Abusix',
-            'opis'   => 'Abusix Guardian Ops API (sprawy i klienci). Wymaga mcs.abusix.apiKey. Podsumowanie w health; poza indeksem badge.',
+            'opis'   => 'Wymaga płatnej subskrypcji Abusix (AbuseHQ / Guardian Ops). Na planie free konto nie dostaje spraw. Import wstrzymany. Guardian Ops API (sprawy, zdarzenia, klienci); token w Wtyczki → Abusix → Klucz.',
         ],
         [
             'zrodlo' => 'wazuh',
@@ -74,6 +74,9 @@ class PluginSeeder
 
     /** Źródła wymuszane jako wstrzymane + ukryte w UI przy każdym seedzie (np. płatne API). */
     private const WYMUS_WSTRZYMANE_UKRYTE = ['qrator'];
+
+    /** Źródła wymuszane jako wstrzymane przy każdym seedzie, ale widoczne w UI (wymagają płatnej subskrypcji). */
+    private const WYMUS_WSTRZYMANE = ['abusix'];
 
     public function __construct(private readonly ?BaseConnection $db = null)
     {
@@ -108,6 +111,8 @@ class PluginSeeder
                 if ($wymusUkryte) {
                     $aktualizuj['import_wstrzymany'] = true;
                     $aktualizuj['ukryty_w_ui']       = true;
+                } elseif (in_array($wiersz['zrodlo'], self::WYMUS_WSTRZYMANE, true)) {
+                    $aktualizuj['import_wstrzymany'] = true;
                 }
                 if ($aktualizuj !== []) {
                     $model->update($wiersz['zrodlo'], $aktualizuj);

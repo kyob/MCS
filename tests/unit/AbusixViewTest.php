@@ -26,6 +26,7 @@ final class AbusixViewTest extends CIUnitTestCase
             'wg_stanu' => [], 'sprawy' => [], 'zdarzenia' => [], 'klienci' => [],
         ]);
 
+        $this->assertStringContainsString('Wymaga płatnej subskrypcji Abusix', $html);
         $this->assertStringContainsString('Brak spraw w Abusix.', $html);
         $this->assertStringContainsString('Ostatnie udane pobranie: 2026-10-08 07:27:39+00', $html);
         $this->assertStringNotContainsString('otwartych</span>', $html);

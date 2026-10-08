@@ -116,6 +116,19 @@ final class PluginSeederTest extends CIUnitTestCase
         $this->assertStringContainsString('płatne', (string) ($qrator['opis'] ?? ''));
     }
 
+    public function testPonownyZapisWstrzymujeAbusixIZostawiaWidocznyZAdnotacja(): void
+    {
+        (new PluginSeeder())->zapisz();
+        $this->db->table('mcs_pluginy')->where('zrodlo', 'abusix')->update(['import_wstrzymany' => 0, 'ukryty_w_ui' => 0]);
+
+        (new PluginSeeder())->zapisz();
+
+        $w = $this->db->table('mcs_pluginy')->where('zrodlo', 'abusix')->get()->getRowArray();
+        $this->assertSame(1, (int) $w['import_wstrzymany']);
+        $this->assertSame(0, (int) $w['ukryty_w_ui']);
+        $this->assertStringContainsString('płatnej subskrypcji', (string) $w['opis']);
+    }
+
     public function testPonownyZapisWymuszaQratorUkryty(): void
     {
         (new PluginSeeder())->zapisz();

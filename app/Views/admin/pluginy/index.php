@@ -112,6 +112,9 @@
                             <td class="text-body-secondary ps-3"><?= $lp ?></td>
                             <td>
                                 <span class="fw-semibold" title="<?= esc($zrodlo) ?>"><?= esc($nazwa) ?></span>
+                                <?php if ($zrodlo === 'abusix'): ?>
+                                    <div class="small text-warning-emphasis"><?= esc(\App\Libraries\AbusixWidok::ADNOTACJA) ?></div>
+                                <?php endif; ?>
                                 <?php if ($szczegolyHtml !== ''): ?>
                                     <button type="button"
                                             class="btn btn-link btn-sm p-0 ms-1 align-baseline"

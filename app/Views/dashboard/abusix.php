@@ -36,6 +36,11 @@ $stanKlasa = static fn (string $s): string => match ($s) {
     </p>
 </div>
 
+<div class="alert alert-warning border-0 shadow-sm rounded-3" role="note" id="abusix-adnotacja">
+    <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i><?= esc(\App\Libraries\AbusixWidok::ADNOTACJA) ?>
+    Import jest wstrzymany.
+</div>
+
 <?php if (! empty($blad)): ?>
     <div class="alert alert-danger border-0 shadow-sm rounded-3" role="alert"><?= esc((string) $blad) ?></div>
 <?php endif; ?>
