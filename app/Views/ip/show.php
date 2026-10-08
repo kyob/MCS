@@ -458,10 +458,6 @@ $badgeWaga = static function (string $waga): string {
                target="_blank" rel="noopener noreferrer">
                 SpamRats BL
             </a>
-            <a class="btn btn-outline-secondary" href="https://check.spamhaus.org/results/?query=<?= rawurlencode((string) $ip) ?>"
-               target="_blank" rel="noopener noreferrer">
-                Spamhaus Check
-            </a>
             <span class="small text-body-secondary" id="spamrats-status">
                 tryb: <?= esc((string) ($spamratsTryb ?? '—')) ?>
             </span>
