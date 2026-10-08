@@ -290,6 +290,22 @@ class Dashboard extends BaseController
     }
 
     /**
+     * Abusix Guardian Ops — sprawy, zdarzenia, klienci (tabele mcs_abusix_*).
+     */
+    public function abusix()
+    {
+        $blad = null;
+        try {
+            $d = (new \App\Libraries\AbusixWidok())->dane(100);
+        } catch (\Throwable $e) {
+            $blad = 'Nie udało się odczytać danych Abusix (czy migracje są uruchomione?).';
+            $d    = [];
+        }
+
+        return view('dashboard/abusix', $this->daneWidoku('abusix', ['blad' => $blad, 'd' => $d]));
+    }
+
+    /**
      * CSV ranking problematycznych IP — te same filtry co lista.
      */
     public function eksportCsv()
@@ -646,6 +662,7 @@ class Dashboard extends BaseController
             'incydenty'         => 'Ostatnie incydenty — MCS',
             'speedtest'         => 'Speedtest — MCS',
             'dnsbl'             => 'DNSBL AS — MCS',
+            'abusix'            => 'Abusix — MCS',
             default             => 'Przegląd — MCS',
         };
 

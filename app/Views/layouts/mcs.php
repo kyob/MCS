@@ -96,6 +96,10 @@ $mozeUzytkownicy = \App\Libraries\Rola::mozeUzytkownicy($rolaKod);
                             <a class="dropdown-item<?= $nav === 'dnsbl' ? ' active' : '' ?>"
                                href="<?= site_url('dashboard/dnsbl') ?>">DNSBL</a>
                         </li>
+                        <li>
+                            <a class="dropdown-item<?= $nav === 'abusix' ? ' active' : '' ?>"
+                               href="<?= site_url('dashboard/abusix') ?>">Abusix</a>
+                        </li>
                     </ul>
                 </li>
                 <li class="nav-item">

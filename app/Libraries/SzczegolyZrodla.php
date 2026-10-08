@@ -22,6 +22,7 @@ class SzczegolyZrodla
         'spoofer'            => 'mcs_spoofer_wiersze',
         'wazuh'              => 'mcs_wazuh_wiersze',
         'dnsbl'              => 'mcs_dnsbl_wiersze',
+        'abusix'             => 'mcs_abusix_zdarzenia',
         // qrator: brak mapowania — API płatne / źródło wstrzymane (nie inwestujemy w live drill-down).
     ];
 
