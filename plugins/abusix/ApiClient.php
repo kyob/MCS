@@ -29,11 +29,11 @@ class ApiClient
 
     public static function fromEnv(?callable $httpRequest = null): self
     {
-        $timeout = (int) env('mcs.abusix.httpTimeout', 30);
+        $timeout = \App\Libraries\OpcjeMcs::int('mcs.abusix.httpTimeout');
 
         return new self(
             (string) env('mcs.abusix.baseUrl', 'https://api.abusix.com'),
-            (string) env('mcs.abusix.apiKey', ''),
+            \App\Libraries\OpcjeMcs::tekst('mcs.abusix.apiKey'),
             $timeout > 0 ? $timeout : 30,
             $httpRequest,
         );

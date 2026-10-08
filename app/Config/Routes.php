@@ -38,6 +38,8 @@ $routes->group('admin', ['filter' => 'mcsRola:admin,superadmin'], static functio
     $routes->post('pluginy', 'Admin\Pluginy::zapisz');
     $routes->post('pluginy/pobierz', 'Admin\Pluginy::pobierz');
     $routes->post('pluginy/snds-klucz', 'Admin\Pluginy::zapiszKluczSnds');
+    $routes->post('pluginy/abusix-klucz', 'Admin\Pluginy::zapiszKluczAbusix');
+    $routes->post('pluginy/abusix-test', 'Admin\Pluginy::testujAbusix');
     $routes->get('ustawienia', 'Admin\Ustawienia::index');
     $routes->post('ustawienia', 'Admin\Ustawienia::zapisz');
     $routes->post('ustawienia/przywroc-domyslne', 'Admin\Ustawienia::przywrocDomyslne');

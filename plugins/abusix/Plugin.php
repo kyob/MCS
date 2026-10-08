@@ -72,8 +72,8 @@ class Plugin implements SourcePluginInterface
             return;
         }
 
-        $limit    = max(1, min(500, (int) env('mcs.abusix.pageLimit', 100)));
-        $maxPages = max(1, min(5, (int) env('mcs.abusix.maxPages', 2)));
+        $limit    = max(1, min(500, \App\Libraries\OpcjeMcs::int('mcs.abusix.pageLimit')));
+        $maxPages = max(1, min(5, \App\Libraries\OpcjeMcs::int('mcs.abusix.maxPages')));
         $db       = Database::connect();
         $stat     = ['zapytan' => 0, 'klienci' => 0, 'sprawy' => 0, 'zdarzenia' => 0, 'incydenty' => 0];
 

@@ -177,6 +177,21 @@
                                             <i class="bi bi-key me-1" aria-hidden="true"></i>Klucz
                                         </button>
                                     <?php endif; ?>
+                                    <?php if ($zrodlo === 'abusix'): ?>
+                                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                                data-bs-toggle="modal" data-bs-target="#modalAbusixKlucz"
+                                                title="Token API Abusix">
+                                            <i class="bi bi-key me-1" aria-hidden="true"></i>Klucz
+                                        </button>
+                                        <a class="btn btn-sm btn-outline-secondary" href="<?= site_url('admin/ustawienia/opcje') ?>#abusix"
+                                           title="timeout, limit na stronę, maks. stron (Base URL tylko w .env)">Opcje</a>
+                                        <form method="post" action="<?= site_url('admin/pluginy/abusix-test') ?>" class="mb-0">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Jedno zapytanie do API">
+                                                <i class="bi bi-plug me-1" aria-hidden="true"></i>Testuj połączenie
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
                                     <form method="post" action="<?= site_url('admin/pluginy/pobierz') ?>" class="mb-0"
                                           onsubmit="return confirm('Uruchomić pobieranie dla <?= esc($zrodlo, 'js') ?>? Może potrwać dłużej.');">
                                         <?= csrf_field() ?>
@@ -210,6 +225,49 @@ $sndsZrodloEtykieta = match ($sndsZrodlo) {
     default                             => 'brak',
 };
 ?>
+<?php
+$abK = is_array($abusixKlucz ?? null) ? $abusixKlucz : [];
+$abUst = (bool) ($abK['ustawiony'] ?? false);
+$abZrodlo = match ((string) ($abK['zrodlo'] ?? '')) {
+    \App\Libraries\OpcjeMcs::ZRODLO_DB  => 'z bazy',
+    \App\Libraries\OpcjeMcs::ZRODLO_ENV => 'z .env',
+    default                             => 'brak',
+};
+?>
+<div class="modal fade" id="modalAbusixKlucz" tabindex="-1" aria-labelledby="modalAbusixKluczLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" action="<?= site_url('admin/pluginy/abusix-klucz') ?>" class="modal-content">
+            <?= csrf_field() ?>
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="modalAbusixKluczLabel">Token API Abusix</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-body-secondary mb-3">
+                    Status:
+                    <?php if ($abUst): ?>
+                        <span class="badge text-bg-success"><?= esc($abZrodlo) ?></span>
+                        <code class="ms-1"><?= esc((string) ($abK['skrot'] ?? '')) ?></code>
+                    <?php else: ?>
+                        <span class="badge text-bg-secondary">brak</span>
+                    <?php endif; ?>
+                </p>
+                <label class="form-label" for="mcs_abusix_key">Nowy token</label>
+                <input type="password" class="form-control font-monospace" id="mcs_abusix_key"
+                       name="mcs_abusix_key" autocomplete="off"
+                       placeholder="<?= $abUst ? '•••••••• (ustawiony, puste = bez zmiany)' : 'token z app.abusix.com/account/abusix-api' ?>">
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" value="1" id="abusix_usun" name="usun">
+                    <label class="form-check-label small" for="abusix_usun">Usuń token z bazy (wróci <code>mcs.abusix.apiKey</code> z .env)</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>Zapisz token</button>
+            </div>
+        </form>
+    </div>
+</div>
 <div class="modal fade" id="modalSndsKlucz" tabindex="-1" aria-labelledby="modalSndsKluczLabel" aria-hidden="true">
     <div class="modal-dialog">
         <form method="post" action="<?= site_url('admin/pluginy/snds-klucz') ?>" class="modal-content">
