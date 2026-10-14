@@ -86,7 +86,7 @@ class Serwis
 
             return [
                 'status' => 'pominieto',
-                'msg'    => 'pominięto — następne pobranie po ' . gmdate('Y-m-d H:i', $po) . ' UTC',
+                'msg'    => 'pominięto (następne po ' . gmdate('Y-m-d H:i', $po) . ' UTC)',
             ];
         }
 

@@ -24,6 +24,9 @@ class Plugin implements SourcePluginInterface
 
     private ?Serwis $serwis;
 
+    /** Komunikat pominięcia z ostatniego pobierz() (harmonogram) — dla mcs:pobierz zamiast starego health. */
+    private ?string $pominiecie = null;
+
     public function __construct(?Serwis $serwis = null)
     {
         $this->serwis = $serwis;
@@ -36,8 +39,11 @@ class Plugin implements SourcePluginInterface
 
     public function pobierz(): void
     {
-        $wynik = $this->serwis()->uruchom();
+        $this->pominiecie = null;
+        $wynik            = $this->serwis()->uruchom();
         if ($wynik['status'] === 'pominieto') {
+            $this->pominiecie = $wynik['msg'];
+
             return;
         }
         $ok = $wynik['status'] === 'ok';
@@ -45,6 +51,14 @@ class Plugin implements SourcePluginInterface
         if (! $ok) {
             throw new RuntimeException($wynik['msg']);
         }
+    }
+
+    /**
+     * Ostatni przebieg pominięty przez harmonogram: komunikat, inaczej null (zob. PobierzSerwis).
+     */
+    public function komunikatPominiecia(): ?string
+    {
+        return $this->pominiecie;
     }
 
     /**
