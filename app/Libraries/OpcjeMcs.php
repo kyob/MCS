@@ -266,6 +266,13 @@ final class OpcjeMcs
         $d['mcs.spoofer.httpTimeout']        = $h['timeout'];
         $d['mcs.spoofer.httpConnectTimeout'] = $h['connect'];
 
+        // Spamhaus DROP: FAQ Spamhaus — nie częściej niż 1/h, raz na dobę wystarcza.
+        $d['mcs.spamhaus.interwalGodzin'] = [
+            'grupa' => 'Spamhaus DROP', 'etykieta' => 'Pobieranie co N godzin (+ losowa minuta)', 'typ' => 'int', 'domyslna' => '24', 'min' => 1, 'max' => 168,
+            'opis' => 'Spamhaus: nie częściej niż raz na godzinę; raz na dobę wystarcza.',
+        ];
+        $d['mcs.spamhaus.httpTimeout'] = $http('Spamhaus DROP', 30, null)['timeout'];
+
         // --- Wazuh ---
         $d['mcs.wazuh.oknoGodzin'] = [
             'grupa' => 'Wazuh', 'etykieta' => 'Okno eksportu (h)', 'typ' => 'int', 'domyslna' => '48', 'min' => 1, 'max' => 168,

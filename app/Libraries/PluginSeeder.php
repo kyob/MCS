@@ -70,6 +70,11 @@ class PluginSeeder
             'nazwa'  => 'Wazuh',
             'opis'   => 'Własna telemetria serwerów (Wazuh SIEM): IP klientów AS198050, które spamują lub atakują nasze serwery (SMTP/SSH/WWW). Eksport przez SSH forced command.',
         ],
+        [
+            'zrodlo' => 'spamhaus',
+            'nazwa'  => 'Spamhaus DROP',
+            'opis'   => 'Darmowe listy Spamhaus DROP, DROPv6 i ASN-DROP (JSON, raz na dobę), dopasowane lokalnie do as198050_cidry i ASN. Trafienie = incydent. Stan na /dashboard/spamhaus.',
+        ],
     ];
 
     /** Źródła wymuszane jako wstrzymane + ukryte w UI przy każdym seedzie (np. płatne API). */

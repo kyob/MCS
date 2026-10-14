@@ -25,6 +25,7 @@ class EtykietyUi
         'spoofer'            => 'CAIDA Spoofer',
         'speedtest'          => 'Speedtest',
         'abusix'             => 'Abusix',
+        'spamhaus'           => 'Spamhaus DROP',
     ];
 
     /** @var array<string, string> */
@@ -36,6 +37,8 @@ class EtykietyUi
         'reputation'    => 'reputacja',
         'exposure'      => 'ekspozycja',
         'other'         => 'inne',
+        'spam'          => 'spam',
+        'hijack'        => 'hijack (DROP)',
     ];
 
     public function zrodlo(string $kod): string

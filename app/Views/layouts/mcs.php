@@ -63,7 +63,7 @@ $mozeUzytkownicy = \App\Libraries\Rola::mozeUzytkownicy($rolaKod);
         <div class="collapse navbar-collapse" id="mcsNavbar">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <?php
-                $navDashboard = in_array($nav, ['dashboard', 'kolejka', 'problematyczne-ip', 'incydenty', 'speedtest', 'dnsbl'], true);
+                $navDashboard = in_array($nav, ['dashboard', 'kolejka', 'problematyczne-ip', 'incydenty', 'speedtest', 'dnsbl', 'spamhaus'], true);
                 ?>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle<?= $navDashboard ? ' active' : '' ?>"
@@ -95,6 +95,10 @@ $mozeUzytkownicy = \App\Libraries\Rola::mozeUzytkownicy($rolaKod);
                         <li>
                             <a class="dropdown-item<?= $nav === 'dnsbl' ? ' active' : '' ?>"
                                href="<?= site_url('dashboard/dnsbl') ?>">DNSBL</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item<?= $nav === 'spamhaus' ? ' active' : '' ?>"
+                               href="<?= site_url('dashboard/spamhaus') ?>">Spamhaus DROP</a>
                         </li>
                         <li>
                             <a class="dropdown-item<?= $nav === 'abusix' ? ' active' : '' ?>"

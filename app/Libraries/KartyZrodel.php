@@ -21,6 +21,7 @@ class KartyZrodel
         'abusix'       => ['event_type', 'domain', 'sender_email'],
         'spoofer'      => ['routedspoof', 'privatespoof', 'prefix', 'ip_wersja', 'country'],
         'wazuh'        => ['kategoria_wazuh', 'liczba', 'poziom_max', 'hosty_docelowe', 'dzien'],
+        'spamhaus'     => ['lista', 'wpis', 'sblid', 'nasz_prefiks', 'zakres'],
     ];
 
     private BaseConnection $db;
