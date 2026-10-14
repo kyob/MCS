@@ -19,14 +19,17 @@ $blad    = $blad ?? null;
         </nav>
         <h1 class="h3 mb-1">DNSBL — spamerzy w AS</h1>
         <p class="text-body-secondary mb-0">
-            Aktualnie listed IP z przestrzeni AS198050 (cache po skanie cron / lookup).
-            Źródło: UCEPROTECT, SpamCop, DroneBL, opcjonalnie Spamhaus DQS.
+            Skaner IPv4 AS198050 na listach DNSBL (lokalny resolver, bez Spamhaus i Abusix).
             Ręczny check Spamhaus:
             <a href="https://check.spamhaus.org/" target="_blank" rel="noopener noreferrer">check.spamhaus.org</a>
             (per IP w tabeli lub na karcie IP).
         </p>
     </div>
 </div>
+
+<?= $this->include('dashboard/_dnsbl_skaner') ?>
+
+<h2 class="h5 mt-5 mb-3">Skan cron (UCEPROTECT L1, SpamCop, DroneBL) — cache enrichment</h2>
 
 <?php if (! empty($blad)): ?>
     <div class="alert alert-danger border-0 shadow-sm rounded-3" role="alert"><?= esc((string) $blad) ?></div>

@@ -286,7 +286,138 @@ class Dashboard extends BaseController
             'wiersze'=> $wiersze,
             'lista'  => $lista,
             'cidr'   => $cidr,
+            'skaner' => $this->daneSkanera(),
         ]));
+    }
+
+    /**
+     * Skaner DNSBL (plugin dnsbl, E2): wybrany skan, strefy, szczegóły per IP.
+     *
+     * @return array<string, mixed>
+     */
+    private function daneSkanera(): array
+    {
+        $filtr = (string) ($this->request->getGet('f') ?? 'listed');
+        if (! in_array($filtr, \App\Libraries\Dnsbl\SkanyWidok::FILTRY, true)) {
+            $filtr = 'listed';
+        }
+        $strona = max(1, (int) ($this->request->getGet('strona') ?? 1));
+        $out    = ['blad' => null, 'skan' => null, 'strefy' => [], 'szczegoly' => null, 'ostatnie' => [], 'filtr' => $filtr, 'strona' => $strona, 'naStrone' => 50, 'prefiksy' => []];
+
+        try {
+            $w = new \App\Libraries\Dnsbl\SkanyWidok();
+            $w->oznaczPorzucone();
+            $out['prefiksy'] = \App\Libraries\Dnsbl\Skaner::prefiksyAs();
+            $out['ostatnie'] = $w->ostatnie(10);
+            $id              = (int) ($this->request->getGet('skan') ?? 0);
+            $skan            = $id > 0 ? $w->skan($id) : ($out['ostatnie'][0] ?? null);
+            if (is_array($skan)) {
+                $out['skan'] = $skan;
+                if ($skan['status'] === 'zakonczony') {
+                    $out['strefy']    = $w->strefySkanu($skan);
+                    $out['szczegoly'] = $w->szczegoly($skan, $filtr, $strona, $out['naStrone']);
+                }
+            }
+        } catch (\Throwable $e) {
+            $out['blad'] = 'Nie udało się odczytać skanów DNSBL (czy migracja CreateMcsDnsblSkaner jest uruchomiona?).';
+        }
+
+        return $out;
+    }
+
+    /**
+     * POST dashboard/dnsbl/skan — zleca skan IP/CIDR w tle (cache TTL, blokada ponownego skanu).
+     */
+    public function dnsblSkan()
+    {
+        $wejscie = trim((string) ($this->request->getPost('zakres') ?? ''));
+        $force   = (string) ($this->request->getPost('force') ?? '') === '1';
+        $wroc    = site_url('dashboard/dnsbl');
+
+        try {
+            $prefiksy = \App\Libraries\Dnsbl\Skaner::prefiksyAs();
+            $wal      = \App\Libraries\Dnsbl\ZakresSkanu::waliduj($wejscie, $prefiksy);
+            if (! $wal['ok']) {
+                return redirect()->to($wroc)->with('blad', $wal['blad'])->withInput();
+            }
+            $zakres = implode(',', $wal['cidry']);
+            $u      = \App\Libraries\Dnsbl\Skaner::ustawienia();
+            $w      = new \App\Libraries\Dnsbl\SkanyWidok();
+            $w->oznaczPorzucone();
+
+            if (! $force) {
+                $cache = $w->zCache($zakres, $u['cache_ttl']);
+                if ($cache !== null) {
+                    return redirect()->to($wroc . '?skan=' . $cache['id'])
+                        ->with('komunikat', 'Wynik z cache (skan #' . $cache['id'] . ', ' . $cache['koniec_at'] . '). Użyj „Skanuj ponownie”, aby odświeżyć.');
+                }
+            }
+
+            $trwa = $w->trwajacy();
+            if ($trwa !== null) {
+                return redirect()->to($wroc . '?skan=' . $trwa['id'])
+                    ->with('blad', 'Trwa inny skan (#' . $trwa['id'] . '). Poczekaj na jego koniec.');
+            }
+
+            $blokada = $w->blokadaS($zakres, $u['blokada_min']);
+            if ($blokada > 0) {
+                return redirect()->to($wroc)
+                    ->with('blad', 'Ten zakres skanowano niedawno. Ponowny skan za ' . (int) ceil($blokada / 60) . ' min.');
+            }
+
+            $skaner = new \App\Libraries\Dnsbl\Skaner();
+            $id     = $skaner->utworzSkan($wal['cidry'], null, 'web', (string) session()->get('mcs_user_email'));
+            $this->uruchomWTle($id);
+        } catch (\Throwable $e) {
+            log_message('error', 'dnsbl skan: ' . $e->getMessage());
+
+            return redirect()->to($wroc)->with('blad', 'Nie udało się zlecić skanu DNSBL.');
+        }
+
+        return redirect()->to($wroc . '?skan=' . $id)->with('komunikat', 'Zlecono skan #' . $id . ' (' . $zakres . ').');
+    }
+
+    /**
+     * GET dashboard/dnsbl/status/{id} — JSON dla pollingu co 2 s.
+     */
+    public function dnsblStatus(int $id)
+    {
+        try {
+            $w = new \App\Libraries\Dnsbl\SkanyWidok();
+            $w->oznaczPorzucone();
+            $s = $w->skan($id);
+        } catch (\Throwable) {
+            $s = null;
+        }
+        if ($s === null) {
+            return $this->response->setStatusCode(404)->setJSON(['ok' => false]);
+        }
+
+        return $this->response->setJSON([
+            'ok'               => true,
+            'id'               => $s['id'],
+            'status'           => $s['status'],
+            'zapytan_plan'     => (int) $s['zapytan_plan'],
+            'zapytan_wykonano' => (int) $s['zapytan_wykonano'],
+            'komunikat'        => (string) ($s['komunikat'] ?? ''),
+        ]);
+    }
+
+    private function uruchomWTle(int $id): void
+    {
+        $php  = trim((string) env('mcs.dnsbl.phpCli', '/usr/bin/php'));
+        $log  = WRITEPATH . 'logs/mcs-dnsbl-skan.log';
+        $cmd  = sprintf(
+            '/usr/bin/setsid -f %s %s mcs:dnsbl-skan --skan-id=%d >> %s 2>&1 < /dev/null',
+            escapeshellarg($php),
+            escapeshellarg(ROOTPATH . 'spark'),
+            $id,
+            escapeshellarg($log),
+        );
+        exec($cmd, $wyj, $kod);
+        if ($kod !== 0) {
+            throw new \RuntimeException('Nie uruchomiono skanu w tle (kod ' . $kod . ').');
+        }
     }
 
     /**

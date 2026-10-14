@@ -565,6 +565,42 @@ $badgeWaga = static function (string $waga): string {
             </span>
         </div>
 
+        <?php
+        $skList  = is_array($dnsblListingi ?? null) ? $dnsblListingi : [];
+        $skOstat = is_array($dnsblOstatniSkan ?? null) ? $dnsblOstatniSkan : null;
+        ?>
+        <div class="mb-3" id="dnsbl-skaner">
+            <div class="small text-body-secondary mb-1">
+                Skaner DNSBL (listy darmowe, lokalny resolver):
+                <?php if ($skOstat !== null): ?>
+                    ostatni skan <a href="<?= site_url('dashboard/dnsbl?skan=' . (int) $skOstat['id']) ?>">#<?= (int) $skOstat['id'] ?></a>
+                    (<?= esc((string) $skOstat['koniec_at']) ?>, zakres <span class="font-monospace"><?= esc((string) $skOstat['zakres']) ?></span>)
+                <?php else: ?>
+                    brak skanu obejmującego to IP.
+                <?php endif; ?>
+            </div>
+            <?php if ($skList === []): ?>
+                <span class="badge text-bg-success" id="dnsbl-skaner-brak">brak aktywnych listingów</span>
+            <?php else: ?>
+                <ul class="list-unstyled mb-0 small" id="dnsbl-skaner-listingi">
+                    <?php foreach ($skList as $l): ?>
+                        <li class="mb-1">
+                            <span class="badge <?= ! empty($l['informacyjna']) ? 'text-bg-secondary' : 'text-bg-danger' ?>"><?= esc((string) ($l['nazwa'] ?? $l['strefa_kod'])) ?></span>
+                            <span class="font-monospace"><?= esc((string) $l['ip']) ?></span>
+                            kody <?= esc((string) $l['kody']) ?>
+                            · od <?= esc((string) $l['pierwszy_raz']) ?> · ostatnio <?= esc((string) $l['ostatni_raz']) ?>
+                            <?php if ((string) ($l['url'] ?? '') !== ''): ?>
+                                · <a href="<?= esc((string) $l['url'], 'attr') ?>" target="_blank" rel="noopener noreferrer">Request removal</a>
+                            <?php endif; ?>
+                            <?php if ((string) ($l['txt'] ?? '') !== ''): ?>
+                                <div class="text-body-secondary"><?= esc((string) $l['txt']) ?></div>
+                            <?php endif; ?>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php endif; ?>
+        </div>
+
         <div id="dnsbl-wynik" class="enrichment-wynik" <?= empty($dnsblCache) ? 'hidden' : '' ?>>
             <?php $dbCache = is_array($dnsblCache ?? null) ? $dnsblCache : []; ?>
             <?php

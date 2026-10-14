@@ -149,6 +149,25 @@ final class OpcjeMcs
         $d['mcs.dnsbl.rateLimitQps'] = [
             'grupa' => 'DNSBL', 'etykieta' => 'Limit zapytań DNS (QPS)', 'typ' => 'int', 'domyslna' => '25', 'min' => 1, 'max' => 500,
         ];
+        // Skaner DNSBL (mcs:dnsbl-skan, /dashboard/dnsbl) — resolver tylko w .env (mcs.dnsbl.skanerResolver).
+        $d['mcs.dnsbl.skanerQpsStrefa'] = [
+            'grupa' => 'DNSBL', 'etykieta' => 'Skaner — limit zapytań na strefę (QPS)', 'typ' => 'int', 'domyslna' => '10', 'min' => 1, 'max' => 50,
+        ];
+        $d['mcs.dnsbl.skanerWLocie'] = [
+            'grupa' => 'DNSBL', 'etykieta' => 'Skaner — zapytań w locie (łącznie)', 'typ' => 'int', 'domyslna' => '32', 'min' => 1, 'max' => 128,
+        ];
+        $d['mcs.dnsbl.skanerTimeoutMs'] = [
+            'grupa' => 'DNSBL', 'etykieta' => 'Skaner — timeout zapytania (ms)', 'typ' => 'int', 'domyslna' => '2000', 'min' => 200, 'max' => 10000,
+        ];
+        $d['mcs.dnsbl.skanerRetry'] = [
+            'grupa' => 'DNSBL', 'etykieta' => 'Skaner — liczba ponowień po timeoucie', 'typ' => 'int', 'domyslna' => '1', 'min' => 0, 'max' => 3,
+        ];
+        $d['mcs.dnsbl.skanerCacheTtl'] = [
+            'grupa' => 'DNSBL', 'etykieta' => 'Skaner — ważność wyniku w WWW (s)', 'typ' => 'int', 'domyslna' => '21600', 'min' => 0, 'max' => 7 * self::DOBA,
+        ];
+        $d['mcs.dnsbl.skanerBlokadaMin'] = [
+            'grupa' => 'DNSBL', 'etykieta' => 'Skaner — blokada „Skanuj ponownie” (min)', 'typ' => 'int', 'domyslna' => '15', 'min' => 0, 'max' => 1440,
+        ];
 
         // --- Źródła IMAP ---
         $d['mcs.shadowserver.imapRecentLimit'] = [

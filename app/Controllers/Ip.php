@@ -134,6 +134,16 @@ class Ip extends BaseController
         $ismCache      = $ism->podgladCache($ip);
         $spamratsCache = $spamrats->podgladCache($ip);
         $dnsblCache    = $dnsbl->podgladCache($ip);
+        // Skaner DNSBL (E2): tylko odczyt mcs_dnsbl_listingi, bez DNS przy otwarciu strony.
+        $dnsblListingi   = [];
+        $dnsblOstatniSkan = null;
+        try {
+            $skWidok          = new \App\Libraries\Dnsbl\SkanyWidok();
+            $dnsblListingi    = $skWidok->listingiIp($ip);
+            $dnsblOstatniSkan = $skWidok->ostatniSkanIp($ip);
+        } catch (\Throwable) {
+            $dnsblListingi = [];
+        }
         $lmsCache      = $lms->podgladCache($ip);
         if ($lmsCache === null && $lmsTryb !== 'brak_konfiguracji') {
             $lmsWynik = $lms->sprawdz($ip, false);
@@ -184,6 +194,8 @@ class Ip extends BaseController
             'dnsblTryb'            => $dnsblCache !== null ? 'cache' : $dnsblTryb,
             'dnsblCache'           => $dnsblCache,
             'dnsblKomunikat'       => $dnsblKomunikat,
+            'dnsblListingi'        => $dnsblListingi,
+            'dnsblOstatniSkan'     => $dnsblOstatniSkan,
             'speedtestCidr'        => $stCidr,
             'speedtestLiczba24'    => $stLiczba,
             'flashOk'            => session()->getFlashdata('komunikat'),

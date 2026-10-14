@@ -11,6 +11,8 @@ $routes->get('dashboard/kolejka', 'Dashboard::kolejka');
 $routes->get('dashboard/incydenty', 'Dashboard::incydenty');
 $routes->get('dashboard/speedtest', 'Dashboard::speedtest');
 $routes->get('dashboard/dnsbl', 'Dashboard::dnsbl');
+$routes->post('dashboard/dnsbl/skan', 'Dashboard::dnsblSkan');
+$routes->get('dashboard/dnsbl/status/(:num)', 'Dashboard::dnsblStatus/$1');
 $routes->get('dashboard/abusix', 'Dashboard::abusix');
 $routes->get('dashboard/eksport.csv', 'Dashboard::eksportCsv');
 $routes->get('szukaj', 'Dashboard::szukaj');
