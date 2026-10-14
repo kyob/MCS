@@ -211,15 +211,14 @@ class Ip extends BaseController
     public function abuseipdb(string $ip)
     {
         $ip = trim($ip);
-        $forceRaw = $this->request->getGet('force');
-        $force    = filter_var($forceRaw, FILTER_VALIDATE_BOOLEAN);
+        $force = $this->czyForce();
 
         $wynik = (new AbuseipdbSerwis())->sprawdz($ip, $force);
 
         if (! $wynik['ok']) {
             $kod = ($wynik['tryb'] === 'brak_klucza') ? 503 : 400;
 
-            return $this->response->setStatusCode($kod)->setJSON([
+            return $this->odpowiedzZCsrf()->setStatusCode($kod)->setJSON([
                 'ok'   => false,
                 'blad' => $wynik['blad'],
                 'ip'   => $wynik['ip'],
@@ -227,7 +226,7 @@ class Ip extends BaseController
             ]);
         }
 
-        return $this->response->setJSON([
+        return $this->odpowiedzZCsrf()->setJSON([
             'ok'      => true,
             'ip'      => $wynik['ip'],
             'z_cache' => $wynik['z_cache'],
@@ -242,15 +241,14 @@ class Ip extends BaseController
     public function ismalicious(string $ip)
     {
         $ip = trim($ip);
-        $forceRaw = $this->request->getGet('force');
-        $force    = filter_var($forceRaw, FILTER_VALIDATE_BOOLEAN);
+        $force = $this->czyForce();
 
         $wynik = (new IsmaliciousSerwis())->sprawdz($ip, $force);
 
         if (! $wynik['ok']) {
             $kod = ($wynik['tryb'] === 'brak_klucza') ? 503 : 400;
 
-            return $this->response->setStatusCode($kod)->setJSON([
+            return $this->odpowiedzZCsrf()->setStatusCode($kod)->setJSON([
                 'ok'   => false,
                 'blad' => $wynik['blad'],
                 'ip'   => $wynik['ip'],
@@ -258,7 +256,7 @@ class Ip extends BaseController
             ]);
         }
 
-        return $this->response->setJSON([
+        return $this->odpowiedzZCsrf()->setJSON([
             'ok'      => true,
             'ip'      => $wynik['ip'],
             'z_cache' => $wynik['z_cache'],
@@ -273,15 +271,14 @@ class Ip extends BaseController
     public function spamrats(string $ip)
     {
         $ip = trim($ip);
-        $forceRaw = $this->request->getGet('force');
-        $force    = filter_var($forceRaw, FILTER_VALIDATE_BOOLEAN);
+        $force = $this->czyForce();
 
         $wynik = (new SpamratsSerwis())->sprawdz($ip, $force);
 
         if (! $wynik['ok']) {
             $kod = ($wynik['tryb'] === 'brak_klucza') ? 503 : 400;
 
-            return $this->response->setStatusCode($kod)->setJSON([
+            return $this->odpowiedzZCsrf()->setStatusCode($kod)->setJSON([
                 'ok'   => false,
                 'blad' => $wynik['blad'],
                 'ip'   => $wynik['ip'],
@@ -289,7 +286,7 @@ class Ip extends BaseController
             ]);
         }
 
-        return $this->response->setJSON([
+        return $this->odpowiedzZCsrf()->setJSON([
             'ok'      => true,
             'ip'      => $wynik['ip'],
             'z_cache' => $wynik['z_cache'],
@@ -304,13 +301,12 @@ class Ip extends BaseController
     public function dnsbl(string $ip)
     {
         $ip = trim($ip);
-        $forceRaw = $this->request->getGet('force');
-        $force    = filter_var($forceRaw, FILTER_VALIDATE_BOOLEAN);
+        $force = $this->czyForce();
 
         $wynik = (new DnsblSerwis())->sprawdz($ip, $force);
 
         if (! $wynik['ok']) {
-            return $this->response->setStatusCode(400)->setJSON([
+            return $this->odpowiedzZCsrf()->setStatusCode(400)->setJSON([
                 'ok'   => false,
                 'blad' => $wynik['blad'],
                 'ip'   => $wynik['ip'],
@@ -318,7 +314,7 @@ class Ip extends BaseController
             ]);
         }
 
-        return $this->response->setJSON([
+        return $this->odpowiedzZCsrf()->setJSON([
             'ok'      => true,
             'ip'      => $wynik['ip'],
             'z_cache' => $wynik['z_cache'],
@@ -333,15 +329,14 @@ class Ip extends BaseController
     public function lms(string $ip)
     {
         $ip = trim($ip);
-        $forceRaw = $this->request->getGet('force');
-        $force    = filter_var($forceRaw, FILTER_VALIDATE_BOOLEAN);
+        $force = $this->czyForce();
 
         $wynik = (new LmsMapowanieSerwis())->sprawdz($ip, $force);
 
         if (! $wynik['ok']) {
             $kod = ($wynik['tryb'] === 'brak_konfiguracji') ? 503 : 400;
 
-            return $this->response->setStatusCode($kod)->setJSON([
+            return $this->odpowiedzZCsrf()->setStatusCode($kod)->setJSON([
                 'ok'   => false,
                 'blad' => $wynik['blad'],
                 'ip'   => $wynik['ip'],
@@ -349,12 +344,30 @@ class Ip extends BaseController
             ]);
         }
 
-        return $this->response->setJSON([
+        return $this->odpowiedzZCsrf()->setJSON([
             'ok'      => true,
             'ip'      => $wynik['ip'],
             'z_cache' => $wynik['z_cache'],
             'tryb'    => $wynik['tryb'],
             'wynik'   => $wynik['wynik'],
         ]);
+    }
+
+    /**
+     * force=1 tylko przez POST (z CSRF). GET z ?force=1 czyta cache jak zwykłe „Sprawdź”.
+     * Chroni limity płatnych API przed linkiem z obcej strony (SameSite=Lax wpuszcza GET).
+     */
+    private function czyForce(): bool
+    {
+        return $this->request->is('post')
+            && filter_var($this->request->getPost('force'), FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * Odpowiedź JSON z aktualnym tokenem CSRF w nagłówku (po POST token jest regenerowany).
+     */
+    private function odpowiedzZCsrf(): \CodeIgniter\HTTP\ResponseInterface
+    {
+        return $this->response->setHeader('X-Mcs-Csrf', csrf_hash());
     }
 }

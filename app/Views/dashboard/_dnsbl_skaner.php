@@ -46,6 +46,8 @@ $statusPl  = [
                     Prefiksy z ustawień (as198050_cidry):
                     <span class="font-monospace"><?= esc(implode(', ', $prefiksy)) ?></span>.
                     Wynik jest ważny 6 h (cache).
+                    Limit: <?= (int) \App\Libraries\Dnsbl\LimitySkanuWww::maksIp() ?> IP na skan,
+                    <?= (int) \App\Libraries\Dnsbl\LimitySkanuWww::limitDoba() ?> skanów z WWW na 24 h.
                 </div>
             </div>
             <div class="col-md-4 d-flex gap-2">

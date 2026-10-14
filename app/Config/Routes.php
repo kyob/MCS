@@ -32,6 +32,12 @@ $routes->get('ip/(:segment)/enrichment/ismalicious', 'Ip::ismalicious/$1');
 $routes->get('ip/(:segment)/enrichment/spamrats', 'Ip::spamrats/$1');
 $routes->get('ip/(:segment)/enrichment/dnsbl', 'Ip::dnsbl/$1');
 $routes->get('ip/(:segment)/enrichment/lms', 'Ip::lms/$1');
+// force=1 (zużywa limity płatnych API) tylko przez POST z CSRF.
+$routes->post('ip/(:segment)/enrichment/abuseipdb', 'Ip::abuseipdb/$1');
+$routes->post('ip/(:segment)/enrichment/ismalicious', 'Ip::ismalicious/$1');
+$routes->post('ip/(:segment)/enrichment/spamrats', 'Ip::spamrats/$1');
+$routes->post('ip/(:segment)/enrichment/dnsbl', 'Ip::dnsbl/$1');
+$routes->post('ip/(:segment)/enrichment/lms', 'Ip::lms/$1');
 $routes->get('watchlista', 'Watchlista::index');
 $routes->post('watchlista/dodaj', 'Watchlista::dodaj');
 $routes->post('watchlista/usun', 'Watchlista::usun');

@@ -342,6 +342,11 @@ class Dashboard extends BaseController
                 return redirect()->to($wroc)->with('blad', $wal['blad'])->withInput();
             }
             $zakres = implode(',', $wal['cidry']);
+            $limity = new \App\Libraries\Dnsbl\LimitySkanuWww();
+            $bladIp = $limity->bladLiczbyIp(count(\App\Libraries\Dnsbl\ZakresSkanu::adresy($wal['cidry'])));
+            if ($bladIp !== '') {
+                return redirect()->to($wroc)->with('blad', $bladIp)->withInput();
+            }
             $u      = \App\Libraries\Dnsbl\Skaner::ustawienia();
             $w      = new \App\Libraries\Dnsbl\SkanyWidok();
             $w->oznaczPorzucone();
@@ -354,20 +359,32 @@ class Dashboard extends BaseController
                 }
             }
 
-            $trwa = $w->trwajacy();
-            if ($trwa !== null) {
-                return redirect()->to($wroc . '?skan=' . $trwa['id'])
-                    ->with('blad', 'Trwa inny skan (#' . $trwa['id'] . '). Poczekaj na jego koniec.');
-            }
+            // Sprawdzenia + INSERT pod flock: dwa równoległe POST nie uruchomią dwóch skanów.
+            $email = (string) session()->get('mcs_user_email');
+            $wynik = $limity->wSekcjiKrytycznej(static function () use ($w, $limity, $zakres, $u, $wal, $email, $wroc) {
+                $trwa = $w->trwajacy();
+                if ($trwa !== null) {
+                    return redirect()->to($wroc . '?skan=' . $trwa['id'])
+                        ->with('blad', 'Trwa inny skan (#' . $trwa['id'] . '). Poczekaj na jego koniec.');
+                }
 
-            $blokada = $w->blokadaS($zakres, $u['blokada_min']);
-            if ($blokada > 0) {
-                return redirect()->to($wroc)
-                    ->with('blad', 'Ten zakres skanowano niedawno. Ponowny skan za ' . (int) ceil($blokada / 60) . ' min.');
-            }
+                $bladDoby = $limity->bladLimituDoby();
+                if ($bladDoby !== '') {
+                    return redirect()->to($wroc)->with('blad', $bladDoby);
+                }
 
-            $skaner = new \App\Libraries\Dnsbl\Skaner();
-            $id     = $skaner->utworzSkan($wal['cidry'], null, 'web', (string) session()->get('mcs_user_email'));
+                $blokada = $w->blokadaS($zakres, $u['blokada_min']);
+                if ($blokada > 0) {
+                    return redirect()->to($wroc)
+                        ->with('blad', 'Ten zakres skanowano niedawno. Ponowny skan za ' . (int) ceil($blokada / 60) . ' min.');
+                }
+
+                return (new \App\Libraries\Dnsbl\Skaner())->utworzSkan($wal['cidry'], null, \App\Libraries\Dnsbl\LimitySkanuWww::TRYB_WWW, $email);
+            });
+            if (! is_int($wynik)) {
+                return $wynik;
+            }
+            $id = $wynik;
             $this->uruchomWTle($id);
         } catch (\Throwable $e) {
             log_message('error', 'dnsbl skan: ' . $e->getMessage());

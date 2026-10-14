@@ -156,7 +156,7 @@ $badgeWaga = static function (string $waga): string {
                     Sprawdź w LMS
                 </button>
                 <button type="button" class="btn btn-outline-secondary btn-sm" id="lms-force"
-                    data-url="<?= site_url('ip/' . $ip . '/enrichment/lms?force=1') ?>"
+                    data-url="<?= site_url('ip/' . $ip . '/enrichment/lms') ?>" data-metoda="post"
                     <?= $lmsDisabled ? 'disabled' : '' ?>>
                     Odśwież (force)
                 </button>
@@ -311,7 +311,7 @@ $badgeWaga = static function (string $waga): string {
                 Sprawdź AbuseIPDB
             </button>
             <button type="button" class="btn btn-outline-secondary" id="abuseipdb-force"
-                data-url="<?= site_url('ip/' . $ip . '/enrichment/abuseipdb?force=1') ?>"
+                data-url="<?= site_url('ip/' . $ip . '/enrichment/abuseipdb') ?>" data-metoda="post"
                 <?= (! empty($abuseipdbKomunikat) && ($abuseipdbTryb ?? '') === 'brak_klucza') ? 'disabled' : '' ?>>
                 Odśwież (force)
             </button>
@@ -369,7 +369,7 @@ $badgeWaga = static function (string $waga): string {
                 Sprawdź isMalicious
             </button>
             <button type="button" class="btn btn-outline-secondary" id="ismalicious-force"
-                data-url="<?= site_url('ip/' . $ip . '/enrichment/ismalicious?force=1') ?>"
+                data-url="<?= site_url('ip/' . $ip . '/enrichment/ismalicious') ?>" data-metoda="post"
                 <?= (! empty($ismaliciousKomunikat) && ($ismaliciousTryb ?? '') === 'brak_klucza') ? 'disabled' : '' ?>>
                 Odśwież (force)
             </button>
@@ -450,7 +450,7 @@ $badgeWaga = static function (string $waga): string {
                 Sprawdź SpamRats
             </button>
             <button type="button" class="btn btn-outline-secondary" id="spamrats-force"
-                data-url="<?= site_url('ip/' . $ip . '/enrichment/spamrats?force=1') ?>"
+                data-url="<?= site_url('ip/' . $ip . '/enrichment/spamrats') ?>" data-metoda="post"
                 <?= $spamratsDisabled ? 'disabled' : '' ?>>
                 Odśwież (force)
             </button>
@@ -549,7 +549,7 @@ $badgeWaga = static function (string $waga): string {
                 Sprawdź DNSBL
             </button>
             <button type="button" class="btn btn-outline-secondary" id="dnsbl-force"
-                data-url="<?= site_url('ip/' . $ip . '/enrichment/dnsbl?force=1') ?>"
+                data-url="<?= site_url('ip/' . $ip . '/enrichment/dnsbl') ?>" data-metoda="post"
                 <?= $dnsblIpv6 ? 'disabled' : '' ?>>
                 Odśwież (force)
             </button>
@@ -676,6 +676,30 @@ $stLiczba = (int) ($speedtestLiczba24 ?? 0);
 </div>
 <?php endif; ?>
 
+<input type="hidden" id="mcs-csrf" name="<?= esc(csrf_token(), 'attr') ?>" value="<?= esc(csrf_hash(), 'attr') ?>">
+<script>
+// Enrichment: „Sprawdź” = GET (cache albo zapytanie), „Odśwież (force)” = POST z CSRF.
+// Po POST serwer zwraca nowy token CSRF w nagłówku X-Mcs-Csrf (regenerate = true).
+window.mcsZapytaj = function (btn, url) {
+    var opcje = { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } };
+    var pole = document.getElementById('mcs-csrf');
+    if (btn.getAttribute('data-metoda') === 'post' && pole) {
+        var body = new URLSearchParams();
+        body.append('force', '1');
+        body.append(pole.name, pole.value);
+        opcje.method = 'POST';
+        opcje.body = body;
+    }
+    return fetch(url, opcje).then(function (r) {
+        var nowy = r.headers.get('X-Mcs-Csrf');
+        if (nowy && pole) {
+            document.querySelectorAll('input[name="' + pole.name + '"]').forEach(function (el) { el.value = nowy; });
+        }
+        return r;
+    });
+};
+</script>
+
 <script>
 (function () {
     function tekst(v) {
@@ -715,7 +739,7 @@ $stLiczba = (int) ($speedtestLiczba24 ?? 0);
         var url = btn.getAttribute('data-url');
         if (!url) return;
         btn.disabled = true;
-        fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+        window.mcsZapytaj(btn, url)
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
             .then(function (x) {
                 if (!x.j || !x.j.ok) {
@@ -792,7 +816,7 @@ $stLiczba = (int) ($speedtestLiczba24 ?? 0);
         var url = btn.getAttribute('data-url');
         if (!url) return;
         btn.disabled = true;
-        fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+        window.mcsZapytaj(btn, url)
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
             .then(function (x) {
                 if (!x.j || !x.j.ok) {
@@ -877,7 +901,7 @@ $stLiczba = (int) ($speedtestLiczba24 ?? 0);
         var url = btn.getAttribute('data-url');
         if (!url) return;
         btn.disabled = true;
-        fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+        window.mcsZapytaj(btn, url)
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
             .then(function (x) {
                 if (!x.j || !x.j.ok) {
@@ -956,7 +980,7 @@ $stLiczba = (int) ($speedtestLiczba24 ?? 0);
         var url = btn.getAttribute('data-url');
         if (!url) return;
         btn.disabled = true;
-        fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+        window.mcsZapytaj(btn, url)
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
             .then(function (x) {
                 if (!x.j || !x.j.ok) {
@@ -1013,7 +1037,7 @@ $stLiczba = (int) ($speedtestLiczba24 ?? 0);
         var url = btn.getAttribute('data-url');
         if (!url) return;
         btn.disabled = true;
-        fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+        window.mcsZapytaj(btn, url)
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
             .then(function (x) {
                 if (!x.j || !x.j.ok) {
