@@ -1,13 +1,12 @@
 {
     "name": "codeigniter4/appstarter",
-    "description": "CodeIgniter4 starter app",
+    "description": "MCS (Moja Czysta Sieć): zbieranie zgłoszeń nadużyć i listingów reputacji dla własnych prefiksów ISP.",
     "license": "MIT",
     "type": "project",
-    "homepage": "https://codeigniter.com",
+    "homepage": "https://github.com/kyob/MCS",
     "support": {
-        "forum": "https://forum.codeigniter.com/",
-        "source": "https://github.com/codeigniter4/CodeIgniter4",
-        "slack": "https://codeigniterchat.slack.com"
+        "issues": "https://github.com/kyob/MCS/issues",
+        "source": "https://github.com/kyob/MCS"
     },
     "require": {
         "php": "^8.2",
