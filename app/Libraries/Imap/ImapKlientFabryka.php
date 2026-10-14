@@ -18,7 +18,7 @@ final class ImapKlientFabryka
             throw new RuntimeException(
                 'Brak rozszerzenia PHP imap. Na Debian Trixie: apt install php8.4-imap'
                 . ' (Sury — brak w stable) i systemctl restart php8.4-fpm.'
-                . ' Patrz docs/09-imap-konfiguracja-env.md',
+                . ' Klucze skrzynek: .env.example.',
             );
         }
 
@@ -27,7 +27,7 @@ final class ImapKlientFabryka
             throw new RuntimeException(
                 'IMAP dla „' . $prefiksZrodla . '”: uzupełnij klucze mcs.' . $prefiksZrodla
                 . '.imapHost / imapPort / imapUser / imapPass w .env'
-                . ' (patrz .env.example i docs/09-imap-konfiguracja-env.md).',
+                . ' (patrz .env.example).',
             );
         }
 

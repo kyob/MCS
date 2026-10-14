@@ -18,7 +18,7 @@ final class ImapKlientPhpExt implements ImapKlientInterface
             throw new RuntimeException(
                 'Brak rozszerzenia PHP imap. Na Debian Trixie: apt install php8.4-imap'
                 . ' (pakiet z packages.sury.org — brak w stable) i systemctl restart php8.4-fpm.'
-                . ' Szczegóły: docs/09-imap-konfiguracja-env.md',
+                . ' Klucze skrzynek: .env.example.',
             );
         }
         if (! $ustawienia->jestSkonfigurowane()) {

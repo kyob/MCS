@@ -27,7 +27,7 @@ cp .env.example .env     # uzupełnij dane bazy i mcs.badgeToken
 php spark migrate
 php spark mcs:seed-pluginy
 php spark mcs:create-user admin@example.local 'hasło' superadmin
-php spark mcs:pobierz all   # import; harmonogram: docs/09-cron-pobierz.md
+php spark mcs:pobierz all   # import; uruchamiaj z crona co 15 min
 ```
 
 Docroot serwera WWW: `public/`. Sekrety trzymaj wyłącznie w `.env`. Nie commituj tego pliku.
@@ -59,15 +59,12 @@ Zasady zgłaszania luk: [SECURITY.md](SECURITY.md). Nie umieszczaj kluczy API, h
 
 MIT. Tekst w pliku [LICENSE](LICENSE).
 
-## Dokumentacja
+## Konfiguracja
 
-| Dokument | Zawartość |
-|----------|-----------|
-| [docs/03-przeplyw-danych.md](docs/03-przeplyw-danych.md) | Jak dane płyną od źródła do incydentu |
-| [docs/05-stack.md](docs/05-stack.md) | Stack: PHP, CodeIgniter 4, PostgreSQL |
-| [docs/09-cron-pobierz.md](docs/09-cron-pobierz.md) | Harmonogram importu (`mcs:pobierz`) |
-| [docs/09-imap-konfiguracja-env.md](docs/09-imap-konfiguracja-env.md) | Klucze `.env` dla skrzynek IMAP (bez haseł) |
-| [docs/13-waga-v1.md](docs/13-waga-v1.md) | Jak liczona jest waga incydentu |
-| [plugins/README.md](plugins/README.md) | Kontrakt wtyczek źródeł |
+Wszystkie opcje są opisane w komentarzach pliku [.env.example](.env.example). Kontrakt wtyczek źródeł: [plugins/README.md](plugins/README.md).
 
-Pozostałe pliki w [docs/](docs/) to historia decyzji projektowych i plany poszczególnych źródeł.
+Przykład crona (co 15 minut):
+
+```cron
+*/15 * * * * www-data cd /var/www/mcs && php spark mcs:pobierz all
+```

@@ -14,7 +14,6 @@ use RuntimeException;
 
 /**
  * Plugin źródła Wazuh — IP z AS198050, które spamują / atakują nasze serwery (SMTP, SSH, WWW).
- * Plan: docs/11-plan-zrodlo-wazuh.md
  *
  * Tryby pobierz():
  * 1) fixture JSON — mcs.wazuh.fixturePath

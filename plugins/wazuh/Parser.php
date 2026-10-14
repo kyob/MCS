@@ -5,7 +5,7 @@ namespace McsPluginy\wazuh;
 use RuntimeException;
 
 /**
- * Parser eksportu Wazuh (kontrakt wersja 1, docs/11-plan-zrodlo-wazuh.md).
+ * Parser eksportu Wazuh (kontrakt wersja 1).
  * Wiersz = agregat ip + kategoria_wazuh + dzień (UTC).
  */
 class Parser

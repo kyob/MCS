@@ -6,7 +6,7 @@ use CodeIgniter\Database\Migration;
 
 /**
  * Wiersze źródła Wazuh: agregat ip + kategoria_wazuh + dzień (UTC) z eksportu
- * /usr/local/lib/wazuh-mcs-export. Plan: docs/11-plan-zrodlo-wazuh.md
+ * /usr/local/lib/wazuh-mcs-export.
  */
 class CreateMcsWazuhWiersze extends Migration
 {
