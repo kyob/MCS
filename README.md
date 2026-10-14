@@ -71,8 +71,3 @@ MIT. Tekst w pliku [LICENSE](LICENSE).
 | [plugins/README.md](plugins/README.md) | Kontrakt wtyczek źródeł |
 
 Pozostałe pliki w [docs/](docs/) to historia decyzji projektowych i plany poszczególnych źródeł.
-
-## Lokalizacja
-
-- Serwer MCS (źródło prawdy): `/var/www/mcs` (CT `mcs`)
-- LMS+ (osobno, poza tym hostem): nie instalować MCS na hoście LMS
