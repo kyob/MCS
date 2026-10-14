@@ -405,21 +405,33 @@ class DnsblSerwis
      */
     private function zapiszWynik(string $ip, array $data, string $zrodloDanych, string $zakres, ?int $importId): int
     {
-        $teraz = gmdate('Y-m-d H:i:sP');
-        $listy = [];
+        $teraz      = gmdate('Y-m-d H:i:sP');
+        $poprzednie = $this->poprzednieListy($ip);
+        $listy      = [];
+        $listedAny  = false;
         foreach ($data['listy'] as $id => $info) {
             if (! is_array($info)) {
                 continue;
             }
-            $listy[(string) $id] = [
+            $wpis = [
                 'listed' => (bool) ($info['listed'] ?? false),
                 'kody'   => is_array($info['kody'] ?? null) ? array_values(array_filter($info['kody'], 'is_string')) : [],
                 'error'  => (string) ($info['error'] ?? ''),
             ];
+            // Błąd zapytania nie kasuje znanego listingu: zostaw poprzedni stan i dopisz błąd.
+            $prev = $poprzednie[(string) $id] ?? null;
+            if ($wpis['error'] !== '' && is_array($prev) && ! empty($prev['listed'])) {
+                $wpis['listed'] = true;
+                $wpis['kody']   = is_array($prev['kody'] ?? null) ? array_values(array_filter($prev['kody'], 'is_string')) : [];
+            }
+            if ($wpis['listed']) {
+                $listedAny = true;
+            }
+            $listy[(string) $id] = $wpis;
         }
 
         $this->enrichment->upsertDlaIp($ip, [
-            'listed_any'    => (bool) ($data['listed_any'] ?? false),
+            'listed_any'    => $listedAny || (bool) ($data['listed_any'] ?? false),
             'listy_json'    => json_encode($listy, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             'raw_json'      => json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             'zrodlo_danych' => $zrodloDanych,
@@ -530,6 +542,25 @@ class DnsblSerwis
         ]);
 
         return true;
+    }
+
+    /**
+     * Listy z poprzedniego wpisu cache (bez sprawdzania TTL).
+     *
+     * @return array<string, mixed>
+     */
+    private function poprzednieListy(string $ip): array
+    {
+        $ist = $this->enrichment->znajdzPoIp($ip);
+        if (! is_array($ist)) {
+            return [];
+        }
+        $listy = $ist['listy_json'] ?? [];
+        if (is_string($listy)) {
+            $listy = json_decode($listy, true);
+        }
+
+        return is_array($listy) ? $listy : [];
     }
 
     /**

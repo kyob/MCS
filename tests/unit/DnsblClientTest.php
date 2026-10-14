@@ -158,4 +158,33 @@ final class DnsblClientTest extends CIUnitTestCase
 
         $this->assertFalse($wynik['ok']);
     }
+
+    public function testBladResolveraToBladNieCzysto(): void
+    {
+        // false z resolvera = SERVFAIL/timeout (jak dns_get_record()).
+        $client = new DnsblClient(
+            ['spamcop' => 'bl.spamcop.net', 'dronebl' => 'dnsbl.dronebl.org'],
+            '',
+            static fn (string $fqdn) => str_contains($fqdn, 'spamcop') ? false : [],
+            25,
+            false,
+        );
+
+        $wynik = $client->checkIp('198.51.100.10');
+
+        $this->assertTrue($wynik['ok']);
+        $this->assertFalse($wynik['data']['listy']['spamcop']['listed']);
+        $this->assertNotSame('', $wynik['data']['listy']['spamcop']['error']);
+        $this->assertSame('', $wynik['data']['listy']['dronebl']['error']);
+    }
+
+    public function testWszystkieStrefyBladToOkFalse(): void
+    {
+        $client = new DnsblClient(['spamcop' => 'bl.spamcop.net'], '', static fn () => false, 25, false);
+
+        $wynik = $client->checkIp('198.51.100.10');
+
+        $this->assertFalse($wynik['ok']);
+        $this->assertNull($wynik['data']);
+    }
 }

@@ -383,7 +383,8 @@ class DnsblClient
         if ($this->resolver !== null) {
             $wynik = ($this->resolver)($fqdn);
             if (! is_array($wynik)) {
-                return [];
+                // Resolver testowy/zewnętrzny zwrócił false/null = błąd, nie „czysto”.
+                throw new \RuntimeException('resolver error');
             }
             $out = [];
             foreach ($wynik as $v) {
@@ -395,8 +396,13 @@ class DnsblClient
             return $out;
         }
 
+        // NXDOMAIN / NODATA => [] (czysto). SERVFAIL / timeout / REFUSED => false (błąd).
+        // Błąd nigdy nie oznacza „czysto”: rzucamy wyjątek, sprawdzStrefę() ustawia error.
         $rekordy = @dns_get_record($fqdn, DNS_A);
-        if ($rekordy === false || $rekordy === []) {
+        if ($rekordy === false) {
+            throw new \RuntimeException('DNS lookup failed (SERVFAIL/timeout)');
+        }
+        if ($rekordy === []) {
             return [];
         }
 

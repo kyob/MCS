@@ -131,6 +131,34 @@ final class DnsblSerwisTest extends CIUnitTestCase
         $this->assertNotContains('8.8.8.8', $ips);
     }
 
+    public function testBladDnsNieKasujeListingu(): void
+    {
+        $serwis = $this->serwisDns(static fn (string $fqdn) => str_contains($fqdn, 'uceprotect') ? ['127.0.0.2'] : []);
+        $serwis->sprawdz('5.253.230.12', true, 'lms');
+
+        // Drugi przebieg: uceprotect SERVFAIL (false), spamcop czysto.
+        $serwis2 = $this->serwisDns(static fn (string $fqdn) => str_contains($fqdn, 'uceprotect') ? false : []);
+        $wynik   = $serwis2->sprawdz('5.253.230.12', true, 'lms');
+
+        $this->assertTrue($wynik['ok']);
+        $this->assertTrue((bool) $wynik['wynik']['listed_any']);
+        $this->assertTrue((bool) $wynik['wynik']['listy']['uceprotect1']['listed']);
+        $this->assertNotSame('', $wynik['wynik']['listy']['uceprotect1']['error']);
+
+        $wiersz = model(DnsblWierszeModel::class)->znajdzPoIpLista('5.253.230.12', 'uceprotect1');
+        $this->assertTrue(PluginModelBool($wiersz['listed'] ?? false));
+    }
+
+    public function testBladDnsBezHistoriiNieJestCzysty(): void
+    {
+        $serwis = $this->serwisDns(static fn (string $fqdn) => str_contains($fqdn, 'uceprotect') ? false : []);
+        $wynik  = $serwis->sprawdz('5.253.230.13', true, 'lms');
+
+        $this->assertTrue($wynik['ok']);
+        $this->assertNotSame('', $wynik['wynik']['listy']['uceprotect1']['error']);
+        $this->assertFalse((bool) $wynik['wynik']['listed_any']);
+    }
+
     private function serwisFixture(): DnsblSerwis
     {
         return new DnsblSerwis(

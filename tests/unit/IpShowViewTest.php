@@ -438,4 +438,56 @@ final class IpShowViewTest extends CIUnitTestCase
             $html,
         );
     }
+
+    public function testDnsblBladZapytaniaNieJestCzysty(): void
+    {
+        $html = view('ip/show', [
+            'title'              => 'IP 198.51.100.10 — MCS',
+            'navAktywny'         => 'ip',
+            'ipNav'              => '198.51.100.10',
+            'szukajIp'           => '198.51.100.10',
+            'ip'                 => '198.51.100.10',
+            'blad'               => null,
+            'statusIp'           => ['max_waga' => '', 'liczba_problemow' => 0, 'top_tytuly' => []],
+            'problemy'           => [],
+            'zrodla'             => [],
+            'filtrZrodlo'        => null,
+            'asMatchWlaczone'    => false,
+            'naszeIp'            => false,
+            'email'              => 'op@example.com',
+            'rola'               => 'operator',
+            'lmsTryb'            => 'brak_konfiguracji',
+            'lmsCache'           => null,
+            'lmsKomunikat'       => null,
+            'abuseipdbTryb'      => 'brak_klucza',
+            'abuseipdbCache'     => null,
+            'abuseipdbKomunikat' => null,
+            'ismaliciousTryb'      => 'brak_klucza',
+            'ismaliciousCache'     => null,
+            'ismaliciousKomunikat' => null,
+            'spamratsTryb'         => 'brak_klucza',
+            'spamratsCache'        => null,
+            'spamratsKomunikat'    => null,
+            'dnsblTryb'            => 'cache',
+            'dnsblCache'           => [
+                'ip'         => '198.51.100.10',
+                'listed_any' => false,
+                'listy'      => [
+                    'spamcop' => ['listed' => false, 'kody' => [], 'error' => 'błąd DNS'],
+                    'dronebl' => ['listed' => false, 'kody' => [], 'error' => ''],
+                ],
+                'checked_at'    => '2026-10-14 10:00:00+00',
+                'zrodlo_danych' => 'dns',
+            ],
+            'dnsblKomunikat'     => null,
+            'flashOk'            => null,
+            'flashBlad'          => null,
+            'revDnsWlaczone'     => false,
+            'revDns'             => null,
+        ]);
+
+        $this->assertStringContainsString('nieznane (błąd zapytania: spamcop)', $html);
+        $this->assertStringContainsString('spamcop (błąd)', $html);
+        $this->assertStringNotContainsString('id="dnsbl-listed">nie<', $html);
+    }
 }

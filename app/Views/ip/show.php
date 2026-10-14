@@ -616,10 +616,26 @@ $badgeWaga = static function (string $waga): string {
             if (! is_array($dbListy)) {
                 $dbListy = [];
             }
+            $dbBledy = [];
+            foreach ($dbListy as $listaId => $info) {
+                if (is_array($info) && (string) ($info['error'] ?? '') !== '') {
+                    $dbBledy[] = (string) $listaId;
+                }
+            }
+            if ($dbListed === null) {
+                $dbListedTxt = '—';
+            } elseif ($dbListed) {
+                $dbListedTxt = 'tak';
+            } elseif ($dbBledy !== []) {
+                // Błąd zapytania nigdy nie oznacza „czysto”.
+                $dbListedTxt = 'nieznane (błąd zapytania: ' . implode(', ', $dbBledy) . ')';
+            } else {
+                $dbListedTxt = 'nie';
+            }
             ?>
             <dl class="row mb-0 small">
                 <dt class="col-sm-3 col-md-2 text-body-secondary">Na liście</dt>
-                <dd class="col-sm-9 col-md-10" id="dnsbl-listed"><?= $dbListed === null ? '—' : ($dbListed ? 'tak' : 'nie') ?></dd>
+                <dd class="col-sm-9 col-md-10" id="dnsbl-listed"><?= esc($dbListedTxt) ?></dd>
                 <dt class="col-sm-3 col-md-2 text-body-secondary">Listy</dt>
                 <dd class="col-sm-9 col-md-10" id="dnsbl-listy">
                     <?php if ($dbListy === []): ?>
@@ -627,11 +643,12 @@ $badgeWaga = static function (string $waga): string {
                     <?php else: ?>
                         <?php foreach ($dbListy as $listaId => $info): ?>
                             <?php
-                            $hit = is_array($info) && ! empty($info['listed']);
-                            $cls = $hit ? 'text-bg-danger' : 'text-bg-secondary';
+                            $hit  = is_array($info) && ! empty($info['listed']);
+                            $err  = is_array($info) ? (string) ($info['error'] ?? '') : '';
+                            $cls  = $hit ? 'text-bg-danger' : ($err !== '' ? 'text-bg-warning' : 'text-bg-secondary');
                             ?>
-                            <span class="badge <?= $cls ?> me-1 dnsbl-lista-badge" data-lista="<?= esc((string) $listaId, 'attr') ?>">
-                                <?= esc((string) $listaId) ?>
+                            <span class="badge <?= $cls ?> me-1 dnsbl-lista-badge" data-lista="<?= esc((string) $listaId, 'attr') ?>"<?= $err !== '' ? ' title="błąd: ' . esc($err, 'attr') . '"' : '' ?>>
+                                <?= esc((string) $listaId) ?><?= $err !== '' ? ' (błąd)' : '' ?>
                             </span>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -813,18 +830,35 @@ $stLiczba = (int) ($speedtestLiczba24 ?? 0);
         if (!box) return;
         box.hidden = false;
         var w = dane.wynik || {};
-        document.getElementById('dnsbl-listed').textContent = takNie(w.listed_any);
+        var listy = w.listy || {};
+        var bledy = Object.keys(listy).filter(function (id) {
+            return !!((listy[id] || {}).error);
+        });
+        var listedTxt = takNie(w.listed_any);
+        if (listedTxt === 'nie' && bledy.length) {
+            // Błąd zapytania nigdy nie oznacza „czysto”.
+            listedTxt = 'nieznane (błąd zapytania: ' + bledy.join(', ') + ')';
+        }
+        document.getElementById('dnsbl-listed').textContent = listedTxt;
         var listyEl = document.getElementById('dnsbl-listy');
         if (listyEl) {
-            var listy = w.listy || {};
-            var html = '';
+            listyEl.textContent = '';
             Object.keys(listy).forEach(function (id) {
                 var info = listy[id] || {};
                 var hit = !!(info.listed);
-                var cls = hit ? 'text-bg-danger' : 'text-bg-secondary';
-                html += '<span class="badge ' + cls + ' me-1">' + String(id).replace(/[<>&]/g, '') + '</span>';
+                var err = info.error ? String(info.error) : '';
+                var span = document.createElement('span');
+                span.className = 'badge me-1 ' + (hit ? 'text-bg-danger' : (err ? 'text-bg-warning' : 'text-bg-secondary'));
+                span.textContent = String(id) + (err ? ' (błąd)' : '');
+                if (err) span.title = 'błąd: ' + err;
+                listyEl.appendChild(span);
             });
-            listyEl.innerHTML = html || '<span class="text-body-secondary">—</span>';
+            if (!listyEl.childNodes.length) {
+                var pusty = document.createElement('span');
+                pusty.className = 'text-body-secondary';
+                pusty.textContent = '—';
+                listyEl.appendChild(pusty);
+            }
         }
         document.getElementById('dnsbl-checked').textContent = tekst(w.checked_at);
         document.getElementById('dnsbl-zrodlo').textContent = tekst(w.zrodlo_danych);
