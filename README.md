@@ -76,10 +76,6 @@ MIT. Tekst w pliku [LICENSE](LICENSE).
 | [docs/09-imap-konfiguracja-env.md](docs/09-imap-konfiguracja-env.md) | Klucze `.env` IMAP (bez haseł) |
 | [docs/09-cron-pobierz.md](docs/09-cron-pobierz.md) | Cron / systemd dla `mcs:pobierz` |
 | [docs/10-kryteria-odbioru-1b.md](docs/10-kryteria-odbioru-1b.md) | Szkic odbioru Fazy 1b |
-| [docs/07-zlecenie-agent-lxc.md](docs/07-zlecenie-agent-lxc.md) | Polecenie dla agenta: Task 1 LXC |
-| [docs/07-zlecenie-agent-ci4.md](docs/07-zlecenie-agent-ci4.md) | Polecenie dla agenta: Task 2 CI4 |
-| [docs/07-zlecenie-agent-migracje.md](docs/07-zlecenie-agent-migracje.md) | Polecenie dla agenta: Task 3 migracje |
-| [docs/07-zlecenie-agent-przenies-repo.md](docs/07-zlecenie-agent-przenies-repo.md) | Polecenie: przenieś repo na serwer MCS |
 
 ## Lokalizacja
 
