@@ -59,23 +59,18 @@ Zasady zgłaszania luk: [SECURITY.md](SECURITY.md). Nie umieszczaj kluczy API, h
 
 MIT. Tekst w pliku [LICENSE](LICENSE).
 
-## Dokumenty
+## Dokumentacja
 
-| Plik | Co to jest |
-|------|------------|
-| [docs/01-ustalenia.md](docs/01-ustalenia.md) | Krok 1 — co już ustaliliśmy |
-| [docs/02-wyglad-raportu.md](docs/02-wyglad-raportu.md) | Krok 2 — zgłoszenie, indeks, badge, moduły |
-| [docs/03-przeplyw-danych.md](docs/03-przeplyw-danych.md) | Krok 3 — jak dane płyną |
-| [docs/04-czesci-systemu.md](docs/04-czesci-systemu.md) | Krok 4 — części MCS, pluginy, fazy (+ status 1a/1b) |
-| [docs/05-stack.md](docs/05-stack.md) | Stack: PHP, CodeIgniter 4, PostgreSQL, osobny LXC/VM |
-| [docs/06-poprawki-po-krytyce.md](docs/06-poprawki-po-krytyce.md) | Decyzje po krytyce planu |
-| [docs/07-plan-faza-1a-szkielet.md](docs/07-plan-faza-1a-szkielet.md) | Plan Fazy 1a + LXC / sprzęt |
-| [docs/07-srodowisko-lxc.md](docs/07-srodowisko-lxc.md) | Fakty środowiska LXC |
-| [docs/08-kryteria-odbioru-1a.md](docs/08-kryteria-odbioru-1a.md) | Odbiór Fazy 1a — checklista i wyniki |
-| [docs/09-plan-faza-1b-importery.md](docs/09-plan-faza-1b-importery.md) | Plan Fazy 1b + status źródeł |
-| [docs/09-imap-konfiguracja-env.md](docs/09-imap-konfiguracja-env.md) | Klucze `.env` IMAP (bez haseł) |
-| [docs/09-cron-pobierz.md](docs/09-cron-pobierz.md) | Cron / systemd dla `mcs:pobierz` |
-| [docs/10-kryteria-odbioru-1b.md](docs/10-kryteria-odbioru-1b.md) | Szkic odbioru Fazy 1b |
+| Dokument | Zawartość |
+|----------|-----------|
+| [docs/03-przeplyw-danych.md](docs/03-przeplyw-danych.md) | Jak dane płyną od źródła do incydentu |
+| [docs/05-stack.md](docs/05-stack.md) | Stack: PHP, CodeIgniter 4, PostgreSQL |
+| [docs/09-cron-pobierz.md](docs/09-cron-pobierz.md) | Harmonogram importu (`mcs:pobierz`) |
+| [docs/09-imap-konfiguracja-env.md](docs/09-imap-konfiguracja-env.md) | Klucze `.env` dla skrzynek IMAP (bez haseł) |
+| [docs/13-waga-v1.md](docs/13-waga-v1.md) | Jak liczona jest waga incydentu |
+| [plugins/README.md](plugins/README.md) | Kontrakt wtyczek źródeł |
+
+Pozostałe pliki w [docs/](docs/) to historia decyzji projektowych i plany poszczególnych źródeł.
 
 ## Lokalizacja
 
