@@ -21,7 +21,8 @@ $routes->get('szukaj', 'Dashboard::szukaj');
 
 $routes->get('login', 'Auth::login');
 $routes->post('login', 'Auth::loginSubmit');
-$routes->get('logout', 'Auth::logout');
+// Wylogowanie tylko POST z CSRF (GET /logout z obcej strony nie wyloguje).
+$routes->post('logout', 'Auth::logout');
 
 // Chronione sesją (filtr mcsAuth w Config\Filters).
 $routes->get('ip/(:segment)', 'Ip::show/$1');

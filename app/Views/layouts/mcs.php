@@ -19,7 +19,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
           crossorigin="anonymous">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"
+          integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5AkVDxqC+"
+          crossorigin="anonymous">
     <style>
         .waga-critical { color: var(--bs-danger); font-weight: 700; }
         .waga-high { color: #984c0c; font-weight: 650; }
@@ -159,9 +161,12 @@ $mozeUzytkownicy = \App\Libraries\Rola::mozeUzytkownicy($rolaKod);
                 <?php if (! empty($email)): ?>
                     <span class="me-1"><?= esc($email) ?><?php if ($rolaEtykieta !== ''): ?> · <?= esc($rolaEtykieta) ?><?php endif; ?></span>
                 <?php endif; ?>
-                <a class="btn btn-sm btn-outline-secondary" href="<?= site_url('logout') ?>">
-                    <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>Wyloguj
-                </a>
+                <form method="post" action="<?= site_url('logout') ?>" class="d-inline m-0">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>Wyloguj
+                    </button>
+                </form>
             </div>
         </div>
     </div>

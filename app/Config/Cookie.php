@@ -53,8 +53,12 @@ class Cookie extends BaseConfig
      * --------------------------------------------------------------------------
      *
      * Cookie will only be set if a secure HTTPS connection exists.
+     *
+     * MCS: domyślnie true = tryb „auto” (filtr McsCookieSecureFilter): flaga Secure
+     * przy HTTPS (także przez zaufane proxy z app.proxyIPs), bez flagi przy czystym HTTP.
+     * cookie.secure = false w .env wyłącza flagę zawsze (niezalecane).
      */
-    public bool $secure = false;
+    public bool $secure = true;
 
     /**
      * --------------------------------------------------------------------------
