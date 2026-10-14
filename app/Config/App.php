@@ -27,9 +27,21 @@ class App extends BaseConfig
      * also accepts 'http://media.example.com/' and 'http://accounts.example.com/':
      *     ['media.example.com', 'accounts.example.com']
      *
+     * MCS: ustaw w .env jako listę po przecinku, np.
+     *     app.allowedHostnames = '192.0.2.10,mcs'
+     *
      * @var list<string>
      */
-    public array $allowedHostnames = ['192.0.2.110', 'mcs'];
+    public array $allowedHostnames = [];
+
+    /**
+     * MCS: hosty (z listy allowedHostnames), dla których baseURL ma schemat http://
+     * (np. wejście po adresie LAN bez TLS). Domyślnie puste. W .env:
+     *     app.httpHostnames = '192.0.2.10,mcs'
+     *
+     * @var list<string>
+     */
+    public array $httpHostnames = [];
 
     /**
      * --------------------------------------------------------------------------
@@ -178,11 +190,13 @@ class App extends BaseConfig
      *         '192.168.5.0/24' => 'X-Real-IP',
      *     ]
      *
+     * MCS: ustaw w .env jako listę po przecinku „IP_lub_CIDR=Nagłówek”
+     * (nagłówek domyślnie X-Forwarded-For), np.
+     *     app.proxyIPs = '192.0.2.247=X-Forwarded-For'
+     *
      * @var array<string, string>
      */
-    public array $proxyIPs = [
-        '192.0.2.247' => 'X-Forwarded-For',
-    ];
+    public array $proxyIPs = [];
 
     /**
      * --------------------------------------------------------------------------
@@ -206,10 +220,67 @@ class App extends BaseConfig
     {
         parent::__construct();
 
-        // Caddy trzyma HTTPS na domenie; wejście po LAN-owym IP zostaje na HTTP.
+        // Tablice nie są nadpisywane z .env przez BaseConfig — czytamy je tu jako listy.
+        $this->allowedHostnames = self::listaZEnv('app.allowedHostnames', $this->allowedHostnames);
+        $this->httpHostnames    = self::listaZEnv('app.httpHostnames', $this->httpHostnames);
+        $this->proxyIPs         = self::proxyZEnv('app.proxyIPs', $this->proxyIPs);
+
+        // Reverse proxy trzyma HTTPS na domenie; wejście po hoście z httpHostnames zostaje na HTTP.
         $host = strtolower(explode(':', (string) ($_SERVER['HTTP_HOST'] ?? ''), 2)[0]);
-        if (in_array($host, ['192.0.2.110', 'mcs'], true)) {
+        if ($host !== '' && in_array($host, $this->httpHostnames, true) && in_array($host, $this->allowedHostnames, true)) {
             $this->baseURL = 'http://' . $host . '/';
         }
+    }
+
+    /**
+     * @param list<string> $domyslne
+     *
+     * @return list<string>
+     */
+    public static function listaZEnv(string $klucz, array $domyslne): array
+    {
+        $raw = env($klucz);
+        if (! is_string($raw) || trim($raw) === '') {
+            return $domyslne;
+        }
+        $out = [];
+        foreach (preg_split('/[\s,]+/', trim($raw, " \t\n\r\0\x0B'\"")) ?: [] as $v) {
+            $v = strtolower(trim($v));
+            if ($v !== '') {
+                $out[$v] = $v;
+            }
+        }
+
+        return array_values($out);
+    }
+
+    /**
+     * Format: „IP_lub_CIDR=Nagłówek, IP2” (brak nagłówka = X-Forwarded-For).
+     *
+     * @param array<string, string> $domyslne
+     *
+     * @return array<string, string>
+     */
+    public static function proxyZEnv(string $klucz, array $domyslne): array
+    {
+        $raw = env($klucz);
+        if (! is_string($raw) || trim($raw) === '') {
+            return $domyslne;
+        }
+        $out = [];
+        foreach (explode(',', trim($raw, " \t\n\r\0\x0B'\"")) as $para) {
+            $para = trim($para);
+            if ($para === '') {
+                continue;
+            }
+            [$ip, $naglowek] = array_pad(explode('=', $para, 2), 2, '');
+            $ip       = trim($ip);
+            $naglowek = trim($naglowek) !== '' ? trim($naglowek) : 'X-Forwarded-For';
+            if ($ip !== '') {
+                $out[$ip] = $naglowek;
+            }
+        }
+
+        return $out;
     }
 }

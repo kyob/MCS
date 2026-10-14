@@ -24,7 +24,8 @@ class DropKlient
         'asndrop' => 'asndrop.json',
     ];
 
-    public const USER_AGENT = 'MCS/1.0 (Alfa-System AS198050 abuse monitor; +https://mcs.alfa-system.net; DROP 1x/24h)';
+    /** Domyślny User-Agent. Własny ustaw w .env: mcs.spamhaus.userAgent (np. z nazwą firmy i kontaktem). */
+    public const USER_AGENT = 'MCS/1.0 (+https://github.com/kyob/MCS)';
 
     /** @var (callable(string, int): array{ok: bool, http_code: int, body: string, error: string, retry_after: int})|null */
     private $http;
@@ -43,6 +44,13 @@ class DropKlient
     public static function fromOpcje(): self
     {
         return new self(null, \App\Libraries\OpcjeMcs::int('mcs.spamhaus.httpTimeout'));
+    }
+
+    public static function userAgent(): string
+    {
+        $ua = trim((string) env('mcs.spamhaus.userAgent', ''), " \t\n\r\0\x0B'\"");
+
+        return $ua !== '' ? $ua : self::USER_AGENT;
     }
 
     public static function url(string $lista): string
@@ -83,7 +91,7 @@ class DropKlient
             CURLOPT_MAXREDIRS      => 3,
             CURLOPT_CONNECTTIMEOUT => min(15, $this->timeout),
             CURLOPT_TIMEOUT        => $this->timeout,
-            CURLOPT_USERAGENT      => self::USER_AGENT,
+            CURLOPT_USERAGENT      => self::userAgent(),
             CURLOPT_HTTPHEADER     => ['Accept: application/json, text/plain'],
             CURLOPT_HEADERFUNCTION => static function ($ch, string $linia) use (&$retryAfter): int {
                 if (stripos($linia, 'retry-after:') === 0) {

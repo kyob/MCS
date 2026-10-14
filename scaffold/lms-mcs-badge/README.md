@@ -11,18 +11,18 @@
 | Środowisko | Stan |
 |------------|------|
 | MCS `GET /api/badge?ip=` | **OK** (200/401) |
-| LMS drzewo | `kyob@192.0.2.50:/var/www/html/lmsplus` |
+| LMS drzewo | `user@192.0.2.50:/var/www/html/lmsplus` |
 | Scaffold na LMS | `~/mcs-badge-staging/lms-mcs-badge/` (LMS+ handlers + `templates/node/nodeinfobox.html`) |
 | `[mcs]` w `/etc/lms/lms.ini` | **OK** |
 | `phpui.plugins` → `LMSMcsBadgePlugin` | **OK** |
 | Runtime | autoload bridge ze stagingu (do `composer dump-autoload` jako root) |
-| Smoke | node `9910` / `176.97.24.50` → `liczba>0` |
+| Smoke | node `9910` / `192.0.2.50` → `liczba>0` |
 | Cutover fetch | SNDS + N6 soft-off; MojeCert timer = leftover root |
 
 ### Opcjonalnie — pełna kopia do `plugins/` (root)
 
 ```bash
-bash /home/kyob/mcs-badge-staging/update-mcs-badge-fix.sh
+bash ~/mcs-badge-staging/update-mcs-badge-fix.sh
 ```
 
 ## Config LMS (bez sekretów w gicie)

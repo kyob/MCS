@@ -33,7 +33,7 @@ class PluginSeeder
         [
             'zrodlo' => 'lms_mapowanie',
             'nazwa'  => 'LMS mapowanie',
-            'opis'   => 'Mapowanie IP → komputer (node) i abonent (customer) z LMS; cache w MCS, poza indeksem badge. Host: mcs.lms.baseUrl (lms26.alfa-system.pl).',
+            'opis'   => 'Mapowanie IP → komputer (node) i abonent (customer) z LMS; cache w MCS, poza indeksem badge. Host: mcs.lms.baseUrl (np. lms.example.net).',
         ],
         [
             'zrodlo' => 'ismalicious',
