@@ -150,6 +150,17 @@ final class PobierzSerwisTest extends CIUnitTestCase
         $this->assertSame('boom', $wyniki[0]['msg']);
     }
 
+    public function testPominieciePrzezHarmonogramPokazujeKomunikatZamiastHealth(): void
+    {
+        $this->db->table('mcs_pluginy')->insert(['zrodlo' => 'harm', 'nazwa' => 'Harm', 'import_wstrzymany' => 0, 'ukryty_w_ui' => 0]);
+        $this->zapiszPlugin('harm', false, "    public function komunikatPominiecia(): ?string\n    {\n        return 'pominięto (następne po 2026-10-15 03:12 UTC)';\n    }\n");
+
+        $wyniki = $this->serwis()->uruchom('harm');
+
+        $this->assertSame('pominiety', $wyniki[0]['status']);
+        $this->assertSame('pominięto (następne po 2026-10-15 03:12 UTC)', $wyniki[0]['msg']);
+    }
+
     private function serwis(): PobierzSerwis
     {
         return new PobierzSerwis(
@@ -159,7 +170,7 @@ final class PobierzSerwisTest extends CIUnitTestCase
         );
     }
 
-    private function zapiszPlugin(string $zrodlo, bool $rzucBlad): void
+    private function zapiszPlugin(string $zrodlo, bool $rzucBlad, string $dodatek = ''): void
     {
         $dir = $this->katalogPluginow . '/' . $zrodlo;
         mkdir($dir, 0777, true);
@@ -191,6 +202,7 @@ class Plugin implements SourcePluginInterface
         return ['ok' => true, 'msg' => '{$zrodlo}-ok'];
     }
 
+{$dodatek}
     public function opisPolaczenia(): array
     {
         return [

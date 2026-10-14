@@ -13,6 +13,7 @@ $filtr     = (string) ($sk['filtr'] ?? 'listed');
 $strona    = (int) ($sk['strona'] ?? 1);
 $naStrone  = (int) ($sk['naStrone'] ?? 50);
 $prefiksy  = is_array($sk['prefiksy'] ?? null) ? $sk['prefiksy'] : [];
+$trend     = is_array($sk['trend'] ?? null) ? $sk['trend'] : [];
 $trwa      = $skan !== null && in_array($skan['status'], ['oczekuje', 'w_toku'], true);
 $gotowy    = $skan !== null && $skan['status'] === 'zakonczony';
 $urlBaza   = site_url('dashboard/dnsbl');
@@ -63,8 +64,10 @@ $statusPl  = [
             · status <?= esc($statusPl[$skan['status']] ?? (string) $skan['status']) ?>
             <?php if (! empty($skan['koniec_at'])): ?>· koniec <?= esc((string) $skan['koniec_at']) ?><?php endif; ?>
             <?php if (! empty($skan['uzytkownik'])): ?>· zlecił <?= esc((string) $skan['uzytkownik']) ?><?php endif; ?>
+            <?php if ($gotowy && array_key_exists('nowe', $skan)): ?>· nowe <?= (int) $skan['nowe'] ?> · zdjęte <?= (int) ($skan['zdjete'] ?? 0) ?> · incydenty <?= (int) ($skan['incydenty'] ?? 0) ?><?php endif; ?>
         </div>
         <?php if ($gotowy): ?>
+            <a class="btn btn-sm btn-outline-secondary" id="dnsbl-csv" href="<?= site_url('dashboard/dnsbl/skan/' . (int) $skan['id'] . '/csv') ?>">CSV</a>
             <form method="post" action="<?= site_url('dashboard/dnsbl/skan') ?>" class="m-0">
                 <?= csrf_field() ?>
                 <input type="hidden" name="zakres" value="<?= esc((string) $skan['zakres'], 'attr') ?>">
@@ -109,6 +112,10 @@ $statusPl  = [
             setInterval(tick, 2000);
         })();
         </script>
+    <?php elseif ($gotowy && in_array($skan['fala'] ?? false, [true, 't', '1', 1], true)): ?>
+        <div class="alert alert-warning border-0 shadow-sm rounded-3" role="alert" id="dnsbl-fala">
+            <strong>Możliwy błąd skanu.</strong> <?= esc((string) ($skan['komunikat'] ?? '')) ?>
+        </div>
     <?php elseif ($skan['status'] === 'blad'): ?>
         <div class="alert alert-danger border-0 shadow-sm rounded-3" role="alert">
             Skan zakończony błędem: <?= esc((string) ($skan['komunikat'] ?? '')) ?>
@@ -265,19 +272,57 @@ $statusPl  = [
     <?php endif; ?>
 <?php endif; ?>
 
+<?php if ($trend !== []): ?>
+    <?php
+    $maxT = max(1, max(array_column($trend, 'listowane')));
+    $n    = count($trend);
+    $szer = 600;
+    $wys  = 120;
+    $krok = $szer / max(1, $n);
+    $slup = max(2, min(16, $krok - 2));
+    ?>
+    <div class="card border-0 shadow-sm rounded-3 mb-4" id="dnsbl-trend">
+        <div class="card-header bg-transparent border-0 pt-3 px-3 pb-0">
+            <h2 class="h6 mb-0">Listowane IP w AS — ostatnie <?= $n ?> pełnych skanów</h2>
+            <div class="small text-body-secondary">Pełny skan prefiksów as198050_cidry (nocny lub ręczny). Bez stref informacyjnych.</div>
+        </div>
+        <div class="card-body">
+            <svg viewBox="0 0 <?= $szer ?> <?= $wys + 18 ?>" width="100%" height="<?= $wys + 18 ?>" role="img" aria-label="Trend liczby listowanych IP" preserveAspectRatio="none">
+                <line x1="0" y1="<?= $wys ?>" x2="<?= $szer ?>" y2="<?= $wys ?>" stroke="currentColor" stroke-opacity=".25" stroke-width="1"/>
+                <?php foreach ($trend as $i => $t): ?>
+                    <?php
+                    $h = $t['listowane'] > 0 ? max(2, $wys * $t['listowane'] / $maxT) : 0;
+                    $x = $i * $krok + ($krok - $slup) / 2;
+                    ?>
+                    <a href="<?= esc($urlBaza . '?skan=' . $t['id'], 'attr') ?>">
+                        <rect x="<?= round($x, 1) ?>" y="0" width="<?= round($krok, 1) ?>" height="<?= $wys ?>" fill="transparent"/>
+                        <rect x="<?= round($x, 1) ?>" y="<?= round($wys - $h, 1) ?>" width="<?= round($slup, 1) ?>" height="<?= round($h, 1) ?>" rx="2" fill="var(--bs-primary)">
+                        </rect>
+                        <title>Skan #<?= $t['id'] ?> (<?= esc($t['tryb']) ?>) <?= esc($t['koniec_at']) ?>: <?= $t['listowane'] ?> listowanych IP</title>
+                    </a>
+                <?php endforeach; ?>
+                <text x="0" y="<?= $wys + 14 ?>" font-size="11" fill="currentColor" fill-opacity=".6"><?= esc(substr((string) $trend[0]['koniec_at'], 0, 10)) ?></text>
+                <text x="<?= $szer ?>" y="<?= $wys + 14 ?>" font-size="11" text-anchor="end" fill="currentColor" fill-opacity=".6"><?= esc(substr((string) $trend[$n - 1]['koniec_at'], 0, 10)) ?> · max <?= $maxT ?></text>
+            </svg>
+        </div>
+    </div>
+<?php endif; ?>
+
 <?php if ($ostatnie !== []): ?>
     <details class="mb-4">
         <summary class="small text-body-secondary">Ostatnie skany (<?= count($ostatnie) ?>)</summary>
         <div class="table-responsive mt-2">
             <table class="table table-sm small mb-0">
-                <thead><tr><th>#</th><th>Zakres</th><th>Status</th><th>Listed</th><th>Błędy</th><th>Koniec</th><th>Zlecił</th></tr></thead>
+                <thead><tr><th>#</th><th>Tryb</th><th>Zakres</th><th>Status</th><th>Listed</th><th>Nowe/zdjęte</th><th>Błędy</th><th>Koniec</th><th>Zlecił</th></tr></thead>
                 <tbody>
                 <?php foreach ($ostatnie as $o): ?>
                     <tr>
                         <td><a href="<?= esc($urlBaza . '?skan=' . (int) $o['id'], 'attr') ?>">#<?= (int) $o['id'] ?></a></td>
-                        <td class="font-monospace"><?= esc((string) $o['zakres']) ?><?= ! empty($o['strefa_filtr']) ? ' [' . esc((string) $o['strefa_filtr']) . ']' : '' ?></td>
+                        <td><?= esc((string) ($o['tryb'] ?? '')) ?></td>
+                        <td class="font-monospace text-truncate" style="max-width: 24rem"><?= esc((string) $o['zakres']) ?><?= ! empty($o['strefa_filtr']) ? ' [' . esc((string) $o['strefa_filtr']) . ']' : '' ?></td>
                         <td><?= esc($statusPl[$o['status']] ?? (string) $o['status']) ?></td>
                         <td><?= (int) $o['listowane'] ?></td>
+                        <td><?= (int) ($o['nowe'] ?? 0) ?>/<?= (int) ($o['zdjete'] ?? 0) ?></td>
                         <td><?= (int) $o['bledy'] ?></td>
                         <td><?= esc((string) ($o['koniec_at'] ?? '—')) ?></td>
                         <td><?= esc((string) $o['uzytkownik']) ?></td>

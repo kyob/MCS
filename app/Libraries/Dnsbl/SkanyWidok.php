@@ -57,7 +57,7 @@ class SkanyWidok
             return null;
         }
         $r = $this->db->table('mcs_dnsbl_skany')
-            ->where('zakres', $zakres)->where('strefa_filtr', null)->where('status', 'zakonczony')
+            ->where('zakres', $zakres)->where('strefa_filtr', null)->where('pary', null)->where('status', 'zakonczony')
             ->where('koniec_at >=', gmdate('Y-m-d H:i:sP', time() - $ttl))
             ->orderBy('id', 'DESC')->limit(1)->get()->getRowArray();
 
@@ -73,7 +73,7 @@ class SkanyWidok
             return 0;
         }
         $r = $this->db->table('mcs_dnsbl_skany')->select('utworzono_at')
-            ->where('zakres', $zakres)->where('status !=', 'blad')
+            ->where('zakres', $zakres)->where('pary', null)->where('status !=', 'blad')
             ->orderBy('id', 'DESC')->limit(1)->get()->getRowArray();
         if (! is_array($r)) {
             return 0;
@@ -230,6 +230,75 @@ class SkanyWidok
         }
 
         return null;
+    }
+
+    /**
+     * Trend: liczba listowanych IP w ostatnich pełnych skanach AS (najstarszy pierwszy).
+     *
+     * @param list<string> $prefiksy
+     *
+     * @return list<array{id: int, koniec_at: string, listowane: int, tryb: string}>
+     */
+    public function trend(array $prefiksy, int $limit = 30): array
+    {
+        $b = $this->db->table('mcs_dnsbl_skany')->select('id, koniec_at, listowane, tryb')
+            ->where('status', 'zakonczony')->where('strefa_filtr', null)->where('pary', null)
+            ->groupStart()->where('tryb', HarmonogramSkanera::TRYB_NOC);
+        if ($prefiksy !== []) {
+            $b->orWhere('zakres', implode(',', $prefiksy));
+        }
+        $rows = $b->groupEnd()->orderBy('id', 'DESC')->limit($limit)->get()->getResultArray();
+        $out  = [];
+        foreach (array_reverse($rows) as $r) {
+            $out[] = ['id' => (int) $r['id'], 'koniec_at' => (string) $r['koniec_at'], 'listowane' => (int) $r['listowane'], 'tryb' => (string) $r['tryb']];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Wiersze CSV skanu (listed + błędy; czyste IP nie mają wiersza).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function wynikiCsv(int $skanId): array
+    {
+        return $this->db->table('mcs_dnsbl_wyniki w')
+            ->select('w.ip, w.strefa_kod, s.strefa, w.kody, w.txt, w.status, w.blad')
+            ->join('mcs_dnsbl_strefy s', 's.kod = w.strefa_kod', 'left')
+            ->where('w.skan_id', $skanId)->orderBy('w.ip')->orderBy('w.strefa_kod')->get()->getResultArray();
+    }
+
+    /**
+     * CSV: ip, strefa, kod, txt, status, blad. Wartości z DNS (TXT) zabezpieczone przed formułami arkusza.
+     *
+     * @param list<array<string, mixed>> $wiersze
+     */
+    public static function csv(array $wiersze): string
+    {
+        $bezp = static function (mixed $v): string {
+            $v = (string) ($v ?? '');
+
+            return $v !== '' && in_array($v[0], ['=', '+', '-', '@', "\t", "\r"], true) ? "'" . $v : $v;
+        };
+        $fh = fopen('php://temp', 'r+');
+        fputcsv($fh, ['ip', 'strefa', 'kod', 'txt', 'status', 'blad'], ',', '"', '');
+        foreach ($wiersze as $w) {
+            $strefa = (string) ($w['strefa'] ?? '');
+            fputcsv($fh, [
+                $bezp($w['ip'] ?? ''),
+                $bezp($strefa !== '' ? $strefa : ($w['strefa_kod'] ?? '')),
+                $bezp($w['kody'] ?? ''),
+                $bezp($w['txt'] ?? ''),
+                $bezp($w['status'] ?? ''),
+                $bezp($w['blad'] ?? ''),
+            ], ',', '"', '');
+        }
+        rewind($fh);
+        $csv = (string) stream_get_contents($fh);
+        fclose($fh);
+
+        return $csv;
     }
 
     /**

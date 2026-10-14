@@ -20,7 +20,7 @@ class McsDnsblSkan extends BaseCommand
 {
     protected $group       = 'MCS';
     protected $name        = 'mcs:dnsbl-skan';
-    protected $description = 'Skan DNSBL IPv4 z as198050_cidry (lokalny unbound, bez incydentów).';
+    protected $description = 'Skan DNSBL IPv4 z as198050_cidry (lokalny unbound; incydenty tylko dla nowych listingów stref o wysokiej wadze).';
     protected $usage       = 'mcs:dnsbl-skan [--cidr=] [--strefa=] [--dry-run] [--skan-id=]';
     protected $options     = [
         '--cidr'    => 'IP/CIDR (lista po przecinku), /21–/32, tylko z as198050_cidry. Brak = całe AS.',
@@ -39,6 +39,14 @@ class McsDnsblSkan extends BaseCommand
 
         if (($opt['skan-id'] ?? '') !== '') {
             $id = (int) $opt['skan-id'];
+            if (! $this->zajmijBlokade()) {
+                \Config\Database::connect()->table('mcs_dnsbl_skany')->where('id', $id)->where('status', 'oczekuje')->update([
+                    'status' => 'blad', 'koniec_at' => gmdate('Y-m-d H:i:sP'), 'komunikat' => 'Pominięty: trwa inny skan DNSBL.',
+                ]);
+                CLI::error('[dnsbl-skan] skan #' . $id . ': trwa inny skan DNSBL (blokada).');
+
+                return EXIT_ERROR;
+            }
             try {
                 $w = $skaner->wykonaj($id);
             } catch (\Throwable $e) {
@@ -95,6 +103,11 @@ class McsDnsblSkan extends BaseCommand
             return EXIT_SUCCESS;
         }
 
+        if (! $this->zajmijBlokade()) {
+            CLI::error('[dnsbl-skan] trwa inny skan DNSBL (blokada) — spróbuj później.');
+
+            return EXIT_ERROR;
+        }
         $id = $skaner->utworzSkan($cidry, $strefa !== '' ? $strefa : null, 'cli', 'cli');
         CLI::write('[dnsbl-skan] skan #' . $id);
         try {
@@ -107,6 +120,29 @@ class McsDnsblSkan extends BaseCommand
         $this->podsumuj($id, $w);
 
         return EXIT_SUCCESS;
+    }
+
+    /** @var resource|null uchwyt blokady (zwalniany przy końcu procesu) */
+    private $blokada;
+
+    /**
+     * Jeden skan DNSBL naraz (flock, nieblokujący).
+     */
+    private function zajmijBlokade(): bool
+    {
+        $plik = WRITEPATH . 'cache/mcs-dnsbl-skan.lock';
+        $fh   = @fopen($plik, 'c+e');
+        if ($fh === false) {
+            return true;
+        }
+        if (! flock($fh, LOCK_EX | LOCK_NB)) {
+            fclose($fh);
+
+            return false;
+        }
+        $this->blokada = $fh;
+
+        return true;
     }
 
     /**
@@ -123,8 +159,9 @@ class McsDnsblSkan extends BaseCommand
             ));
         }
         CLI::write(sprintf(
-            '[dnsbl-skan] OK skan #%d IP=%d czyste=%d listowane=%d błędy=%d czas=%.1fs zapytań=%d',
+            '[dnsbl-skan] OK skan #%d IP=%d czyste=%d listowane=%d błędy=%d czas=%.1fs zapytań=%d nowe=%d zdjete=%d incydenty=%d%s',
             $id, $w['liczba_ip'], $w['czyste'], $w['listowane'], $w['bledy'], $w['czas_ms'] / 1000, $w['zapytan_wykonano'],
+            $w['nowe'] ?? 0, $w['zdjete'] ?? 0, $w['incydenty'] ?? 0, ! empty($w['fala']) ? ' FALA' : '',
         ), 'green');
     }
 

@@ -95,6 +95,13 @@ class PobierzSerwis
         try {
             $plugin = $mapa[$zrodlo];
             $plugin->pobierz();
+            // Plugin z własnym harmonogramem może zgłosić pominięcie (np. spamhaus) — nie pokazuj starego health.
+            if (method_exists($plugin, 'komunikatPominiecia')) {
+                $pominiecie = $plugin->komunikatPominiecia();
+                if (is_string($pominiecie) && $pominiecie !== '') {
+                    return ['zrodlo' => $zrodlo, 'status' => 'pominiety', 'msg' => $pominiecie];
+                }
+            }
             $health = $plugin->health();
             $msg    = trim((string) ($health['msg'] ?? ''));
 
@@ -141,7 +148,7 @@ class PobierzSerwis
 
         $bezpieczne = preg_replace('/[^a-zA-Z0-9._-]/', '_', $zrodlo) ?: 'zrodlo';
         $plik       = rtrim($this->katalogBlokad, '/\\') . '/mcs-pobierz-' . $bezpieczne . '.lock';
-        $fh         = @fopen($plik, 'c+');
+        $fh         = @fopen($plik, 'c+e'); // e = O_CLOEXEC: skan w tle (setsid) nie dziedziczy blokady
         if ($fh === false) {
             $uchwyt = null;
 

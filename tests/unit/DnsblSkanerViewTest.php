@@ -52,6 +52,28 @@ final class DnsblSkanerViewTest extends CIUnitTestCase
         $this->assertStringNotContainsString('dnsbl-postep-bar', $html);
     }
 
+    public function testLinkCsvTrendIFala(): void
+    {
+        $skan = [
+            'id' => 9, 'zakres' => '91.231.70.0/23', 'strefa_filtr' => null, 'status' => 'zakonczony', 'uzytkownik' => 'auto', 'tryb' => 'noc',
+            'koniec_at' => '2026-10-15 03:40:00+00', 'liczba_ip' => 512, 'czyste' => 450, 'listowane' => 62, 'bledy' => 0, 'czas_ms' => 1500,
+            'zapytan_plan' => 2, 'zapytan_wykonano' => 2, 'nowe' => 62, 'zdjete' => 0, 'incydenty' => 0, 'fala' => true,
+            'komunikat' => 'Możliwy błąd skanu: 62 nowych listingów (> 50). Incydenty pominięte.',
+        ];
+        $html = $this->render([
+            'blad' => null, 'skan' => $skan, 'ostatnie' => [$skan], 'filtr' => 'listed', 'strona' => 1, 'naStrone' => 50, 'prefiksy' => [],
+            'strefy' => [], 'szczegoly' => null,
+            'trend' => [
+                ['id' => 8, 'koniec_at' => '2026-10-14 03:40:00+00', 'listowane' => 7, 'tryb' => 'noc'],
+                ['id' => 9, 'koniec_at' => '2026-10-15 03:40:00+00', 'listowane' => 62, 'tryb' => 'noc'],
+            ],
+        ]);
+        $this->assertStringContainsString('dashboard/dnsbl/skan/9/csv', $html);
+        $this->assertStringContainsString('id="dnsbl-trend"', $html);
+        $this->assertStringContainsString('Skan #9 (noc)', $html);
+        $this->assertStringContainsString('id="dnsbl-fala"', $html);
+    }
+
     public function testSkanWTokuPokazujePostepIPolling(): void
     {
         $html = $this->render([

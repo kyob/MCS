@@ -2,6 +2,7 @@
 
 namespace McsPluginy\dnsbl;
 
+use App\Libraries\Dnsbl\HarmonogramSkanera;
 use App\Libraries\Enrichment\DnsblClient;
 use App\Libraries\Enrichment\DnsblSerwis;
 use App\Libraries\ImportKoperta;
@@ -10,8 +11,10 @@ use App\Models\PluginModel;
 use RuntimeException;
 
 /**
- * Plugin stream DNSBL — skan LMS (codziennie) / pełne AS (dzień asScanWeekday).
- * Incydenty w indeksie + enrichment na /ip/{ip} + /dashboard/dnsbl.
+ * Plugin stream DNSBL — dwa mechanizmy:
+ * 1) stary (DnsblSerwis): skan LMS (codziennie) / pełne AS (dzień asScanWeekday), 3 strefy, enrichment na /ip/{ip};
+ * 2) skaner E3 (HarmonogramSkanera): pełny skan AS nocą + recheck aktywnych listingów co godzinę, w tle.
+ * Oba tworzą incydenty z tym samym kluczem dedupu ip|lista (zrodlo=dnsbl).
  */
 class Plugin implements SourcePluginInterface
 {
@@ -36,13 +39,15 @@ class Plugin implements SourcePluginInterface
 
     public function pobierz(): void
     {
+        $e3 = $this->krokSkanera();
+
         $zakres   = $this->serwis->wybierzZakres();
         $importId = $this->koperta->rozpocznij($this->zrodlo(), null, null, [
             'opis'   => 'skan DNSBL zakres=' . $zakres,
             'zakres' => $zakres,
         ]);
         if ($importId === null) {
-            $this->aktualizujHealth(true, 'pominięto (duplikat przebiegu)');
+            $this->aktualizujHealth(! $e3['fala'], $this->zHealthSkanera('pominięto (duplikat przebiegu)', $e3));
 
             return;
         }
@@ -63,7 +68,7 @@ class Plugin implements SourcePluginInterface
                 'listed'     => $wynik['listed'],
                 'incydenty'  => $wynik['incydenty'],
             ]);
-            $this->aktualizujHealth(true, $msg);
+            $this->aktualizujHealth(! $e3['fala'], $this->zHealthSkanera($msg, $e3));
         } catch (\Throwable $e) {
             $this->koperta->zakonczBlad($importId, $e->getMessage());
             $this->aktualizujHealth(false, $e->getMessage());
@@ -116,6 +121,34 @@ class Plugin implements SourcePluginInterface
         $strefy = implode(', ', array_keys($this->client->aktywneStrefy()));
 
         return 'DNSBL strefy: ' . ($strefy !== '' ? $strefy : 'brak');
+    }
+
+    /**
+     * Harmonogram skanera E3. Błąd nie przerywa starego mechanizmu.
+     *
+     * @return array{msg: string, fala: bool}
+     */
+    private function krokSkanera(): array
+    {
+        try {
+            $h    = new HarmonogramSkanera();
+            $krok = $h->krok();
+            $stan = $h->stanOstatniego();
+
+            return ['msg' => $stan['msg'] . ($krok !== '' ? '; ' . $krok : ''), 'fala' => $stan['fala']];
+        } catch (\Throwable $e) {
+            log_message('error', 'dnsbl skaner E3: ' . $e->getMessage());
+
+            return ['msg' => 'skaner: błąd harmonogramu: ' . $e->getMessage(), 'fala' => false];
+        }
+    }
+
+    /**
+     * @param array{msg: string, fala: bool} $e3
+     */
+    private function zHealthSkanera(string $msg, array $e3): string
+    {
+        return $e3['fala'] ? $e3['msg'] . ' | ' . $msg : $msg . ' | ' . $e3['msg'];
     }
 
     private function aktualizujHealth(bool $ok, string $msg): void

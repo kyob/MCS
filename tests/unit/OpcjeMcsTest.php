@@ -110,6 +110,7 @@ final class OpcjeMcsTest extends CIUnitTestCase
             'mcs.dnsbl.asScanWeekday'               => '0',
             'mcs.dnsbl.cacheTtl'                    => 86400,
             'mcs.dnsbl.rateLimitQps'                => 25,
+            'mcs.dnsbl.skanerRetencjaDni'           => 90,
             'mcs.shadowserver.imapRecentLimit'      => 40,
             'mcs.play.imapRecentLimit'              => 100,
             'mcs.snds.lookbackDays'                 => 3,

@@ -302,13 +302,14 @@ class Dashboard extends BaseController
             $filtr = 'listed';
         }
         $strona = max(1, (int) ($this->request->getGet('strona') ?? 1));
-        $out    = ['blad' => null, 'skan' => null, 'strefy' => [], 'szczegoly' => null, 'ostatnie' => [], 'filtr' => $filtr, 'strona' => $strona, 'naStrone' => 50, 'prefiksy' => []];
+        $out    = ['blad' => null, 'skan' => null, 'strefy' => [], 'szczegoly' => null, 'ostatnie' => [], 'filtr' => $filtr, 'strona' => $strona, 'naStrone' => 50, 'prefiksy' => [], 'trend' => []];
 
         try {
             $w = new \App\Libraries\Dnsbl\SkanyWidok();
             $w->oznaczPorzucone();
             $out['prefiksy'] = \App\Libraries\Dnsbl\Skaner::prefiksyAs();
             $out['ostatnie'] = $w->ostatnie(10);
+            $out['trend']    = $w->trend($out['prefiksy'], 30);
             $id              = (int) ($this->request->getGet('skan') ?? 0);
             $skan            = $id > 0 ? $w->skan($id) : ($out['ostatnie'][0] ?? null);
             if (is_array($skan)) {
@@ -405,19 +406,31 @@ class Dashboard extends BaseController
 
     private function uruchomWTle(int $id): void
     {
-        $php  = trim((string) env('mcs.dnsbl.phpCli', '/usr/bin/php'));
-        $log  = WRITEPATH . 'logs/mcs-dnsbl-skan.log';
-        $cmd  = sprintf(
-            '/usr/bin/setsid -f %s %s mcs:dnsbl-skan --skan-id=%d >> %s 2>&1 < /dev/null',
-            escapeshellarg($php),
-            escapeshellarg(ROOTPATH . 'spark'),
-            $id,
-            escapeshellarg($log),
-        );
-        exec($cmd, $wyj, $kod);
-        if ($kod !== 0) {
-            throw new \RuntimeException('Nie uruchomiono skanu w tle (kod ' . $kod . ').');
+        \App\Libraries\Dnsbl\Skaner::uruchomWTle($id);
+    }
+
+    /**
+     * GET dashboard/dnsbl/skan/{id}/csv — wyniki skanu (listed + błędy).
+     */
+    public function dnsblSkanCsv(int $id)
+    {
+        try {
+            $w    = new \App\Libraries\Dnsbl\SkanyWidok();
+            $skan = $w->skan($id);
+            if ($skan === null) {
+                return $this->response->setStatusCode(404)->setBody('Brak skanu.');
+            }
+            $csv = \App\Libraries\Dnsbl\SkanyWidok::csv($w->wynikiCsv($id));
+        } catch (\Throwable $e) {
+            log_message('error', 'dnsbl csv: ' . $e->getMessage());
+
+            return redirect()->to(site_url('dashboard/dnsbl'))->with('blad', 'Nie udało się przygotować CSV skanu.');
         }
+
+        return $this->response
+            ->setHeader('Content-Type', 'text/csv; charset=utf-8')
+            ->setHeader('Content-Disposition', 'attachment; filename="mcs-dnsbl-skan-' . $id . '.csv"')
+            ->setBody($csv);
     }
 
     /**

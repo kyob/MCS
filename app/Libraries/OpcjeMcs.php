@@ -168,6 +168,10 @@ final class OpcjeMcs
         $d['mcs.dnsbl.skanerBlokadaMin'] = [
             'grupa' => 'DNSBL', 'etykieta' => 'Skaner — blokada „Skanuj ponownie” (min)', 'typ' => 'int', 'domyslna' => '15', 'min' => 0, 'max' => 1440,
         ];
+        $d['mcs.dnsbl.skanerRetencjaDni'] = [
+            'grupa' => 'DNSBL', 'etykieta' => 'Skaner — retencja wyników mcs_dnsbl_wyniki (dni, 0 = bez czyszczenia)', 'typ' => 'int', 'domyslna' => '90', 'min' => 0, 'max' => 3650,
+            'opis' => 'Czyszczone przy każdym skanie. Wiersze skanów (trend) zostają.',
+        ];
 
         // --- Źródła IMAP ---
         $d['mcs.shadowserver.imapRecentLimit'] = [

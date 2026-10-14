@@ -11,7 +11,9 @@ use Config\Database;
  * Skaner DNSBL dla IPv4 AS198050 (plugin dnsbl, E1).
  *
  * Resolver: lokalny unbound (mcs.dnsbl.skanerResolver, domyślnie 127.0.0.1) — nie systemowy resolv.conf.
- * Bez incydentów i bez alertów: zapisuje tylko mcs_dnsbl_skany / _wyniki / _listingi.
+ * Zapisuje mcs_dnsbl_skany / _wyniki / _listingi. E3: zdarzenia nowy/zdjęty (mcs_dnsbl_zdarzenia),
+ * incydenty dla nowych listingów stref o wysokiej wadze (ZmianySkanu), retencja wyników.
+ * Tryb „pary” (recheck): pytamy tylko o pary ip+strefa z aktywnych listingów.
  */
 class Skaner
 {
@@ -129,6 +131,77 @@ class Skaner
     }
 
     /**
+     * Skan „recheck”: tylko pary ip+strefa (klucz = IP albo sieć /24) z aktywnych listingów.
+     *
+     * @param list<array{kod: string, ip: string}> $pary
+     */
+    public function utworzSkanPar(array $pary, string $tryb, string $uzytkownik): int
+    {
+        $ips = [];
+        foreach ($pary as $p) {
+            $ips[self::ipZapytania($p['ip'])] = true;
+        }
+        $this->db->table('mcs_dnsbl_skany')->insert([
+            'zakres'       => implode(',', array_map(static fn ($ip) => $ip . '/32', array_keys($ips))),
+            'strefa_filtr' => null,
+            'tryb'         => $tryb,
+            'status'       => 'oczekuje',
+            'uzytkownik'   => mb_substr($uzytkownik, 0, 255),
+            'utworzono_at' => gmdate('Y-m-d H:i:sP'),
+            'liczba_ip'    => count($ips),
+            'pary'         => json_encode(array_values($pary), JSON_UNESCAPED_SLASHES),
+        ]);
+
+        return (int) $this->db->insertID();
+    }
+
+    /**
+     * Aktywne listingi jako pary do recheck (tylko aktywne strefy).
+     *
+     * @return list<array{kod: string, ip: string}>
+     */
+    public function aktywnePary(): array
+    {
+        $aktywne = array_column($this->db->table('mcs_dnsbl_strefy')->select('kod')->where('aktywna', true)->get()->getResultArray(), 'kod');
+        if ($aktywne === []) {
+            return [];
+        }
+        $out = [];
+        foreach ($this->db->table('mcs_dnsbl_listingi')->select('ip, strefa_kod')->where('aktywny', true)
+            ->whereIn('strefa_kod', $aktywne)->orderBy('ip')->get()->getResultArray() as $r) {
+            $out[] = ['kod' => (string) $r['strefa_kod'], 'ip' => (string) $r['ip']];
+        }
+
+        return $out;
+    }
+
+    /** Klucz listingu (IP albo a.b.c.0/24) → IP użyte w zapytaniu. */
+    public static function ipZapytania(string $klucz): string
+    {
+        return str_contains($klucz, '/') ? (string) strstr($klucz, '/', true) : $klucz;
+    }
+
+    /**
+     * Uruchamia `mcs:dnsbl-skan --skan-id=N` w tle (setsid). Nie czeka na koniec.
+     */
+    public static function uruchomWTle(int $id): void
+    {
+        $php = trim((string) env('mcs.dnsbl.phpCli', '/usr/bin/php'));
+        $log = WRITEPATH . 'logs/mcs-dnsbl-skan.log';
+        $cmd = sprintf(
+            '/usr/bin/setsid -f %s %s mcs:dnsbl-skan --skan-id=%d >> %s 2>&1 < /dev/null',
+            escapeshellarg($php),
+            escapeshellarg(ROOTPATH . 'spark'),
+            $id,
+            escapeshellarg($log),
+        );
+        exec($cmd, $wyj, $kod);
+        if ($kod !== 0) {
+            throw new \RuntimeException('Nie uruchomiono skanu w tle (kod ' . $kod . ').');
+        }
+    }
+
+    /**
      * Plan bez zapytań o IP (dla --dry-run).
      *
      * @param list<string> $cidry
@@ -229,20 +302,37 @@ class Skaner
      */
     private function przebieg(int $skanId, array $skan, float $t0): array
     {
-        $cidry  = array_values(array_filter(explode(',', (string) $skan['zakres'])));
-        $ips    = ZakresSkanu::adresy($cidry);
+        $pary   = self::dekodujPary($skan['pary'] ?? null);
         $strefy = $this->strefy($skan['strefa_filtr'] ?? null);
+        /** @var array<string, array<string, string>>|null $paryKod kod → [klucz → IP zapytania] */
+        $paryKod = null;
+        $sieci   = [];
+        if ($pary !== null) {
+            $paryKod = [];
+            $ips     = [];
+            foreach ($pary as $p) {
+                $ipZap                          = self::ipZapytania($p['ip']);
+                $paryKod[$p['kod']][$p['ip']]   = $ipZap;
+                $ips[$ipZap]                    = $ipZap;
+                if (str_contains($p['ip'], '/')) {
+                    $sieci[$p['ip']] = $ipZap;
+                }
+            }
+            $ips    = array_values($ips);
+            $strefy = array_values(array_filter($strefy, static fn ($s) => isset($paryKod[$s['kod']])));
+        } else {
+            $cidry = array_values(array_filter(explode(',', (string) $skan['zakres'])));
+            $ips   = ZakresSkanu::adresy($cidry);
+            // klucz zapytania /24 → IP użyte w zapytaniu (pierwsze z zakresu w tej sieci)
+            foreach ($ips as $ip) {
+                $s24 = DnsblNarzedzia::siec24($ip);
+                if (! isset($sieci[$s24])) {
+                    $sieci[$s24] = $ip;
+                }
+            }
+        }
         if ($strefy === []) {
             throw new \RuntimeException('Brak aktywnych stref w mcs_dnsbl_strefy.');
-        }
-
-        // klucz zapytania /24 → IP użyte w zapytaniu (pierwsze z zakresu w tej sieci)
-        $sieci = [];
-        foreach ($ips as $ip) {
-            $s24 = DnsblNarzedzia::siec24($ip);
-            if (! isset($sieci[$s24])) {
-                $sieci[$s24] = $ip;
-            }
         }
 
         $info = [];
@@ -277,7 +367,11 @@ class Skaner
             if ($info[$s['kod']]['status'] !== 'ok') {
                 continue;
             }
-            $klucze = $s['typ'] === 'siec24' ? $sieci : array_combine($ips, $ips);
+            if ($paryKod !== null) {
+                $klucze = $paryKod[$s['kod']] ?? [];
+            } else {
+                $klucze = $s['typ'] === 'siec24' ? $sieci : array_combine($ips, $ips);
+            }
             foreach ($klucze as $kluczIp => $ipZap) {
                 $zad[] = [
                     'klucz' => $s['kod'] . '|' . $kluczIp,
@@ -377,25 +471,35 @@ class Skaner
 
         // stan bieżący — tylko strefy, które przeszły cały skan
         $zakresKluczy = array_fill_keys($ips, true) + array_fill_keys(array_keys($sieci), true);
+        $zmianyNowe   = [];
+        $zmianyZdjete = [];
         foreach ($info as $kod => $i) {
             if ($i['status'] !== 'ok') {
                 continue;
             }
+            $kluczeStrefy = $paryKod !== null ? ($paryKod[$kod] ?? []) : $zakresKluczy;
             $stare = [];
             foreach ($this->db->table('mcs_dnsbl_listingi')->select('ip')->where('strefa_kod', $kod)->where('aktywny', true)->get()->getResultArray() as $r) {
-                if (isset($zakresKluczy[$r['ip']])) {
+                if (isset($kluczeStrefy[$r['ip']])) {
                     $stare[] = (string) $r['ip'];
                 }
             }
             $d = DnsblNarzedzia::diff($stare, array_keys($listed[$kod] ?? []), array_keys($czyste[$kod] ?? []));
+            foreach ($d['nowe'] as $kluczIp) {
+                $zmianyNowe[] = ['kod' => (string) $kod, 'ip' => (string) $kluczIp, 'kody' => implode(',', $listed[$kod][$kluczIp]['kody']), 'txt' => (string) $listed[$kod][$kluczIp]['txt']];
+            }
+            foreach ($d['zdjete'] as $kluczIp) {
+                $zmianyZdjete[] = ['kod' => (string) $kod, 'ip' => (string) $kluczIp];
+            }
             foreach (array_merge($d['nowe'], $d['utrzymane']) as $kluczIp) {
                 $w = $listed[$kod][$kluczIp];
+                $t = $this->db->prefixTable('mcs_dnsbl_listingi');
                 $this->db->query(
-                    'INSERT INTO mcs_dnsbl_listingi (ip, strefa_kod, kody, txt, pierwszy_raz, ostatni_raz, aktywny, skan_id)
+                    'INSERT INTO ' . $t . ' (ip, strefa_kod, kody, txt, pierwszy_raz, ostatni_raz, aktywny, skan_id)
                      VALUES (?, ?, ?, ?, ?, ?, TRUE, ?)
                      ON CONFLICT (ip, strefa_kod) DO UPDATE SET
                        kody = EXCLUDED.kody, txt = EXCLUDED.txt, ostatni_raz = EXCLUDED.ostatni_raz, skan_id = EXCLUDED.skan_id,
-                       pierwszy_raz = CASE WHEN mcs_dnsbl_listingi.aktywny THEN mcs_dnsbl_listingi.pierwszy_raz ELSE EXCLUDED.pierwszy_raz END,
+                       pierwszy_raz = CASE WHEN ' . $t . '.aktywny THEN ' . $t . '.pierwszy_raz ELSE EXCLUDED.pierwszy_raz END,
                        aktywny = TRUE',
                     [$kluczIp, $kod, implode(',', $w['kody']), $w['txt'], $teraz, $teraz, $skanId],
                 );
@@ -451,10 +555,57 @@ class Skaner
             throw new \RuntimeException('Błąd zapisu wyników skanu #' . $skanId);
         }
 
+        // E3: zdarzenia + incydenty (po zapisie stanu; IncydentZapis ma własną transakcję)
+        $zm = new ZmianySkanu($this->db);
+        $e3 = $zm->zapisz($skanId, $zmianyNowe, $zmianyZdjete);
+        $this->aktualizuj($skanId, [
+            'nowe'      => $e3['nowe'],
+            'zdjete'    => $e3['zdjete'],
+            'incydenty' => $e3['incydenty'],
+            'fala'      => $e3['fala'],
+            'komunikat' => $e3['fala'] ? sprintf('Możliwy błąd skanu: %d nowych listingów (> %d). Incydenty pominięte.', $e3['nowe'], ZmianySkanu::PROG_FALI) : null,
+        ]);
+        $this->loguj(sprintf('E3: nowe=%d zdjete=%d incydenty=%d%s', $e3['nowe'], $e3['zdjete'], $e3['incydenty'], $e3['fala'] ? ' FALA (incydenty pominięte)' : ''));
+        $usun = $zm->czyscRetencje(self::retencjaDni());
+        if ($usun > 0) {
+            $this->loguj('retencja: usunięto ' . $usun . ' wierszy mcs_dnsbl_wyniki');
+        }
+
+        $wynik           = array_merge($wynik, $e3);
         $wynik['strefy'] = array_values($info);
         $wynik['liczba_ip'] = count($ips);
 
         return $wynik;
+    }
+
+    public static function retencjaDni(): int
+    {
+        try {
+            return max(0, OpcjeMcs::int('mcs.dnsbl.skanerRetencjaDni'));
+        } catch (\Throwable) {
+            return max(0, (int) env('mcs.dnsbl.skanerRetencjaDni', 90));
+        }
+    }
+
+    /**
+     * @return list<array{kod: string, ip: string}>|null
+     */
+    public static function dekodujPary(mixed $v): ?array
+    {
+        if (is_string($v) && $v !== '') {
+            $v = json_decode($v, true);
+        }
+        if (! is_array($v)) {
+            return null;
+        }
+        $out = [];
+        foreach ($v as $p) {
+            if (is_array($p) && isset($p['kod'], $p['ip'])) {
+                $out[] = ['kod' => (string) $p['kod'], 'ip' => (string) $p['ip']];
+            }
+        }
+
+        return $out;
     }
 
     /**
