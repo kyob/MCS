@@ -74,7 +74,8 @@ final class DnsPakiet
                     $s .= substr($rdata, $p + 1, $dl);
                     $p += 1 + $dl;
                 }
-                $txt[] = $s;
+                // TXT to obce bajty: popraw UTF-8 i usuń znaki sterujące (NUL psuje INSERT do PostgreSQL).
+                $txt[] = (string) preg_replace('/[\x00-\x1F\x7F]/', ' ', mb_scrub($s, 'UTF-8'));
             }
             $off += $r['dl'];
         }
