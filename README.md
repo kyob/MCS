@@ -49,6 +49,54 @@ vendor/bin/phpunit
 
 Zasady zgłaszania luk: [SECURITY.md](SECURITY.md). Nie umieszczaj kluczy API, haseł ani tokenów w repozytorium.
 
+## Wdrożenie i bezpieczeństwo
+
+**TLS na reverse proxy.** Wystaw panel tylko przez HTTPS, np. Caddy albo nginx z certyfikatem. Aplikacja za proxy działa po HTTP.
+- Wpisz adres proxy w `.env`: `app.proxyIPs = '192.0.2.247=X-Forwarded-For'`. Bez tego MCS widzi IP proxy zamiast IP klienta. Limit logowania liczy wtedy wszystkich jako jednego klienta.
+- Proxy musi wysyłać `X-Forwarded-Proto: https`. Caddy robi to domyślnie.
+- Dodatkowe nazwy hosta wpisz w `app.allowedHostnames`. `app.httpHostnames` zostaw puste, chyba że świadomie wchodzisz bez TLS w LAN.
+
+**Ciasteczka.** `Config\Cookie::$secure` jest domyślnie `true` i działa jak tryb „auto”:
+- żądanie przez HTTPS albo przez zaufane proxy z `X-Forwarded-Proto: https`: ciasteczka sesji i CSRF mają flagę `Secure`,
+- żądanie po czystym HTTP (np. adres LAN, healthcheck): ciasteczka bez flagi `Secure`.
+- `cookie.secure = false` w `.env` wyłącza flagę zawsze. Nie zalecamy tego.
+
+Logowanie po czystym HTTP wysyła hasło i sesję otwartym tekstem. Używaj go tylko w zaufanej sieci testowej.
+
+**Nagłówki.** Filtr `secureheaders` (`App\Filters\McsSecureHeaders`) działa dla każdej odpowiedzi:
+- `X-Frame-Options: DENY` i `Content-Security-Policy: frame-ancestors 'none'` (ochrona przed clickjackingiem),
+- `X-Content-Type-Options: nosniff`,
+- `Referrer-Policy: same-origin`.
+
+Pełne CSP nie jest włączone, bo widoki mają skrypty inline. HSTS ustaw na reverse proxy.
+
+**Ograniczenie dostępu po IP.** Panel nie jest przeznaczony dla Internetu. Na reverse proxy zezwól tylko na adresy biura i VPN, np. w Caddy:
+
+```caddy
+mcs.example.net {
+    @blocked not remote_ip 192.0.2.0/24 2001:db8::/48
+    respond @blocked "Not allowed." 403
+    reverse_proxy 192.0.2.10
+}
+```
+
+**Role.** `operator` czyta dane i zleca skan DNSBL. `admin` zmienia wtyczki i ustawienia. `superadmin` zarządza kontami. Dawaj najniższą rolę, która wystarcza.
+
+**Sekrety w `.env`.** Hasło bazy, `mcs.badgeToken`, klucze API i hasła IMAP trzymaj tylko w `.env`.
+- Ustaw prawa pliku: właściciel `www-data`, tryb `0640` albo `0600`.
+- Plik jest w `.gitignore`. Nie kopiuj go do zgłoszeń ani czatów.
+
+**Rotacja tokenów.** Zmień sekret od razu, gdy mógł wyciec, oraz po odejściu osoby z dostępem.
+- `mcs.badgeToken`: wygeneruj nowy (`openssl rand -hex 32`), wpisz w `.env` MCS i w `lms.ini` na LMS w tym samym oknie.
+- Klucze API dostawców: wygeneruj nowe w panelu dostawcy, potem usuń stare.
+- Tokeny zapisane w panelu (Abusix, SNDS) są w tabeli `mcs_ustawienia`. Kopia bazy zawiera je otwartym tekstem.
+
+**Backup.** Rób kopię bazy (`pg_dump -Fc mcs`) i pliku `.env`. Kopia `.env` i bazy zawiera sekrety, więc szyfruj ją i ogranicz dostęp.
+
+**Limit logowania.** Po 5 próbach na jeden e-mail albo 20 próbach z jednego IP w ciągu 10 minut panel odrzuca kolejne próby. Komunikat nie mówi, czy konto istnieje. Liczniki są w cache aplikacji (`writable/cache`). Odblokowanie ręczne: usuń pliki `writable/cache/throttler_mcslogin_*`.
+
+**Skaner DNSBL z WWW.** Jeden skan ma limit IP (`mcs.dnsbl.skanerMaksIpWww`, domyślnie 4096) i jest dzienny limit skanów (`mcs.dnsbl.skanerLimitDobaWww`, domyślnie 20 na 24 h). Naraz działa jeden skan. Zmienisz to w `/admin/ustawienia/opcje`.
+
 ## Dane zewnętrzne i atrybucja
 
 - Spamhaus DROP / DROPv6 / ASN-DROP: dane © The Spamhaus Project SLU, używane zgodnie z DROP Fair Use Policy. Panel pokazuje źródło i datę pliku. MCS nie odpytuje `zen.spamhaus.org` ani `check.spamhaus.org` automatem.
