@@ -129,8 +129,6 @@ final class OpcjeMcsTest extends CIUnitTestCase
             'mcs.wanguard.httpConnectTimeout'       => 10,
             'mcs.cloudflare_botnet.httpTimeout'     => 60,
             'mcs.cloudflare_botnet.httpConnectTimeout' => 10,
-            'mcs.qrator.httpTimeout'                => 60,
-            'mcs.qrator.httpConnectTimeout'         => 10,
             'mcs.spoofer.maxPages'                  => 50,
             'mcs.spoofer.httpTimeout'               => 60,
             'mcs.spoofer.httpConnectTimeout'        => 10,
@@ -158,7 +156,7 @@ final class OpcjeMcsTest extends CIUnitTestCase
         $this->assertSame('high', OpcjeMcs::tekst('mcs.kolejkaDnia.minWaga'));
         $this->assertSame('antyddos@play.pl', OpcjeMcs::tekst('mcs.play.fromAddress'));
         $this->assertSame('', OpcjeMcs::tekst('mcs.spoofer.lookbackDays'));
-        $this->assertSame('', OpcjeMcs::tekst('mcs.qrator.asn'));
+        $this->assertSame('', OpcjeMcs::tekst('mcs.spoofer.asn'));
     }
 
     public function testWrapperyZwracajaPoprzednieWartosci(): void
@@ -220,7 +218,6 @@ final class OpcjeMcsTest extends CIUnitTestCase
         OpcjeMcs::ustawModel($this->modelZ(['mcs.as198050.asn' => '65001']));
 
         $this->assertSame(65001, As198050Matcher::asn());
-        $this->assertSame(65001, (new \McsPluginy\qrator\Plugin())->resolveAsn());
         $this->assertSame(65001, (new \McsPluginy\spoofer\Plugin())->resolveAsn());
     }
 
@@ -236,7 +233,7 @@ final class OpcjeMcsTest extends CIUnitTestCase
         $this->assertFalse(OpcjeMcs::waliduj('mcs.as198050.asn', '0')['ok']);
         $this->assertFalse(OpcjeMcs::waliduj('mcs.as198050.asn', '4294967296')['ok']);
         $this->assertFalse(OpcjeMcs::waliduj('mcs.as198050.asn', '')['ok']);
-        $this->assertTrue(OpcjeMcs::waliduj('mcs.qrator.asn', '')['ok']);
+        $this->assertTrue(OpcjeMcs::waliduj('mcs.spoofer.asn', '')['ok']);
 
         $this->assertTrue(OpcjeMcs::waliduj('mcs.play.fromAddress', 'Alert@Example.com')['ok']);
         $this->assertSame('alert@example.com', OpcjeMcs::waliduj('mcs.play.fromAddress', 'Alert@Example.com')['wartosc']);

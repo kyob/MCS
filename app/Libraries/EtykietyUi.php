@@ -17,7 +17,6 @@ class EtykietyUi
         'mojecert'           => 'MojeCERT',
         'wanguard'           => 'Wanguard',
         'cloudflare_botnet'  => 'Cloudflare Botnet',
-        'qrator'             => 'Qrator',
         'lms_mapowanie'      => 'LMS',
         'ismalicious'        => 'isMalicious',
         'spamrats'           => 'SpamRats',

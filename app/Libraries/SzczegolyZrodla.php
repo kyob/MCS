@@ -23,7 +23,6 @@ class SzczegolyZrodla
         'wazuh'              => 'mcs_wazuh_wiersze',
         'dnsbl'              => 'mcs_dnsbl_wiersze',
         'spamhaus'           => 'mcs_spamhaus_trafienia',
-        // qrator: brak mapowania — API płatne / źródło wstrzymane (nie inwestujemy w live drill-down).
     ];
 
     private BaseConnection $db;

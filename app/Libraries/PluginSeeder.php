@@ -26,11 +26,6 @@ class PluginSeeder
         ['zrodlo' => 'wanguard', 'nazwa' => 'Wanguard'],
         ['zrodlo' => 'cloudflare_botnet', 'nazwa' => 'Cloudflare Botnet'],
         [
-            'zrodlo' => 'qrator',
-            'nazwa'  => 'Qrator Radar',
-            'opis'   => 'Qrator Radar — API płatne / niedostępne w MCS; import wstrzymany, źródło ukryte w UI.',
-        ],
-        [
             'zrodlo' => 'lms_mapowanie',
             'nazwa'  => 'LMS mapowanie',
             'opis'   => 'Mapowanie IP → komputer (node) i abonent (customer) z LMS; cache w MCS, poza indeksem badge. Host: mcs.lms.baseUrl (np. lms.example.net).',
@@ -72,17 +67,13 @@ class PluginSeeder
         ],
     ];
 
-    /** Źródła wymuszane jako wstrzymane + ukryte w UI przy każdym seedzie (np. płatne API). */
-    private const WYMUS_WSTRZYMANE_UKRYTE = ['qrator'];
-
     public function __construct(private readonly ?BaseConnection $db = null)
     {
     }
 
     /**
-     * Dopisuje brakujące źródła. Dla istniejących aktualizuje `opis` (gdy zdefiniowany)
-     * oraz wymusza wstrzymanie/ukrycie dla źródeł z WYMUS_WSTRZYMANE_UKRYTE (np. qrator).
-     * Nie rusza flag innych źródeł ani health_*.
+     * Dopisuje brakujące źródła. Dla istniejących aktualizuje `opis` (gdy zdefiniowany).
+     * Nie rusza flag import_wstrzymany / ukryty_w_ui ani health_*.
      *
      * @return array{nowe: list<string>, juz_byly: list<string>, opis_zaktualizowany: list<string>}
      */
@@ -95,7 +86,6 @@ class PluginSeeder
 
         foreach (self::PLACEHOLDERY as $wiersz) {
             $opis           = isset($wiersz['opis']) ? (string) $wiersz['opis'] : null;
-            $wymusUkryte    = in_array($wiersz['zrodlo'], self::WYMUS_WSTRZYMANE_UKRYTE, true);
             $istniejacy     = $model->find($wiersz['zrodlo']);
 
             if ($istniejacy !== null) {
@@ -104,10 +94,6 @@ class PluginSeeder
                 if ($opis !== null && $opis !== '') {
                     $aktualizuj['opis'] = $opis;
                     $opisZaktualizowany[] = $wiersz['zrodlo'];
-                }
-                if ($wymusUkryte) {
-                    $aktualizuj['import_wstrzymany'] = true;
-                    $aktualizuj['ukryty_w_ui']       = true;
                 }
                 if ($aktualizuj !== []) {
                     $model->update($wiersz['zrodlo'], $aktualizuj);
@@ -119,7 +105,7 @@ class PluginSeeder
                 'zrodlo'            => $wiersz['zrodlo'],
                 'nazwa'             => $wiersz['nazwa'],
                 'import_wstrzymany' => true,
-                'ukryty_w_ui'       => $wymusUkryte,
+                'ukryty_w_ui'       => false,
             ];
             if ($opis !== null && $opis !== '') {
                 $insert['opis'] = $opis;

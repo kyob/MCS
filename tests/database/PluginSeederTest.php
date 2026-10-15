@@ -46,11 +46,11 @@ final class PluginSeederTest extends CIUnitTestCase
         $wynik = (new PluginSeeder())->zapisz();
 
         $this->assertSame(
-            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'qrator', 'lms_mapowanie', 'ismalicious', 'spamrats', 'dnsbl', 'spoofer', 'speedtest', 'wazuh', 'spamhaus'],
+            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'lms_mapowanie', 'ismalicious', 'spamrats', 'dnsbl', 'spoofer', 'speedtest', 'wazuh', 'spamhaus'],
             $wynik['nowe'],
         );
         $this->assertSame([], $wynik['juz_byly']);
-        $this->seeNumRecords(16, 'mcs_pluginy', []);
+        $this->seeNumRecords(15, 'mcs_pluginy', []);
         $this->seeInDatabase('mcs_pluginy', [
             'zrodlo'            => 'shadowserver',
             'nazwa'             => 'Shadowserver',
@@ -94,12 +94,6 @@ final class PluginSeederTest extends CIUnitTestCase
             'import_wstrzymany' => 1,
         ]);
         $this->seeInDatabase('mcs_pluginy', [
-            'zrodlo'            => 'qrator',
-            'nazwa'             => 'Qrator Radar',
-            'import_wstrzymany' => 1,
-            'ukryty_w_ui'       => 1,
-        ]);
-        $this->seeInDatabase('mcs_pluginy', [
             'zrodlo'            => 'dnsbl',
             'nazwa'             => 'DNSBL (AS)',
             'import_wstrzymany' => 1,
@@ -111,26 +105,8 @@ final class PluginSeederTest extends CIUnitTestCase
             'import_wstrzymany' => 1,
             'ukryty_w_ui'       => 0,
         ]);
-        $qrator = $this->db->table('mcs_pluginy')->where('zrodlo', 'qrator')->get()->getRowArray();
-        $this->assertIsArray($qrator);
-        $this->assertStringContainsString('płatne', (string) ($qrator['opis'] ?? ''));
-    }
-
-    public function testPonownyZapisWymuszaQratorUkryty(): void
-    {
-        (new PluginSeeder())->zapisz();
-        $this->db->table('mcs_pluginy')->where('zrodlo', 'qrator')->update([
-            'import_wstrzymany' => 0,
-            'ukryty_w_ui'       => 0,
-        ]);
-
-        (new PluginSeeder())->zapisz();
-
-        $this->seeInDatabase('mcs_pluginy', [
-            'zrodlo'            => 'qrator',
-            'import_wstrzymany' => 1,
-            'ukryty_w_ui'       => 1,
-        ]);
+        $this->dontSeeInDatabase('mcs_pluginy', ['zrodlo' => 'qrator']);
+        $this->dontSeeInDatabase('mcs_pluginy', ['zrodlo' => 'abusix']);
     }
 
     public function testPonownyZapisNieNadpisujeIstniejacych(): void
@@ -142,11 +118,11 @@ final class PluginSeederTest extends CIUnitTestCase
 
         $this->assertSame([], $wynik['nowe']);
         $this->assertSame(
-            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'qrator', 'lms_mapowanie', 'ismalicious', 'spamrats', 'dnsbl', 'spoofer', 'speedtest', 'wazuh', 'spamhaus'],
+            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'lms_mapowanie', 'ismalicious', 'spamrats', 'dnsbl', 'spoofer', 'speedtest', 'wazuh', 'spamhaus'],
             $wynik['juz_byly'],
         );
         $this->assertContains('play', $wynik['opis_zaktualizowany']);
-        $this->seeNumRecords(16, 'mcs_pluginy', []);
+        $this->seeNumRecords(15, 'mcs_pluginy', []);
         $this->seeInDatabase('mcs_pluginy', [
             'zrodlo'            => 'play',
             'import_wstrzymany' => 0,

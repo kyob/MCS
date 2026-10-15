@@ -10,7 +10,7 @@ class McsSeedPluginy extends BaseCommand
 {
     protected $group       = 'MCS';
     protected $name        = 'mcs:seed-pluginy';
-    protected $description = 'Zapisuje placeholdery źródeł (shadowserver, play, snds, mojecert, cert_n6, wanguard, cloudflare_botnet, qrator, spoofer) z wstrzymanym importem.
+    protected $description = 'Zapisuje placeholdery źródeł (shadowserver, play, snds, mojecert, cert_n6, wanguard, cloudflare_botnet, spoofer) z wstrzymanym importem.
 
 Przykłady:
   php spark mcs:seed-pluginy

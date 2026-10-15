@@ -6,7 +6,7 @@ Panel i zbieracz zgłoszeń o reputacji sieci dla małego ISP. MCS zbiera zgłos
 
 ## Co robi
 
-- Importuje zgłoszenia z wielu źródeł przez wtyczki (IMAP, API, pliki): Shadowserver, SNDS, Play, MojeCert, CERT N6, Wanguard, Wazuh, Cloudflare Botnet, Qrator, CAIDA Spoofer, speedtest.
+- Importuje zgłoszenia z wielu źródeł przez wtyczki (IMAP, API, pliki): Shadowserver, SNDS, Play, MojeCert, CERT N6, Wanguard, Wazuh, Cloudflare Botnet, CAIDA Spoofer, speedtest.
 - Skanuje własne prefiksy IPv4 na listach DNSBL (lokalny resolver `unbound`, limity zapytań, test kontrolny strefy).
 - Dopasowuje lokalnie darmowe listy Spamhaus DROP, DROPv6 i ASN-DROP do prefiksów AS.
 - Łączy dane w incydenty z wagą i deduplikacją, z widokiem per IP (`/ip/{adres}`).

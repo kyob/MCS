@@ -237,17 +237,12 @@ final class OpcjeMcs
         $d['mcs.wanguard.httpTimeout']        = $h['timeout'];
         $d['mcs.wanguard.httpConnectTimeout'] = $h['connect'];
 
-        // --- Cloudflare / Qrator / Spoofer ---
+        // --- Cloudflare / Spoofer ---
         $d['mcs.cloudflare_botnet.asn'] = $asnPlugin('Cloudflare Botnet');
         $d['mcs.cloudflare_botnet.asn']['etykieta'] = 'ASN (puste = z konta CF, potem ASN globalny)';
         $h = $http('Cloudflare Botnet', 60, 10);
         $d['mcs.cloudflare_botnet.httpTimeout']        = $h['timeout'];
         $d['mcs.cloudflare_botnet.httpConnectTimeout'] = $h['connect'];
-
-        $d['mcs.qrator.asn'] = $asnPlugin('Qrator Radar');
-        $h = $http('Qrator Radar', 60, 10);
-        $d['mcs.qrator.httpTimeout']        = $h['timeout'];
-        $d['mcs.qrator.httpConnectTimeout'] = $h['connect'];
 
         $d['mcs.spoofer.asn']          = $asnPlugin('CAIDA Spoofer');
         $d['mcs.spoofer.lookbackDays'] = [

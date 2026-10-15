@@ -50,7 +50,6 @@ final class SzczegolyZrodlaTest extends CIUnitTestCase
         $this->assertSame('mcs_cert_n6_zdarzenia', $svc->tabelaDla('cert_n6'));
         $this->assertSame('mcs_cloudflare_botnet_wiersze', $svc->tabelaDla('cloudflare_botnet'));
         $this->assertSame('mcs_spoofer_wiersze', $svc->tabelaDla('spoofer'));
-        $this->assertNull($svc->tabelaDla('qrator'));
         $this->assertNull($svc->tabelaDla('nieznane'));
     }
 

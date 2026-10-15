@@ -14,3 +14,4 @@ Format wzorowany na [Keep a Changelog](https://keepachangelog.com/).
 
 ### Removed
 - Wtyczka `abusix` (płatna subskrypcja). Tabele `mcs_abusix_*` zostają w bazie.
+- Wtyczka `qrator` (API Qrator Radar płatne). Tabela `mcs_qrator_wiersze` zostaje w bazie.
