@@ -61,11 +61,6 @@ class PluginSeeder
             'opis'   => 'Historia testów Speedtest Servers reporting (portal Ookla lub CSV). Filtr CIDR AS198050, agregaty /24 na /dashboard/speedtest (Ookla anonimizuje do *.0), poza indeksem badge.',
         ],
         [
-            'zrodlo' => 'abusix',
-            'nazwa'  => 'Abusix',
-            'opis'   => 'Wymaga płatnej subskrypcji Abusix (AbuseHQ / Guardian Ops). Na planie free konto nie dostaje spraw. Import wstrzymany. Guardian Ops API (sprawy, zdarzenia, klienci); token w Wtyczki → Abusix → Klucz.',
-        ],
-        [
             'zrodlo' => 'wazuh',
             'nazwa'  => 'Wazuh',
             'opis'   => 'Własna telemetria serwerów (Wazuh SIEM): IP klientów AS198050, które spamują lub atakują nasze serwery (SMTP/SSH/WWW). Eksport przez SSH forced command.',
@@ -79,9 +74,6 @@ class PluginSeeder
 
     /** Źródła wymuszane jako wstrzymane + ukryte w UI przy każdym seedzie (np. płatne API). */
     private const WYMUS_WSTRZYMANE_UKRYTE = ['qrator'];
-
-    /** Źródła wymuszane jako wstrzymane przy każdym seedzie, ale widoczne w UI (wymagają płatnej subskrypcji). */
-    private const WYMUS_WSTRZYMANE = ['abusix'];
 
     public function __construct(private readonly ?BaseConnection $db = null)
     {
@@ -116,8 +108,6 @@ class PluginSeeder
                 if ($wymusUkryte) {
                     $aktualizuj['import_wstrzymany'] = true;
                     $aktualizuj['ukryty_w_ui']       = true;
-                } elseif (in_array($wiersz['zrodlo'], self::WYMUS_WSTRZYMANE, true)) {
-                    $aktualizuj['import_wstrzymany'] = true;
                 }
                 if ($aktualizuj !== []) {
                     $model->update($wiersz['zrodlo'], $aktualizuj);

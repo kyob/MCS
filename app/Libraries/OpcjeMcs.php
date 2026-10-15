@@ -192,24 +192,6 @@ final class OpcjeMcs
             'grupa' => 'Play Scrubbing', 'etykieta' => 'Adres nadawcy alertów DDoS', 'typ' => 'email', 'domyslna' => 'antyddos@play.pl',
         ];
 
-        // --- Abusix ---
-        $d['mcs.abusix.apiKey'] = [
-            'grupa'    => 'Abusix',
-            'etykieta' => 'Token API (Bearer)',
-            'typ'      => 'secret',
-            'domyslna' => '',
-            'wzorzec'  => '/^[A-Za-z0-9_.\-]{16,200}$/',
-            'opis'     => 'Edycja: Wtyczki źródeł → Abusix → Klucz. Wartość z bazy ma pierwszeństwo przed .env.',
-        ];
-        $d['mcs.abusix.pageLimit'] = [
-            'grupa' => 'Abusix', 'etykieta' => 'Limit elementów na stronę', 'typ' => 'int', 'domyslna' => '100', 'min' => 1, 'max' => 500,
-        ];
-        $d['mcs.abusix.maxPages'] = [
-            'grupa' => 'Abusix', 'etykieta' => 'Maks. stron na typ danych / przebieg', 'typ' => 'int', 'domyslna' => '2', 'min' => 1, 'max' => 5,
-            'opis' => 'Zapytań na przebieg ≤ 1 + 2×to. Plan free: 5000 zapytań/dobę.',
-        ];
-        $d['mcs.abusix.httpTimeout'] = $http('Abusix', 30, null)['timeout'];
-
         // --- SNDS ---
         $d['mcs.snds.key'] = [
             'grupa'    => 'SNDS',

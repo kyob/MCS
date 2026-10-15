@@ -451,22 +451,6 @@ class Dashboard extends BaseController
     }
 
     /**
-     * Abusix Guardian Ops — sprawy, zdarzenia, klienci (tabele mcs_abusix_*).
-     */
-    public function abusix()
-    {
-        $blad = null;
-        try {
-            $d = (new \App\Libraries\AbusixWidok())->dane(100);
-        } catch (\Throwable $e) {
-            $blad = 'Nie udało się odczytać danych Abusix (czy migracje są uruchomione?).';
-            $d    = [];
-        }
-
-        return view('dashboard/abusix', $this->daneWidoku('abusix', ['blad' => $blad, 'd' => $d]));
-    }
-
-    /**
      * Spamhaus DROP — stan dopasowania prefiksów AS, pliki, trafienia, historia.
      */
     public function spamhaus()
@@ -839,7 +823,6 @@ class Dashboard extends BaseController
             'incydenty'         => 'Ostatnie incydenty — MCS',
             'speedtest'         => 'Speedtest — MCS',
             'dnsbl'             => 'DNSBL AS — MCS',
-            'abusix'            => 'Abusix — MCS',
             'spamhaus'          => 'Spamhaus DROP — MCS',
             default             => 'Przegląd — MCS',
         };

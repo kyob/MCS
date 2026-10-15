@@ -25,7 +25,6 @@ class Pluginy extends BaseController
     {
         OpcjeMcs::ustawModel(model(UstawieniaModel::class));
         $sndsOdczyt = OpcjeMcs::odczyt('mcs.snds.key');
-        $abusixOdczyt = OpcjeMcs::odczyt('mcs.abusix.apiKey');
 
         return view('admin/pluginy/index', [
             'title'      => 'Wtyczki źródeł — MCS',
@@ -43,11 +42,6 @@ class Pluginy extends BaseController
                 'ustawiony' => $sndsOdczyt['wartosc'] !== '',
                 'zrodlo'    => $sndsOdczyt['zrodlo'],
                 'skrot'     => OpcjeMcs::skrotSekretu($sndsOdczyt['wartosc']),
-            ],
-            'abusixKlucz' => [
-                'ustawiony' => $abusixOdczyt['wartosc'] !== '',
-                'zrodlo'    => $abusixOdczyt['zrodlo'],
-                'skrot'     => OpcjeMcs::skrotSekretu($abusixOdczyt['wartosc']),
             ],
         ]);
     }
@@ -145,52 +139,6 @@ class Pluginy extends BaseController
             'komunikat',
             'Zapisano klucz SNDS. Uruchom „Pobierz teraz”, żeby sprawdzić import.',
         );
-    }
-
-    /**
-     * Zapis tokenu Abusix (override w mcs_ustawienia). Puste pole = bez zmiany;
-     * „usun” = usuń override (wraca mcs.abusix.apiKey z .env).
-     */
-    public function zapiszKluczAbusix()
-    {
-        $klucz = trim((string) $this->request->getPost('mcs_abusix_key'));
-        $usun  = (string) $this->request->getPost('usun') === '1';
-        if ($klucz === '' && ! $usun) {
-            return redirect()->to('/admin/pluginy')->with('komunikat', 'Token Abusix bez zmian (puste pole).');
-        }
-
-        $wynik = OpcjeMcs::zapisz(model(UstawieniaModel::class), ['mcs.abusix.apiKey' => $usun ? '' : $klucz]);
-        if (! $wynik['ok']) {
-            $blad = $wynik['bledy']['mcs.abusix.apiKey'] ?? ($wynik['bledy']['_'] ?? 'Nie udało się zapisać tokenu Abusix.');
-
-            return redirect()->to('/admin/pluginy')->with('blad', $blad);
-        }
-
-        return redirect()->to('/admin/pluginy')->with(
-            'komunikat',
-            $usun ? 'Usunięto token Abusix z bazy — obowiązuje wartość z .env (jeśli jest).' : 'Zapisano token Abusix. Użyj „Testuj połączenie”.',
-        );
-    }
-
-    /**
-     * „Testuj połączenie” Abusix: jedno zapytanie (customers, limit=1).
-     */
-    public function testujAbusix()
-    {
-        OpcjeMcs::ustawModel(model(UstawieniaModel::class));
-        $client = \McsPluginy\abusix\ApiClient::fromEnv();
-        if (! $client->hasAuth()) {
-            return redirect()->to('/admin/pluginy')->with('blad', 'Abusix: brak tokenu API.');
-        }
-        $res = $client->listCustomers(1);
-        if ($res['rate_limited']) {
-            return redirect()->to('/admin/pluginy')->with('blad', 'Abusix: limit zapytań (429), spróbuj za ' . $res['retry_after'] . ' s.');
-        }
-        if (! $res['ok']) {
-            return redirect()->to('/admin/pluginy')->with('blad', 'Abusix: test nieudany (' . ($res['http_code'] > 0 ? 'HTTP ' . $res['http_code'] : $res['error']) . ').');
-        }
-
-        return redirect()->to('/admin/pluginy')->with('komunikat', 'Abusix: połączenie OK (HTTP ' . $res['http_code'] . ', 1 zapytanie).');
     }
 
     /**

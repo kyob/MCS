@@ -6,7 +6,7 @@ Panel i zbieracz zgłoszeń o reputacji sieci dla małego ISP. MCS zbiera zgłos
 
 ## Co robi
 
-- Importuje zgłoszenia z wielu źródeł przez wtyczki (IMAP, API, pliki): Shadowserver, SNDS, Play, MojeCert, CERT N6, Wanguard, Wazuh, Abusix, Cloudflare Botnet, Qrator, CAIDA Spoofer, speedtest.
+- Importuje zgłoszenia z wielu źródeł przez wtyczki (IMAP, API, pliki): Shadowserver, SNDS, Play, MojeCert, CERT N6, Wanguard, Wazuh, Cloudflare Botnet, Qrator, CAIDA Spoofer, speedtest.
 - Skanuje własne prefiksy IPv4 na listach DNSBL (lokalny resolver `unbound`, limity zapytań, test kontrolny strefy).
 - Dopasowuje lokalnie darmowe listy Spamhaus DROP, DROPv6 i ASN-DROP do prefiksów AS.
 - Łączy dane w incydenty z wagą i deduplikacją, z widokiem per IP (`/ip/{adres}`).
@@ -89,7 +89,7 @@ mcs.example.net {
 **Rotacja tokenów.** Zmień sekret od razu, gdy mógł wyciec, oraz po odejściu osoby z dostępem.
 - `mcs.badgeToken`: wygeneruj nowy (`openssl rand -hex 32`), wpisz w `.env` MCS i w `lms.ini` na LMS w tym samym oknie.
 - Klucze API dostawców: wygeneruj nowe w panelu dostawcy, potem usuń stare.
-- Tokeny zapisane w panelu (Abusix, SNDS) są w tabeli `mcs_ustawienia`. Kopia bazy zawiera je otwartym tekstem.
+- Tokeny zapisane w panelu (SNDS) są w tabeli `mcs_ustawienia`. Kopia bazy zawiera je otwartym tekstem.
 
 **Backup.** Rób kopię bazy (`pg_dump -Fc mcs`) i pliku `.env`. Kopia `.env` i bazy zawiera sekrety, więc szyfruj ją i ogranicz dostęp.
 

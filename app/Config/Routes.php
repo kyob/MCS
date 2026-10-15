@@ -14,7 +14,6 @@ $routes->get('dashboard/dnsbl', 'Dashboard::dnsbl');
 $routes->post('dashboard/dnsbl/skan', 'Dashboard::dnsblSkan');
 $routes->get('dashboard/dnsbl/status/(:num)', 'Dashboard::dnsblStatus/$1');
 $routes->get('dashboard/dnsbl/skan/(:num)/csv', 'Dashboard::dnsblSkanCsv/$1');
-$routes->get('dashboard/abusix', 'Dashboard::abusix');
 $routes->get('dashboard/spamhaus', 'Dashboard::spamhaus');
 $routes->get('dashboard/eksport.csv', 'Dashboard::eksportCsv');
 $routes->get('szukaj', 'Dashboard::szukaj');
@@ -49,8 +48,6 @@ $routes->group('admin', ['filter' => 'mcsRola:admin,superadmin'], static functio
     $routes->post('pluginy', 'Admin\Pluginy::zapisz');
     $routes->post('pluginy/pobierz', 'Admin\Pluginy::pobierz');
     $routes->post('pluginy/snds-klucz', 'Admin\Pluginy::zapiszKluczSnds');
-    $routes->post('pluginy/abusix-klucz', 'Admin\Pluginy::zapiszKluczAbusix');
-    $routes->post('pluginy/abusix-test', 'Admin\Pluginy::testujAbusix');
     $routes->get('ustawienia', 'Admin\Ustawienia::index');
     $routes->post('ustawienia', 'Admin\Ustawienia::zapisz');
     $routes->post('ustawienia/przywroc-domyslne', 'Admin\Ustawienia::przywrocDomyslne');

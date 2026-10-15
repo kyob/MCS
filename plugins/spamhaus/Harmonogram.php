@@ -6,7 +6,7 @@ namespace McsPluginy\spamhaus;
  * Własny harmonogram pluginu (cron mcs-pobierz.sh woła pobierz() co 15 min).
  *
  * - po sukcesie: następne pobranie za N h (domyślnie 24) + losowa minuta 0–59,
- * - po błędzie: backoff 1 h, 2 h, 4 h … max 24 h (jak abusix: Retry-After ma pierwszeństwo, gdy dłuższy),
+ * - po błędzie: backoff 1 h, 2 h, 4 h … max 24 h (Retry-After ma pierwszeństwo, gdy dłuższy),
  * - twarda granica: nigdy częściej niż 1 próba / h (FAQ Spamhaus DROP).
  */
 final class Harmonogram

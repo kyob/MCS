@@ -46,11 +46,11 @@ final class PluginSeederTest extends CIUnitTestCase
         $wynik = (new PluginSeeder())->zapisz();
 
         $this->assertSame(
-            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'qrator', 'lms_mapowanie', 'ismalicious', 'spamrats', 'dnsbl', 'spoofer', 'speedtest', 'abusix', 'wazuh', 'spamhaus'],
+            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'qrator', 'lms_mapowanie', 'ismalicious', 'spamrats', 'dnsbl', 'spoofer', 'speedtest', 'wazuh', 'spamhaus'],
             $wynik['nowe'],
         );
         $this->assertSame([], $wynik['juz_byly']);
-        $this->seeNumRecords(17, 'mcs_pluginy', []);
+        $this->seeNumRecords(16, 'mcs_pluginy', []);
         $this->seeInDatabase('mcs_pluginy', [
             'zrodlo'            => 'shadowserver',
             'nazwa'             => 'Shadowserver',
@@ -116,19 +116,6 @@ final class PluginSeederTest extends CIUnitTestCase
         $this->assertStringContainsString('płatne', (string) ($qrator['opis'] ?? ''));
     }
 
-    public function testPonownyZapisWstrzymujeAbusixIZostawiaWidocznyZAdnotacja(): void
-    {
-        (new PluginSeeder())->zapisz();
-        $this->db->table('mcs_pluginy')->where('zrodlo', 'abusix')->update(['import_wstrzymany' => 0, 'ukryty_w_ui' => 0]);
-
-        (new PluginSeeder())->zapisz();
-
-        $w = $this->db->table('mcs_pluginy')->where('zrodlo', 'abusix')->get()->getRowArray();
-        $this->assertSame(1, (int) $w['import_wstrzymany']);
-        $this->assertSame(0, (int) $w['ukryty_w_ui']);
-        $this->assertStringContainsString('płatnej subskrypcji', (string) $w['opis']);
-    }
-
     public function testPonownyZapisWymuszaQratorUkryty(): void
     {
         (new PluginSeeder())->zapisz();
@@ -155,11 +142,11 @@ final class PluginSeederTest extends CIUnitTestCase
 
         $this->assertSame([], $wynik['nowe']);
         $this->assertSame(
-            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'qrator', 'lms_mapowanie', 'ismalicious', 'spamrats', 'dnsbl', 'spoofer', 'speedtest', 'abusix', 'wazuh', 'spamhaus'],
+            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'qrator', 'lms_mapowanie', 'ismalicious', 'spamrats', 'dnsbl', 'spoofer', 'speedtest', 'wazuh', 'spamhaus'],
             $wynik['juz_byly'],
         );
         $this->assertContains('play', $wynik['opis_zaktualizowany']);
-        $this->seeNumRecords(17, 'mcs_pluginy', []);
+        $this->seeNumRecords(16, 'mcs_pluginy', []);
         $this->seeInDatabase('mcs_pluginy', [
             'zrodlo'            => 'play',
             'import_wstrzymany' => 0,
