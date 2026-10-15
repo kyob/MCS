@@ -23,7 +23,6 @@ class SzczegolyZrodla
         'wazuh'              => 'mcs_wazuh_wiersze',
         'dnsbl'              => 'mcs_dnsbl_wiersze',
         'spamhaus'           => 'mcs_spamhaus_trafienia',
-        'spamhaus_sbl'       => 'mcs_spamhaus_sbl_wiersze',
     ];
 
     private BaseConnection $db;

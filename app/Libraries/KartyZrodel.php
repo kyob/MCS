@@ -21,7 +21,6 @@ class KartyZrodel
         'spoofer'      => ['routedspoof', 'privatespoof', 'prefix', 'ip_wersja', 'country'],
         'wazuh'        => ['kategoria_wazuh', 'liczba', 'poziom_max', 'hosty_docelowe', 'dzien'],
         'spamhaus'     => ['lista', 'wpis', 'sblid', 'nasz_prefiks', 'zakres'],
-        'spamhaus_sbl' => ['sbl', 'cidr', 'uwierzytelnienie', 'powod'],
     ];
 
     private BaseConnection $db;

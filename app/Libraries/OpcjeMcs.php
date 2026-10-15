@@ -258,11 +258,6 @@ final class OpcjeMcs
         ];
         $d['mcs.spamhaus.httpTimeout'] = $http('Spamhaus DROP', 30, null)['timeout'];
 
-        // Spamhaus SBL (e-mail IMAP) — skrzynka i authservId tylko w .env.
-        $d['mcs.spamhaus_sbl.maxWiadomosci'] = [
-            'grupa' => 'Spamhaus SBL', 'etykieta' => 'IMAP — max wiadomości UNSEEN na przebieg', 'typ' => 'int', 'domyslna' => '200', 'min' => 1, 'max' => 5000,
-        ];
-
         // --- Wazuh ---
         $d['mcs.wazuh.oknoGodzin'] = [
             'grupa' => 'Wazuh', 'etykieta' => 'Okno eksportu (h)', 'typ' => 'int', 'domyslna' => '48', 'min' => 1, 'max' => 168,

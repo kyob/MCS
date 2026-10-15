@@ -24,7 +24,6 @@ class EtykietyUi
         'spoofer'            => 'CAIDA Spoofer',
         'speedtest'          => 'Speedtest',
         'spamhaus'           => 'Spamhaus DROP',
-        'spamhaus_sbl'       => 'Spamhaus SBL',
     ];
 
     /** @var array<string, string> */

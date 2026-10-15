@@ -4,7 +4,6 @@ Każde źródło zgłoszeń to osobna wtyczka w katalogu `plugins/{zrodlo}/`.
 
 W Fazie 1a katalog był pusty (placeholdery w `mcs_pluginy`).  
 Faza **1b** dokłada importery (Shadowserver / Play / SNDS).
-Spamhaus SBL (`spamhaus_sbl`) — powiadomienia e-mail o wpisach SBL przez IMAP, filtr nadawcy odporny na podróbki (szczegóły: `plugins/spamhaus_sbl/README.md`).
 Dodatkowe streamy: MojeCert, CERT N6, Wanguard, Cloudflare Botnet (`cloudflare_botnet`), CAIDA Spoofer (`spoofer` — BCP38, filtr ASN, poza badge hosta).
 Enrichment + sync: LMS mapowanie (`lms_mapowanie` — IP→komputer/abonent, poza badge); isMalicious (`ismalicious`); SpamRats (`spamrats` — DNSBL RATS-All, panel `/ip/{ip}`, poza badge); DNSBL AS (`dnsbl` — UCEPROTECT/SpamCop/DroneBL, skan LMS codziennie + pełne AS raz/tydzień, incydenty + `/dashboard/dnsbl`); Speedtest (`speedtest` — portal Ookla lub CSV Servers reporting, filtr AS198050, **agregaty /24** na `/dashboard/speedtest`, poza badge).
 

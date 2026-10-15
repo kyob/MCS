@@ -80,18 +80,7 @@ final class ImapKlientPhpExt implements ImapKlientInterface
             'from'        => $from,
             'tresc'       => $this->pobierzTrescTekstowa($uid),
             'zalaczniki'  => $this->pobierzZalaczniki($uid),
-            'naglowki'    => $this->pobierzNaglowkiSurowe($uid),
         ];
-    }
-
-    /**
-     * Surowe nagłówki (bez treści) — np. Authentication-Results dodane przez nasz MTA.
-     */
-    private function pobierzNaglowkiSurowe(int $uid): string
-    {
-        $raw = imap_fetchheader($this->polacz(), $uid, FT_UID);
-
-        return is_string($raw) ? $raw : '';
     }
 
     public function oznaczPrzeczytane(int $uid): void

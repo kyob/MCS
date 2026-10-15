@@ -25,11 +25,8 @@ interface ImapKlientInterface
      *   date: ?string,
      *   from: string,
      *   tresc: string,
-     *   zalaczniki: list<array{filename: string, mime: string, tresc: string}>,
-     *   naglowki?: string
+     *   zalaczniki: list<array{filename: string, mime: string, tresc: string}>
      * }
-     *
-     * `naglowki` = surowy blok nagłówków RFC 5322 (np. Authentication-Results); opcjonalny.
      */
     public function pobierzWiadomosc(int $uid): array;
 
