@@ -161,6 +161,59 @@ final class PobierzSerwisTest extends CIUnitTestCase
         $this->assertSame('pominięto (następne po 2026-10-15 03:12 UTC)', $wyniki[0]['msg']);
     }
 
+    public function testZlecWTleZlecaZarejestrowaneZrodlo(): void
+    {
+        $s = $this->serwisTlo();
+        $w = $s->zlecWTle('demo');
+
+        $this->assertSame('zlecono', $w['status']);
+        $this->assertCount(1, $s->polecenia);
+        $this->assertStringContainsString('/usr/bin/setsid -f', $s->polecenia[0]);
+        $this->assertStringContainsString("mcs:pobierz 'demo'", $s->polecenia[0]);
+    }
+
+    public function testZlecWTleOdrzucaNieznaneZrodloIWstrzykniecie(): void
+    {
+        $s = $this->serwisTlo();
+        foreach (['nieistnieje', 'demo; rm -rf /', '$(id)', 'all', '../demo', ''] as $zle) {
+            $w = $s->zlecWTle($zle);
+            $this->assertSame('blad', $w['status'], $zle);
+        }
+        $this->assertSame([], $s->polecenia);
+    }
+
+    public function testZlecWTlePomijaWstrzymanyIZajety(): void
+    {
+        $s = $this->serwisTlo();
+        $this->assertSame('pominiety', $s->zlecWTle('wstrzymany')['status']);
+
+        $fh = fopen($this->katalogBlokad . '/mcs-pobierz-demo.lock', 'c+');
+        $this->assertTrue(flock($fh, LOCK_EX | LOCK_NB));
+
+        try {
+            $this->assertSame('zajety', $s->zlecWTle('demo')['status']);
+        } finally {
+            flock($fh, LOCK_UN);
+            fclose($fh);
+        }
+        $this->assertSame([], $s->polecenia);
+    }
+
+    private function serwisTlo(): PobierzSerwis
+    {
+        return new class (new PluginRegistry($this->katalogPluginow), model(PluginModel::class), $this->katalogBlokad) extends PobierzSerwis {
+            /** @var list<string> */
+            public array $polecenia = [];
+
+            protected function wykonajPolecenie(string $cmd): int
+            {
+                $this->polecenia[] = $cmd;
+
+                return 0;
+            }
+        };
+    }
+
     private function serwis(): PobierzSerwis
     {
         return new PobierzSerwis(

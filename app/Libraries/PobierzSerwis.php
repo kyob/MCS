@@ -122,6 +122,76 @@ class PobierzSerwis
     }
 
     /**
+     * Zleca import w tle (setsid) i wraca od razu — dla żądania HTTP (limit FPM/nginx).
+     * Identyfikator musi być zarejestrowaną wtyczką; do shella trafia tylko escapeshellarg().
+     *
+     * @return array{zrodlo: string, status: string, msg: string}
+     *         status: zlecono|blad|pominiety|zajety
+     */
+    public function zlecWTle(string $zrodlo): array
+    {
+        $zrodlo = trim($zrodlo);
+        $mapa   = $this->mapaPluginow();
+        if ($zrodlo === '' || ! isset($mapa[$zrodlo])) {
+            return ['zrodlo' => $zrodlo, 'status' => 'blad', 'msg' => 'Nieznane źródło.'];
+        }
+
+        $meta = $this->pluginy->find($zrodlo);
+        if (is_array($meta) && PluginModel::jakoBool($meta['import_wstrzymany'] ?? false)) {
+            return [
+                'zrodlo' => $zrodlo,
+                'status' => 'pominiety',
+                'msg'    => 'pominięto — import_wstrzymany=true (odblokuj w /admin/pluginy).',
+            ];
+        }
+
+        if ($this->czyZajete($zrodlo)) {
+            return ['zrodlo' => $zrodlo, 'status' => 'zajety', 'msg' => 'Pobieranie już trwa.'];
+        }
+
+        $kod = $this->wykonajPolecenie($this->poleceniePobierz($zrodlo));
+        if ($kod !== 0) {
+            return ['zrodlo' => $zrodlo, 'status' => 'blad', 'msg' => 'Nie uruchomiono pobierania w tle (kod ' . $kod . ').'];
+        }
+
+        return ['zrodlo' => $zrodlo, 'status' => 'zlecono', 'msg' => 'zlecono'];
+    }
+
+    /** Polecenie shell dla importu w tle; $zrodlo musi być już zwalidowane. */
+    public function poleceniePobierz(string $zrodlo): string
+    {
+        $php = trim((string) env('mcs.dnsbl.phpCli', '/usr/bin/php'));
+        $log = WRITEPATH . 'logs/mcs-pobierz-tlo.log';
+
+        return sprintf(
+            '/usr/bin/setsid -f %s %s mcs:pobierz %s >> %s 2>&1 < /dev/null',
+            escapeshellarg($php),
+            escapeshellarg(ROOTPATH . 'spark'),
+            escapeshellarg($zrodlo),
+            escapeshellarg($log),
+        );
+    }
+
+    protected function wykonajPolecenie(string $cmd): int
+    {
+        exec($cmd, $wyj, $kod);
+
+        return (int) $kod;
+    }
+
+    /** Sprawdza (bez trzymania) czy flock źródła jest zajęty. */
+    public function czyZajete(string $zrodlo): bool
+    {
+        $uchwyt = null;
+        if (! $this->zajmijBlokade($zrodlo, $uchwyt)) {
+            return true;
+        }
+        $this->zwolnijBlokade($uchwyt);
+
+        return false;
+    }
+
+    /**
      * @return array<string, SourcePluginInterface>
      */
     private function mapaPluginow(): array

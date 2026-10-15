@@ -142,7 +142,7 @@ class Pluginy extends BaseController
     }
 
     /**
-     * Ręczne „Pobierz teraz” — ta sama logika co `php spark mcs:pobierz`.
+     * Ręczne „Pobierz teraz” — zleca `php spark mcs:pobierz <źródło>` w tle (bez czekania na koniec).
      */
     public function pobierz()
     {
@@ -151,27 +151,23 @@ class Pluginy extends BaseController
             return redirect()->to('/admin/pluginy')->with('blad', 'Brak identyfikatora źródła.');
         }
 
-        $wyniki = (new PobierzSerwis())->uruchom($zrodlo);
-        $w      = $wyniki[0] ?? null;
-        if (! is_array($w)) {
-            return redirect()->to('/admin/pluginy')->with('blad', 'Brak wyniku pobierania.');
-        }
-
+        $w      = $this->serwisPobierz()->zlecWTle($zrodlo);
         $status = (string) ($w['status'] ?? '');
         $msg    = (string) ($w['msg'] ?? '');
-        $etykieta = $zrodlo . ': ' . $msg;
 
         return match ($status) {
-            'ok' => redirect()->to('/admin/pluginy')->with('komunikat', 'Pobrano — ' . $etykieta),
-            'pominiety' => redirect()->to('/admin/pluginy')->with(
-                'blad',
-                'Import wstrzymany — ' . $etykieta,
+            'zlecono' => redirect()->to('/admin/pluginy')->with(
+                'komunikat',
+                'Zlecono pobieranie w tle: ' . $zrodlo . '. Wynik: kolumna statusu źródła.',
             ),
-            'zajety' => redirect()->to('/admin/pluginy')->with(
-                'blad',
-                'Pobieranie zajęte — ' . $etykieta,
-            ),
-            default => redirect()->to('/admin/pluginy')->with('blad', 'Błąd pobierania — ' . $etykieta),
+            'zajety' => redirect()->to('/admin/pluginy')->with('blad', 'Pobieranie już trwa: ' . $zrodlo),
+            'pominiety' => redirect()->to('/admin/pluginy')->with('blad', 'Import wstrzymany — ' . $zrodlo . ': ' . $msg),
+            default => redirect()->to('/admin/pluginy')->with('blad', 'Błąd pobierania — ' . $zrodlo . ': ' . $msg),
         };
+    }
+
+    protected function serwisPobierz(): PobierzSerwis
+    {
+        return new PobierzSerwis();
     }
 }
