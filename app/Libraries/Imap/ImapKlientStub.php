@@ -9,11 +9,11 @@ use RuntimeException;
  */
 final class ImapKlientStub implements ImapKlientInterface
 {
-    /** @var list<array{uid: int, message_id: ?string, subject: string, date: ?string, from: string, tresc: string, zalaczniki: list<array{filename: string, mime: string, tresc: string}>, przeczytane?: bool}> */
+    /** @var list<array{uid: int, message_id: ?string, subject: string, date: ?string, from: string, tresc: string, zalaczniki: list<array{filename: string, mime: string, tresc: string}>, naglowki: string, przeczytane?: bool}> */
     private array $wiadomosci;
 
     /**
-     * @param list<array{uid: int, message_id?: ?string, subject?: string, date?: ?string, from?: string, tresc?: string, zalaczniki?: list<array{filename: string, mime: string, tresc: string}>, przeczytane?: bool}> $wiadomosci
+     * @param list<array{uid: int, message_id?: ?string, subject?: string, date?: ?string, from?: string, tresc?: string, zalaczniki?: list<array{filename: string, mime: string, tresc: string}>, naglowki?: string, przeczytane?: bool}> $wiadomosci
      */
     public function __construct(array $wiadomosci = [])
     {
@@ -27,6 +27,7 @@ final class ImapKlientStub implements ImapKlientInterface
                 'from'        => $w['from'] ?? '',
                 'tresc'       => $w['tresc'] ?? '',
                 'zalaczniki'  => $w['zalaczniki'] ?? [],
+                'naglowki'    => (string) ($w['naglowki'] ?? ''),
                 'przeczytane' => (bool) ($w['przeczytane'] ?? false),
             ];
         }
@@ -57,6 +58,7 @@ final class ImapKlientStub implements ImapKlientInterface
                     'from'       => $w['from'],
                     'tresc'      => $w['tresc'],
                     'zalaczniki' => $w['zalaczniki'],
+                    'naglowki'   => $w['naglowki'],
                 ];
             }
         }

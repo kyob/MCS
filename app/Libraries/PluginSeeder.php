@@ -65,6 +65,11 @@ class PluginSeeder
             'nazwa'  => 'Spamhaus DROP',
             'opis'   => 'Darmowe listy Spamhaus DROP, DROPv6 i ASN-DROP (JSON, raz na dobę), dopasowane lokalnie do as198050_cidry i ASN. Trafienie = incydent. Stan na /dashboard/spamhaus.',
         ],
+        [
+            'zrodlo' => 'spamhaus_sbl',
+            'nazwa'  => 'Spamhaus SBL (e-mail)',
+            'opis'   => 'Powiadomienia e-mail Spamhaus SBL przez IMAP (mcs.spamhaus_sbl.imap*). Filtr: From w spamhaus.org, temat z „SBL”, Authentication-Results naszego MTA. Tylko adresy z as198050_cidry; incydent kategorii spam.',
+        ],
     ];
 
     public function __construct(private readonly ?BaseConnection $db = null)

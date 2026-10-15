@@ -1,0 +1,10 @@
+Authentication-Results: mx.example.net; dkim=fail header.d=spamhaus.org; spf=softfail smtp.mailfrom=bounces@spamhaus.org
+Authentication-Results: forged.evil.example; dkim=pass header.d=spamhaus.org; spf=pass smtp.mailfrom=spamhaus.org
+From: Spamhaus SBL <sbl-notify@spamhaus.org>
+To: abuse@example.net
+Subject: SBL700005 listing for 91.231.82.11
+Date: Wed, 14 Oct 2026 14:00:00 +0000
+Message-ID: <sbl700005.fixture@spamhaus.org>
+
+Ref: SBL700005
+IP: 91.231.82.11

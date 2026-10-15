@@ -43,7 +43,25 @@ class Pluginy extends BaseController
                 'zrodlo'    => $sndsOdczyt['zrodlo'],
                 'skrot'     => OpcjeMcs::skrotSekretu($sndsOdczyt['wartosc']),
             ],
+            'spamhausSbl' => $this->kartaSpamhausSbl(),
         ]);
+    }
+
+    /**
+     * Dane karty Spamhaus SBL (null = brak wtyczki / tabel — karta się nie pokazuje).
+     *
+     * @return array<string, mixed>|null
+     */
+    private function kartaSpamhausSbl(): ?array
+    {
+        if (! class_exists(\McsPluginy\spamhaus_sbl\Widok::class)) {
+            return null;
+        }
+        try {
+            return (new \McsPluginy\spamhaus_sbl\Widok())->dane();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     /**

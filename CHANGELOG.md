@@ -6,6 +6,7 @@ Format wzorowany na [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 - Skaner DNSBL dla prefiksów AS: `php spark mcs:dnsbl-skan`, widok `/dashboard/dnsbl`, lokalny resolver, cache wyników.
+- Wtyczka `spamhaus_sbl`: import powiadomień e-mail Spamhaus SBL (IMAP), filtr From/temat/Authentication-Results, tylko adresy z AS, karta w `/admin/pluginy`. Po seedzie wstrzymana.
 - Wtyczka `spamhaus`: lokalne dopasowanie Spamhaus DROP, DROPv6 i ASN-DROP, widok `/dashboard/spamhaus`.
 - Licencja MIT, SECURITY.md, opis projektu w README.
 

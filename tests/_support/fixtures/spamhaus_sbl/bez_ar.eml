@@ -1,0 +1,9 @@
+Received: from mail.spamhaus.org by mx.example.net
+From: Spamhaus SBL <sbl-notify@spamhaus.org>
+To: abuse@example.net
+Subject: sbl notification SBL700004
+Date: Wed, 14 Oct 2026 13:00:00 +0000
+Message-ID: <sbl700004.fixture@spamhaus.org>
+
+Ref: SBL700004
+IP: 91.231.82.10

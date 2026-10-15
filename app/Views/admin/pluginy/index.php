@@ -199,6 +199,10 @@
     </div>
 <?php endif; ?>
 
+<?php if (is_array($spamhausSbl ?? null)): ?>
+    <?= view('admin/pluginy/_spamhaus_sbl_karta', ['k' => $spamhausSbl]) ?>
+<?php endif; ?>
+
 <?php
 $sndsKlucz = is_array($sndsKlucz ?? null) ? $sndsKlucz : [];
 $sndsUstawiony = (bool) ($sndsKlucz['ustawiony'] ?? false);
