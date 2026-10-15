@@ -103,7 +103,6 @@ final class OpcjeMcsTest extends CIUnitTestCase
             'mcs.dnsbl.listaUceprotect'             => 'tak',
             'mcs.dnsbl.listaSpamcop'                => 'tak',
             'mcs.dnsbl.listaDronebl'                => 'tak',
-            'mcs.dnsbl.listaSpamhaus'               => 'nie',
             'mcs.dnsbl.skanLms'                     => 'tak',
             'mcs.dnsbl.skanAs'                      => 'tak',
             'mcs.dnsbl.forceZakres'                 => 'auto',
@@ -152,7 +151,6 @@ final class OpcjeMcsTest extends CIUnitTestCase
         }
 
         $this->assertTrue(OpcjeMcs::jestTak('mcs.dnsbl.listaUceprotect'));
-        $this->assertFalse(OpcjeMcs::jestTak('mcs.dnsbl.listaSpamhaus'));
         $this->assertSame('high', OpcjeMcs::tekst('mcs.kolejkaDnia.minWaga'));
         $this->assertSame('antyddos@play.pl', OpcjeMcs::tekst('mcs.play.fromAddress'));
         $this->assertSame('', OpcjeMcs::tekst('mcs.spoofer.lookbackDays'));

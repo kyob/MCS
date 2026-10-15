@@ -522,7 +522,7 @@ $badgeWaga = static function (string $waga): string {
     </div>
     <div class="card-body">
         <p class="card-text text-body-secondary small">
-            Multi-list DNSBL (UCEPROTECT, SpamCop, DroneBL, opcjonalnie Spamhaus DQS) — skan cron AS / LMS
+            Multi-list DNSBL (UCEPROTECT, SpamCop, DroneBL) — skan cron AS / LMS
             oraz lookup na żądanie. Trafienia trafiają też do indeksu incydentów (źródło dnsbl).
             <a href="<?= site_url('dashboard/dnsbl') ?>">Zbiorczy widok AS</a>.
         </p>
@@ -557,7 +557,7 @@ $badgeWaga = static function (string $waga): string {
                 Dashboard DNSBL
             </a>
             <a class="btn btn-outline-secondary" href="https://check.spamhaus.org/results/?query=<?= rawurlencode((string) $ip) ?>"
-               target="_blank" rel="noopener noreferrer" title="Lookup w Spamhaus Check (bez DQS w MCS)">
+               target="_blank" rel="noopener noreferrer" title="Ręczny lookup w Spamhaus Check (strona WWW)">
                 <i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>Spamhaus Check
             </a>
             <span class="small text-body-secondary" id="dnsbl-status">

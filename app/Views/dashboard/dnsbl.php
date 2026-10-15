@@ -61,7 +61,7 @@ $blad    = $blad ?? null;
                 <label class="form-label" for="dnsbl-lista">Lista</label>
                 <select class="form-select" id="dnsbl-lista" name="lista">
                     <option value="">Wszystkie</option>
-                    <?php foreach (['uceprotect1' => 'UCEPROTECT', 'spamcop' => 'SpamCop', 'dronebl' => 'DroneBL', 'spamhaus' => 'Spamhaus'] as $kod => $etyk): ?>
+                    <?php foreach (['uceprotect1' => 'UCEPROTECT', 'spamcop' => 'SpamCop', 'dronebl' => 'DroneBL'] as $kod => $etyk): ?>
                         <option value="<?= esc($kod, 'attr') ?>" <?= $lista === $kod ? 'selected' : '' ?>><?= esc($etyk) ?></option>
                     <?php endforeach; ?>
                 </select>

@@ -125,10 +125,6 @@ final class OpcjeMcs
             'grupa' => 'DNSBL', 'etykieta' => 'Lista DroneBL', 'typ' => 'enum', 'domyslna' => 'tak', 'opcje' => $takNie,
             'opis' => 'dnsbl.dronebl.org',
         ];
-        $d['mcs.dnsbl.listaSpamhaus'] = [
-            'grupa' => 'DNSBL', 'etykieta' => 'Lista Spamhaus DQS', 'typ' => 'enum', 'domyslna' => 'nie', 'opcje' => $takNie,
-            'opis' => 'Wymaga mcs.dnsbl.spamhausDqsKey w .env (klucz komercyjny).',
-        ];
         $d['mcs.dnsbl.skanLms'] = [
             'grupa' => 'DNSBL', 'etykieta' => 'Skan codzienny — IP z LMS ∩ AS', 'typ' => 'enum', 'domyslna' => 'tak', 'opcje' => $takNie,
         ];

@@ -111,12 +111,6 @@ class DnsblSerwis
             'DNS',
             [
                 PluginOpisPolaczenia::pozycja(
-                    'Spamhaus DQS',
-                    PluginOpisPolaczenia::sekret($this->client->hasSpamhaus()),
-                    false,
-                    $this->client->hasSpamhaus(),
-                ),
-                PluginOpisPolaczenia::pozycja(
                     'Skan LMS / AS',
                     ($skanLms ? 'LMS' : '—') . ' / ' . ($skanAs ? 'AS(dzień ' . $this->asScanWeekday . ')' : '—'),
                     false,

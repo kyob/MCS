@@ -17,7 +17,7 @@ class McsDnsbl extends BaseCommand
 {
     protected $group       = 'MCS';
     protected $name        = 'mcs:dnsbl';
-    protected $description = 'Enrichment DNSBL (UCEPROTECT/SpamCop/opcjonalnie Spamhaus DQS).';
+    protected $description = 'Enrichment DNSBL (UCEPROTECT/SpamCop/DroneBL).';
     protected $usage       = 'mcs:dnsbl <ip> [--force] [--json]';
     protected $arguments   = [
         'ip' => 'Adres IPv4 do sprawdzenia',

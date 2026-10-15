@@ -162,7 +162,7 @@ final class DnsblSerwisTest extends CIUnitTestCase
     private function serwisFixture(): DnsblSerwis
     {
         return new DnsblSerwis(
-            new DnsblClient(['spamcop' => 'bl.spamcop.net'], '', static fn () => []),
+            new DnsblClient(['spamcop' => 'bl.spamcop.net'], static fn () => []),
             model(EnrichmentDnsblModel::class),
             model(DnsblWierszeModel::class),
             model(EnrichmentLmsModel::class),
@@ -188,7 +188,6 @@ final class DnsblSerwisTest extends CIUnitTestCase
                     'uceprotect1' => 'dnsbl-1.uceprotect.net',
                     'spamcop'     => 'bl.spamcop.net',
                 ],
-                '',
                 $resolver,
             ),
             model(EnrichmentDnsblModel::class),

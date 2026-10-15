@@ -3,10 +3,11 @@
 namespace App\Libraries\Enrichment;
 
 /**
- * Multi-zone DNSBL client (IPv4) — UCEPROTECT, SpamCop, DroneBL; opcjonalnie Spamhaus DQS.
+ * Multi-zone DNSBL client (IPv4) — UCEPROTECT, SpamCop, DroneBL (darmowe strefy).
+ * Spamhaus zen/DQS nie jest obsługiwany (płatny dla ISP, decyzja 2026-10-15).
  *
  * Zapytanie: {odwrócone-IPv4}.{strefa}
- * Listed: A w 127.0.0.0/8 poza kodami błędów Spamhaus 127.255.255.*.
+ * Listed: A w 127.0.0.0/8 poza kodami błędów 127.255.255.*.
  */
 class DnsblClient
 {
@@ -16,12 +17,11 @@ class DnsblClient
 
     public const LISTA_DRONEBL = 'dronebl';
 
+    /** Id strefy Spamhaus — tylko do odrzucania w mcs.dnsbl.zones (zen/DQS nieobsługiwane). */
     public const LISTA_SPAMHAUS = 'spamhaus';
 
     /** @var array<string, string> id => strefa DNS */
     private array $strefy;
-
-    private string $spamhausDqsKey;
 
     /** @var callable(string): list<string>|null */
     private $resolver;
@@ -36,13 +36,11 @@ class DnsblClient
      */
     public function __construct(
         array $strefy = [],
-        string $spamhausDqsKey = '',
         ?callable $resolver = null,
         int $rateLimitQps = 25,
         bool $uzyjDomyslnychGdyPuste = true,
     ) {
         $this->strefy          = ($strefy === [] && $uzyjDomyslnychGdyPuste) ? self::domyslneStrefy() : $strefy;
-        $this->spamhausDqsKey  = trim($spamhausDqsKey);
         $this->resolver        = $resolver;
         $this->rateLimitQps    = max(1, $rateLimitQps);
     }
@@ -50,7 +48,6 @@ class DnsblClient
     public static function fromEnv(?callable $resolver = null): self
     {
         $strefy = self::strefyZOpcji();
-        $key    = trim((string) env('mcs.dnsbl.spamhausDqsKey', ''));
         $qps    = 25;
         try {
             $qps = \App\Libraries\OpcjeMcs::int('mcs.dnsbl.rateLimitQps');
@@ -61,15 +58,8 @@ class DnsblClient
             $qps = 25;
         }
 
-        $spamhausWlaczony = false;
-        try {
-            $spamhausWlaczony = \App\Libraries\OpcjeMcs::jestTak('mcs.dnsbl.listaSpamhaus');
-        } catch (\Throwable) {
-            $spamhausWlaczony = false;
-        }
-
         // Puste strefy z opcji = świadomie wyłączone list — nie przywracaj domyślnych.
-        return new self($strefy, $spamhausWlaczony ? $key : '', $resolver, $qps, false);
+        return new self($strefy, $resolver, $qps, false);
     }
 
     /**
@@ -109,7 +99,7 @@ class DnsblClient
             $out[self::LISTA_DRONEBL] = self::domyslneStrefy()[self::LISTA_DRONEBL];
         }
 
-        // Pozostałe strefy z .env zones (niestandardowe), poza znanymi id
+        // Pozostałe strefy z .env zones (niestandardowe), poza znanymi id. Spamhaus pomijany zawsze.
         foreach ($baza as $id => $host) {
             if (isset($out[$id])) {
                 continue;
@@ -184,24 +174,14 @@ class DnsblClient
         return preg_replace('/[^a-z0-9]+/', '_', $host) ?: 'dnsbl';
     }
 
-    public function hasSpamhaus(): bool
-    {
-        return $this->spamhausDqsKey !== '' && $this->kluczDqsPrawidlowy($this->spamhausDqsKey);
-    }
-
     /**
-     * Aktywne strefy (z opcjonalnym Spamhaus DQS).
+     * Aktywne strefy.
      *
      * @return array<string, string> id => strefa (suffix po odwróconym IP)
      */
     public function aktywneStrefy(): array
     {
-        $out = $this->strefy;
-        if ($this->hasSpamhaus()) {
-            $out[self::LISTA_SPAMHAUS] = $this->spamhausDqsKey . '.zen.dq.spamhaus.net';
-        }
-
-        return $out;
+        return $this->strefy;
     }
 
     /**
@@ -319,7 +299,7 @@ class DnsblClient
                 return [
                     'listed' => false,
                     'kody'   => [$kod],
-                    'error'  => 'kod błędu Spamhaus ' . $kod,
+                    'error'  => 'kod błędu DNSBL ' . $kod,
                 ];
             }
             if ($this->czyKodListed($kod)) {
@@ -353,11 +333,6 @@ class DnsblClient
         }
         // 127.0.0.0/8 poza 127.255.255.*
         return ($long & 0xFF000000) === 0x7F000000 && ! $this->czyKodBleduSpamhaus($kod);
-    }
-
-    private function kluczDqsPrawidlowy(string $key): bool
-    {
-        return (bool) preg_match('/^[A-Za-z0-9._-]+$/', $key);
     }
 
     private function czekajRateLimit(): void
