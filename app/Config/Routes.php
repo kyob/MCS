@@ -32,7 +32,7 @@ $routes->get('ip/(:segment)/enrichment/ismalicious', 'Ip::ismalicious/$1');
 $routes->get('ip/(:segment)/enrichment/spamrats', 'Ip::spamrats/$1');
 $routes->get('ip/(:segment)/enrichment/dnsbl', 'Ip::dnsbl/$1');
 $routes->get('ip/(:segment)/enrichment/lms', 'Ip::lms/$1');
-// force=1 (zużywa limity płatnych API) tylko przez POST z CSRF.
+// GET enrichment = tylko cache. Zapytanie do API (Sprawdź / force) tylko POST z CSRF.
 $routes->post('ip/(:segment)/enrichment/abuseipdb', 'Ip::abuseipdb/$1');
 $routes->post('ip/(:segment)/enrichment/ismalicious', 'Ip::ismalicious/$1');
 $routes->post('ip/(:segment)/enrichment/spamrats', 'Ip::spamrats/$1');

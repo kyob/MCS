@@ -151,12 +151,12 @@ $badgeWaga = static function (string $waga): string {
 
             <div class="d-flex flex-wrap gap-2 align-items-center">
                 <button type="button" class="btn btn-primary btn-sm" id="lms-sprawdz"
-                    data-url="<?= site_url('ip/' . $ip . '/enrichment/lms') ?>"
+                    data-url="<?= site_url('ip/' . $ip . '/enrichment/lms') ?>" data-metoda="post"
                     <?= $lmsDisabled ? 'disabled' : '' ?>>
                     Sprawdź w LMS
                 </button>
                 <button type="button" class="btn btn-outline-secondary btn-sm" id="lms-force"
-                    data-url="<?= site_url('ip/' . $ip . '/enrichment/lms') ?>" data-metoda="post"
+                    data-url="<?= site_url('ip/' . $ip . '/enrichment/lms') ?>" data-metoda="post" data-force="1"
                     <?= $lmsDisabled ? 'disabled' : '' ?>>
                     Odśwież (force)
                 </button>
@@ -306,12 +306,12 @@ $badgeWaga = static function (string $waga): string {
 
         <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
             <button type="button" class="btn btn-primary" id="abuseipdb-sprawdz"
-                data-url="<?= site_url('ip/' . $ip . '/enrichment/abuseipdb') ?>"
+                data-url="<?= site_url('ip/' . $ip . '/enrichment/abuseipdb') ?>" data-metoda="post"
                 <?= (! empty($abuseipdbKomunikat) && ($abuseipdbTryb ?? '') === 'brak_klucza') ? 'disabled' : '' ?>>
                 Sprawdź AbuseIPDB
             </button>
             <button type="button" class="btn btn-outline-secondary" id="abuseipdb-force"
-                data-url="<?= site_url('ip/' . $ip . '/enrichment/abuseipdb') ?>" data-metoda="post"
+                data-url="<?= site_url('ip/' . $ip . '/enrichment/abuseipdb') ?>" data-metoda="post" data-force="1"
                 <?= (! empty($abuseipdbKomunikat) && ($abuseipdbTryb ?? '') === 'brak_klucza') ? 'disabled' : '' ?>>
                 Odśwież (force)
             </button>
@@ -364,12 +364,12 @@ $badgeWaga = static function (string $waga): string {
 
         <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
             <button type="button" class="btn btn-primary" id="ismalicious-sprawdz"
-                data-url="<?= site_url('ip/' . $ip . '/enrichment/ismalicious') ?>"
+                data-url="<?= site_url('ip/' . $ip . '/enrichment/ismalicious') ?>" data-metoda="post"
                 <?= (! empty($ismaliciousKomunikat) && ($ismaliciousTryb ?? '') === 'brak_klucza') ? 'disabled' : '' ?>>
                 Sprawdź isMalicious
             </button>
             <button type="button" class="btn btn-outline-secondary" id="ismalicious-force"
-                data-url="<?= site_url('ip/' . $ip . '/enrichment/ismalicious') ?>" data-metoda="post"
+                data-url="<?= site_url('ip/' . $ip . '/enrichment/ismalicious') ?>" data-metoda="post" data-force="1"
                 <?= (! empty($ismaliciousKomunikat) && ($ismaliciousTryb ?? '') === 'brak_klucza') ? 'disabled' : '' ?>>
                 Odśwież (force)
             </button>
@@ -445,12 +445,12 @@ $badgeWaga = static function (string $waga): string {
 
         <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
             <button type="button" class="btn btn-primary" id="spamrats-sprawdz"
-                data-url="<?= site_url('ip/' . $ip . '/enrichment/spamrats') ?>"
+                data-url="<?= site_url('ip/' . $ip . '/enrichment/spamrats') ?>" data-metoda="post"
                 <?= $spamratsDisabled ? 'disabled' : '' ?>>
                 Sprawdź SpamRats
             </button>
             <button type="button" class="btn btn-outline-secondary" id="spamrats-force"
-                data-url="<?= site_url('ip/' . $ip . '/enrichment/spamrats') ?>" data-metoda="post"
+                data-url="<?= site_url('ip/' . $ip . '/enrichment/spamrats') ?>" data-metoda="post" data-force="1"
                 <?= $spamratsDisabled ? 'disabled' : '' ?>>
                 Odśwież (force)
             </button>
@@ -544,12 +544,12 @@ $badgeWaga = static function (string $waga): string {
 
         <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
             <button type="button" class="btn btn-primary" id="dnsbl-sprawdz"
-                data-url="<?= site_url('ip/' . $ip . '/enrichment/dnsbl') ?>"
+                data-url="<?= site_url('ip/' . $ip . '/enrichment/dnsbl') ?>" data-metoda="post"
                 <?= $dnsblIpv6 ? 'disabled' : '' ?>>
                 Sprawdź DNSBL
             </button>
             <button type="button" class="btn btn-outline-secondary" id="dnsbl-force"
-                data-url="<?= site_url('ip/' . $ip . '/enrichment/dnsbl') ?>" data-metoda="post"
+                data-url="<?= site_url('ip/' . $ip . '/enrichment/dnsbl') ?>" data-metoda="post" data-force="1"
                 <?= $dnsblIpv6 ? 'disabled' : '' ?>>
                 Odśwież (force)
             </button>
@@ -678,14 +678,17 @@ $stLiczba = (int) ($speedtestLiczba24 ?? 0);
 
 <input type="hidden" id="mcs-csrf" name="<?= esc(csrf_token(), 'attr') ?>" value="<?= esc(csrf_hash(), 'attr') ?>">
 <script>
-// Enrichment: „Sprawdź” = GET (cache albo zapytanie), „Odśwież (force)” = POST z CSRF.
+// Enrichment: „Sprawdź” i „Odśwież (force)” = POST z CSRF (GET tylko czyta cache).
+// force=1 wysyłany tylko z przycisku z data-force="1".
 // Po POST serwer zwraca nowy token CSRF w nagłówku X-Mcs-Csrf (regenerate = true).
 window.mcsZapytaj = function (btn, url) {
     var opcje = { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } };
     var pole = document.getElementById('mcs-csrf');
     if (btn.getAttribute('data-metoda') === 'post' && pole) {
         var body = new URLSearchParams();
-        body.append('force', '1');
+        if (btn.getAttribute('data-force') === '1') {
+            body.append('force', '1');
+        }
         body.append(pole.name, pole.value);
         opcje.method = 'POST';
         opcje.body = body;

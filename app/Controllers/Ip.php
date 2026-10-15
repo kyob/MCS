@@ -207,32 +207,11 @@ class Ip extends BaseController
 
     /**
      * Enrichment AbuseIPDB pod sesją (nie Bearer). Nie pisze do indeksu/badge.
+     * GET = tylko cache; zapytanie do API tylko POST z CSRF.
      */
     public function abuseipdb(string $ip)
     {
-        $ip = trim($ip);
-        $force = $this->czyForce();
-
-        $wynik = (new AbuseipdbSerwis())->sprawdz($ip, $force);
-
-        if (! $wynik['ok']) {
-            $kod = ($wynik['tryb'] === 'brak_klucza') ? 503 : 400;
-
-            return $this->odpowiedzZCsrf()->setStatusCode($kod)->setJSON([
-                'ok'   => false,
-                'blad' => $wynik['blad'],
-                'ip'   => $wynik['ip'],
-                'tryb' => $wynik['tryb'],
-            ]);
-        }
-
-        return $this->odpowiedzZCsrf()->setJSON([
-            'ok'      => true,
-            'ip'      => $wynik['ip'],
-            'z_cache' => $wynik['z_cache'],
-            'tryb'    => $wynik['tryb'],
-            'wynik'   => $wynik['wynik'],
-        ]);
+        return $this->enrichment(AbuseipdbSerwis::class, $ip, 'brak_klucza');
     }
 
     /**
@@ -240,29 +219,7 @@ class Ip extends BaseController
      */
     public function ismalicious(string $ip)
     {
-        $ip = trim($ip);
-        $force = $this->czyForce();
-
-        $wynik = (new IsmaliciousSerwis())->sprawdz($ip, $force);
-
-        if (! $wynik['ok']) {
-            $kod = ($wynik['tryb'] === 'brak_klucza') ? 503 : 400;
-
-            return $this->odpowiedzZCsrf()->setStatusCode($kod)->setJSON([
-                'ok'   => false,
-                'blad' => $wynik['blad'],
-                'ip'   => $wynik['ip'],
-                'tryb' => $wynik['tryb'],
-            ]);
-        }
-
-        return $this->odpowiedzZCsrf()->setJSON([
-            'ok'      => true,
-            'ip'      => $wynik['ip'],
-            'z_cache' => $wynik['z_cache'],
-            'tryb'    => $wynik['tryb'],
-            'wynik'   => $wynik['wynik'],
-        ]);
+        return $this->enrichment(IsmaliciousSerwis::class, $ip, 'brak_klucza');
     }
 
     /**
@@ -270,29 +227,7 @@ class Ip extends BaseController
      */
     public function spamrats(string $ip)
     {
-        $ip = trim($ip);
-        $force = $this->czyForce();
-
-        $wynik = (new SpamratsSerwis())->sprawdz($ip, $force);
-
-        if (! $wynik['ok']) {
-            $kod = ($wynik['tryb'] === 'brak_klucza') ? 503 : 400;
-
-            return $this->odpowiedzZCsrf()->setStatusCode($kod)->setJSON([
-                'ok'   => false,
-                'blad' => $wynik['blad'],
-                'ip'   => $wynik['ip'],
-                'tryb' => $wynik['tryb'],
-            ]);
-        }
-
-        return $this->odpowiedzZCsrf()->setJSON([
-            'ok'      => true,
-            'ip'      => $wynik['ip'],
-            'z_cache' => $wynik['z_cache'],
-            'tryb'    => $wynik['tryb'],
-            'wynik'   => $wynik['wynik'],
-        ]);
+        return $this->enrichment(SpamratsSerwis::class, $ip, 'brak_klucza');
     }
 
     /**
@@ -300,27 +235,7 @@ class Ip extends BaseController
      */
     public function dnsbl(string $ip)
     {
-        $ip = trim($ip);
-        $force = $this->czyForce();
-
-        $wynik = (new DnsblSerwis())->sprawdz($ip, $force);
-
-        if (! $wynik['ok']) {
-            return $this->odpowiedzZCsrf()->setStatusCode(400)->setJSON([
-                'ok'   => false,
-                'blad' => $wynik['blad'],
-                'ip'   => $wynik['ip'],
-                'tryb' => $wynik['tryb'],
-            ]);
-        }
-
-        return $this->odpowiedzZCsrf()->setJSON([
-            'ok'      => true,
-            'ip'      => $wynik['ip'],
-            'z_cache' => $wynik['z_cache'],
-            'tryb'    => $wynik['tryb'],
-            'wynik'   => $wynik['wynik'],
-        ]);
+        return $this->enrichment(DnsblSerwis::class, $ip, '');
     }
 
     /**
@@ -328,13 +243,60 @@ class Ip extends BaseController
      */
     public function lms(string $ip)
     {
-        $ip = trim($ip);
-        $force = $this->czyForce();
+        return $this->enrichment(LmsMapowanieSerwis::class, $ip, 'brak_konfiguracji');
+    }
 
-        $wynik = (new LmsMapowanieSerwis())->sprawdz($ip, $force);
+    /**
+     * Fabryka serwisu enrichmentu (nadpisywana w testach atrapą).
+     */
+    protected function nowySerwis(string $klasa): object
+    {
+        return new $klasa();
+    }
+
+    /**
+     * GET: wyłącznie podgląd cache (zero zapytań sieciowych do API).
+     * POST (CSRF wymusza filtr globalny): sprawdz() — cache albo API; force=1 pomija cache.
+     *
+     * @param string $trybBrakuKonfiguracji tryb zwracany przez serwis przy braku klucza/konfiguracji (HTTP 503)
+     */
+    private function enrichment(string $klasa, string $ip, string $trybBrakuKonfiguracji)
+    {
+        $ip     = trim($ip);
+        $serwis = $this->nowySerwis($klasa);
+
+        if (! $this->request->is('post')) {
+            if ($ip === '' || filter_var($ip, FILTER_VALIDATE_IP) === false) {
+                return $this->odpowiedzZCsrf()->setStatusCode(400)->setJSON([
+                    'ok'   => false,
+                    'blad' => 'Wymagany prawidłowy adres IP.',
+                    'ip'   => $ip,
+                    'tryb' => 'cache',
+                ]);
+            }
+            $cache = $serwis->podgladCache($ip);
+            if ($cache === null) {
+                return $this->odpowiedzZCsrf()->setStatusCode(404)->setJSON([
+                    'ok'   => false,
+                    'blad' => 'Brak wyniku w cache. Użyj przycisku „Sprawdź” (zapytanie przez POST).',
+                    'ip'   => $ip,
+                    'tryb' => 'brak_cache',
+                ]);
+            }
+
+            return $this->odpowiedzZCsrf()->setJSON([
+                'ok'      => true,
+                'ip'      => $ip,
+                'z_cache' => true,
+                'tryb'    => 'cache',
+                'wynik'   => $cache,
+            ]);
+        }
+
+        $wynik = $serwis->sprawdz($ip, $this->czyForce());
 
         if (! $wynik['ok']) {
-            $kod = ($wynik['tryb'] === 'brak_konfiguracji') ? 503 : 400;
+            $kod = ($trybBrakuKonfiguracji !== '' && $wynik['tryb'] === $trybBrakuKonfiguracji) ? 503 : 400;
 
             return $this->odpowiedzZCsrf()->setStatusCode($kod)->setJSON([
                 'ok'   => false,
@@ -354,7 +316,7 @@ class Ip extends BaseController
     }
 
     /**
-     * force=1 tylko przez POST (z CSRF). GET z ?force=1 czyta cache jak zwykłe „Sprawdź”.
+     * force=1 tylko przez POST (z CSRF). GET (także z ?force=1) czyta wyłącznie cache.
      * Chroni limity płatnych API przed linkiem z obcej strony (SameSite=Lax wpuszcza GET).
      */
     private function czyForce(): bool
