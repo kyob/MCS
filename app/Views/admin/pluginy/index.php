@@ -5,7 +5,7 @@
     <div>
         <h1 class="h3 mb-1">Wtyczki źródeł</h1>
         <p class="text-body-secondary mb-0">
-            Import i UI przełączasz kliknięciem stanu. Szczegóły źródła i statusu — po najechaniu albo ikonie info.
+            Import i UI przełączasz kliknięciem stanu. Liczby ostatniego przebiegu są w kolumnie Status; pełny komunikat po najechaniu, szczegóły połączenia pod ikoną info.
             „Pobierz teraz” = ten sam tor co cron (<code>mcs:pobierz</code>).
         </p>
     </div>
@@ -105,6 +105,7 @@
                             $statusEtykieta = 'brak danych';
                         }
                         $statusTitle = $healthMsg !== '' ? $healthMsg : $statusEtykieta;
+                        $paryStatusu = \App\Libraries\MetrykiTekstu::pary($healthMsg);
                         $szczegolyId = 'plugin-szcz-' . preg_replace('/[^a-z0-9_-]+/i', '-', $zrodlo);
                         $szczegolySkrot = $polSkrot !== '' ? $polSkrot : $opis;
                         ?>
@@ -159,14 +160,19 @@
                                     <div class="text-body-secondary"><?= esc($ileTemu) ?></div>
                                 <?php endif; ?>
                             </td>
-                            <td>
-                                <span class="fs-5"
-                                      data-bs-toggle="tooltip"
-                                      data-bs-title="<?= esc($statusTitle) ?>"
-                                      title="<?= esc($statusTitle) ?>">
-                                    <i class="bi <?= $statusIkona ?>" aria-hidden="true"></i>
-                                    <span class="visually-hidden"><?= esc($statusEtykieta) ?></span>
-                                </span>
+                            <td class="small">
+                                <div class="d-flex align-items-start gap-2">
+                                    <span class="fs-5 flex-shrink-0"
+                                          data-bs-toggle="tooltip"
+                                          data-bs-title="<?= esc($statusTitle) ?>"
+                                          title="<?= esc($statusTitle) ?>">
+                                        <i class="bi <?= $statusIkona ?>" aria-hidden="true"></i>
+                                        <span class="visually-hidden"><?= esc($statusEtykieta) ?></span>
+                                    </span>
+                                    <?php if ($paryStatusu !== null): ?>
+                                        <?= view('partials/_metryki', ['pary' => $paryStatusu]) ?>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                             <td class="pe-3">
                                 <div class="d-inline-flex align-items-center gap-1 text-nowrap">

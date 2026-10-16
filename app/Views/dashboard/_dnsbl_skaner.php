@@ -58,24 +58,43 @@ $statusPl  = [
 </form>
 
 <?php if ($skan !== null): ?>
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <div class="small text-body-secondary">
-            Skan <strong>#<?= (int) $skan['id'] ?></strong>
-            · zakres <span class="font-monospace"><?= esc((string) $skan['zakres']) ?></span>
-            <?php if (! empty($skan['strefa_filtr'])): ?>· strefa <?= esc((string) $skan['strefa_filtr']) ?><?php endif; ?>
-            · status <?= esc($statusPl[$skan['status']] ?? (string) $skan['status']) ?>
-            <?php if (! empty($skan['koniec_at'])): ?>· koniec <?= esc((string) $skan['koniec_at']) ?><?php endif; ?>
-            <?php if (! empty($skan['uzytkownik'])): ?>· zlecił <?= esc((string) $skan['uzytkownik']) ?><?php endif; ?>
-            <?php if ($gotowy && array_key_exists('nowe', $skan)): ?>· nowe <?= (int) $skan['nowe'] ?> · zdjęte <?= (int) ($skan['zdjete'] ?? 0) ?> · incydenty <?= (int) ($skan['incydenty'] ?? 0) ?><?php endif; ?>
-        </div>
+    <?php
+    $fmtLiczbaSkanu = static fn (int $n): string => number_format($n, 0, ',', "\u{00A0}");
+    $metaSkanu = [
+        ['Skan', '#' . (int) $skan['id'], ''],
+        ['Zakres', (string) $skan['zakres'], 'font-monospace'],
+        ['Status', (string) ($statusPl[$skan['status']] ?? $skan['status']), ''],
+    ];
+    if (! empty($skan['strefa_filtr'])) {
+        $metaSkanu[] = ['Strefa', (string) $skan['strefa_filtr'], ''];
+    }
+    if (! empty($skan['koniec_at'])) {
+        $metaSkanu[] = ['Koniec', (string) $skan['koniec_at'], ''];
+    }
+    if (! empty($skan['uzytkownik'])) {
+        $metaSkanu[] = ['Zlecił', (string) $skan['uzytkownik'], ''];
+    }
+    if ($gotowy && array_key_exists('nowe', $skan)) {
+        $noweS = (int) $skan['nowe'];
+        $zdjeteS = (int) ($skan['zdjete'] ?? 0);
+        $incS = (int) ($skan['incydenty'] ?? 0);
+        $metaSkanu[] = ['Nowe', $fmtLiczbaSkanu($noweS), $noweS > 0 ? 'text-danger' : ''];
+        $metaSkanu[] = ['Zdjęte', $fmtLiczbaSkanu($zdjeteS), $zdjeteS > 0 ? 'text-success' : ''];
+        $metaSkanu[] = ['Incydenty', $fmtLiczbaSkanu($incS), $incS > 0 ? 'text-danger' : ''];
+    }
+    ?>
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+        <?= view('partials/_metryki', ['pary' => $metaSkanu]) ?>
         <?php if ($gotowy): ?>
-            <a class="btn btn-sm btn-outline-secondary" id="dnsbl-csv" href="<?= site_url('dashboard/dnsbl/skan/' . (int) $skan['id'] . '/csv') ?>">CSV</a>
-            <form method="post" action="<?= site_url('dashboard/dnsbl/skan') ?>" class="m-0">
-                <?= csrf_field() ?>
-                <input type="hidden" name="zakres" value="<?= esc((string) $skan['zakres'], 'attr') ?>">
-                <input type="hidden" name="force" value="1">
-                <button type="submit" class="btn btn-sm btn-outline-secondary">Skanuj ponownie</button>
-            </form>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-sm btn-outline-secondary" id="dnsbl-csv" href="<?= site_url('dashboard/dnsbl/skan/' . (int) $skan['id'] . '/csv') ?>">CSV</a>
+                <form method="post" action="<?= site_url('dashboard/dnsbl/skan') ?>" class="m-0">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="zakres" value="<?= esc((string) $skan['zakres'], 'attr') ?>">
+                    <input type="hidden" name="force" value="1">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">Skanuj ponownie</button>
+                </form>
+            </div>
         <?php endif; ?>
     </div>
 
