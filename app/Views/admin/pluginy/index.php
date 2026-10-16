@@ -232,7 +232,7 @@ $sndsZrodloEtykieta = match ($sndsZrodlo) {
                     <a class="btn btn-sm btn-outline-secondary"
                        href="https://substrate.office.com/ip-domain-management-snds/SNDS/Auto"
                        target="_blank" rel="noopener noreferrer">
-                        <i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>Pobierz klucz z portalu Auto
+                        Pobierz klucz z portalu Auto
                     </a>
                     <div class="form-text text-break mt-1">
                         <a href="https://substrate.office.com/ip-domain-management-snds/SNDS/Auto"

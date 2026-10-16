@@ -558,7 +558,7 @@ $badgeWaga = static function (string $waga): string {
             </a>
             <a class="btn btn-outline-secondary" href="https://check.spamhaus.org/results/?query=<?= rawurlencode((string) $ip) ?>"
                target="_blank" rel="noopener noreferrer" title="Ręczny lookup w Spamhaus Check (strona WWW)">
-                <i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>Spamhaus Check
+                Spamhaus Check
             </a>
             <span class="small text-body-secondary" id="dnsbl-status">
                 tryb: <?= esc((string) ($dnsblTryb ?? '—')) ?>

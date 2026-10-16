@@ -50,6 +50,22 @@
         .mcs-dzien-zrodla[open] .mcs-dzien-chevron { transform: rotate(180deg); }
         body { min-height: 100vh; display: flex; flex-direction: column; }
         main { flex: 1 0 auto; }
+        /* Link poza aplikacją (nowa karta): mała ikona za tekstem. */
+        a[target="_blank"]::after {
+            content: "\f1c5";
+            font-family: "bootstrap-icons";
+            font-style: normal;
+            font-weight: 400 !important;
+            font-variant: normal;
+            text-transform: none;
+            line-height: 1;
+            font-size: 0.72em;
+            margin-inline-start: 0.28em;
+            vertical-align: 0.08em;
+            display: inline-block;
+            speak: never;
+            -webkit-font-smoothing: antialiased;
+        }
     </style>
 </head>
 <body class="bg-body-tertiary">
