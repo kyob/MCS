@@ -57,6 +57,20 @@ final class DashboardViewTest extends CIUnitTestCase
         $this->assertStringContainsString('dashboard/problematyczne-ip', $html);
     }
 
+    public function testPasekDniaOtwieraRozkladZrodel(): void
+    {
+        $html = view('dashboard/index', $this->danePrzegladu());
+
+        $this->assertStringContainsString('<details class="mcs-dzien-zrodla"', $html);
+        $this->assertStringContainsString('Rozkład źródeł 2026-09-12, 3 incydentów', $html);
+        $this->assertStringContainsString('Shadowserver', $html);
+        $this->assertStringContainsString('N6', $html);
+        $this->assertStringContainsString('zrodlo&#x3D;shadowserver', $html);
+        $this->assertStringContainsString('zrodlo&#x3D;cert_n6', $html);
+        $this->assertStringContainsString('Pokaż tylko to źródło', $html);
+        $this->assertStringNotContainsString('ciemniejszy = nowe', $html);
+    }
+
     /**
      * @param array<string, mixed> $nadpisz
      *

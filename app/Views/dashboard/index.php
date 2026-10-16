@@ -9,6 +9,29 @@ $maxObs         = max(1, (int) ($trendy['max_incydenty'] ?? 0));
 $sumaObs        = (int) ($trendy['suma_incydentow'] ?? 0);
 $queryEksport   = (string) ($queryEksport ?? 'okno=' . (int) $okno);
 $qs             = $queryEksport !== '' ? '?' . $queryEksport : '';
+$etykietyUi     = new \App\Libraries\EtykietyUi();
+$paletaZrodel   = [
+    '#0d6efd', '#20c997', '#fd7e14', '#d63384', '#0dcaf0',
+    '#198754', '#ffc107', '#dc3545', '#6c757d', '#0a58ca',
+];
+$kolorZrodla = [];
+$iKolor      = 0;
+foreach (array_keys($trendyZrodla) as $kodZ) {
+    $kolorZrodla[(string) $kodZ] = $paletaZrodel[$iKolor % count($paletaZrodel)];
+    $iKolor++;
+}
+$hrefZrodla = static function (string $kod) use ($queryEksport): string {
+    $params = [];
+    parse_str($queryEksport, $params);
+    if (($params['zrodlo'] ?? null) === $kod) {
+        unset($params['zrodlo']);
+    } else {
+        $params['zrodlo'] = $kod;
+    }
+    $q = http_build_query($params);
+
+    return site_url('/') . ($q !== '' ? '?' . $q : '');
+};
 ?>
 
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
@@ -145,19 +168,20 @@ $qs             = $queryEksport !== '' ? '?' . $queryEksport : '';
         <div class="card-header bg-transparent border-0 pt-3 px-3 pb-0">
             <h2 class="h5 mb-1">Trendy dzienne z incydentów</h2>
             <p class="small text-body-secondary mb-0">
-                Wolumen incydentów aktywnych w oknie <?= (int) $okno ?> <?= (int) $okno === 1 ? 'dnia' : 'dni' ?>
-                — <strong>nowe</strong> (pierwszy dzień incydentu) vs <strong>powtarzające</strong>, plus rozkład źródeł.
+                Wolumen incydentów aktywnych w oknie <?= (int) $okno ?> <?= (int) $okno === 1 ? 'dnia' : 'dni' ?>.
+                Pasek to rozkład źródeł zgłoszeń — kliknij dzień, żeby zobaczyć liczby.
+                Kliknięcie źródła po prawej zawęża przegląd do tego źródła.
             </p>
         </div>
         <div class="card-body pt-3">
             <div class="row g-4">
                 <div class="col-lg-8">
                     <div class="table-responsive">
-                        <table class="table table-sm align-middle mb-0">
+                        <table class="table table-sm align-top mb-0">
                             <thead class="table-light">
                             <tr>
                                 <th scope="col" style="width:7rem">Dzień</th>
-                                <th scope="col">Wolumen</th>
+                                <th scope="col">Rozkład źródeł</th>
                                 <th scope="col" class="text-end" style="width:4rem">Nowe</th>
                                 <th scope="col" class="text-end" style="width:5rem">Powt.</th>
                                 <th scope="col" class="text-end" style="width:4rem">Σ</th>
@@ -166,26 +190,79 @@ $qs             = $queryEksport !== '' ? '?' . $queryEksport : '';
                             <tbody>
                             <?php foreach ($trendyDni as $dzien): ?>
                                 <?php
-                                $obs  = (int) ($dzien['incydenty'] ?? 0);
-                                $nowe = (int) ($dzien['nowe'] ?? 0);
-                                $powt = (int) ($dzien['powtarzajace'] ?? 0);
-                                $pct  = $obs > 0 ? (int) round(100 * $obs / $maxObs) : 0;
-                                $pctN = ($obs > 0 && $pct > 0) ? (int) round($pct * $nowe / $obs) : 0;
-                                $pctP = max(0, $pct - $pctN);
+                                $obs       = (int) ($dzien['incydenty'] ?? 0);
+                                $nowe      = (int) ($dzien['nowe'] ?? 0);
+                                $powt      = (int) ($dzien['powtarzajace'] ?? 0);
+                                $dzienIso  = (string) ($dzien['dzien'] ?? '');
+                                $pct       = $obs > 0 ? max(1, (int) round(100 * $obs / $maxObs)) : 0;
+                                $zrodlaDnia = is_array($dzien['zrodla'] ?? null) ? $dzien['zrodla'] : [];
+                                $segmenty  = [];
+                                foreach (array_keys($kolorZrodla) as $kodZ) {
+                                    $n = (int) ($zrodlaDnia[$kodZ] ?? 0);
+                                    if ($n > 0) {
+                                        $segmenty[$kodZ] = $n;
+                                    }
+                                }
+                                foreach ($zrodlaDnia as $kodZ => $nZ) {
+                                    $kodZ = (string) $kodZ;
+                                    $nZ   = (int) $nZ;
+                                    if ($kodZ !== '' && $nZ > 0 && ! isset($segmenty[$kodZ])) {
+                                        $segmenty[$kodZ] = $nZ;
+                                        if (! isset($kolorZrodla[$kodZ])) {
+                                            $kolorZrodla[$kodZ] = $paletaZrodel[count($kolorZrodla) % count($paletaZrodel)];
+                                        }
+                                    }
+                                }
+                                $bezZrodla = max(0, $obs - array_sum($segmenty));
+                                $idDnia    = 'trend-' . preg_replace('/[^0-9]/', '', $dzienIso);
                                 ?>
                                 <tr>
-                                    <td class="small text-nowrap font-monospace"><?= esc((string) ($dzien['dzien'] ?? '')) ?></td>
+                                    <td class="small text-nowrap font-monospace"><?= esc($dzienIso) ?></td>
                                     <td>
-                                        <div class="progress" style="height:1.1rem" role="img"
-                                             aria-label="<?= $obs ?> incydentów (<?= $nowe ?> nowych)">
-                                            <?php if ($pctN > 0): ?>
-                                                <div class="progress-bar bg-primary" style="width:<?= $pctN ?>%"></div>
-                                            <?php endif; ?>
-                                            <?php if ($pctP > 0): ?>
-                                                <div class="progress-bar bg-primary-subtle text-primary-emphasis"
-                                                     style="width:<?= $pctP ?>%"></div>
-                                            <?php endif; ?>
-                                        </div>
+                                        <?php if ($obs > 0): ?>
+                                            <details class="mcs-dzien-zrodla" id="<?= esc($idDnia, 'attr') ?>">
+                                                <summary aria-label="Rozkład źródeł <?= esc($dzienIso, 'attr') ?>, <?= $obs ?> incydentów">
+                                                    <span class="d-flex align-items-center gap-2">
+                                                    <span class="flex-grow-1">
+                                                    <span class="progress" style="height:1.1rem;width:<?= $pct ?>%">
+                                                        <?php foreach ($segmenty as $kodZ => $nZ): ?>
+                                                            <span class="h-100"
+                                                                  style="flex:<?= (int) $nZ ?> <?= (int) $nZ ?> 0;background:<?= esc($kolorZrodla[$kodZ] ?? '#6c757d', 'attr') ?>"
+                                                                  title="<?= esc($etykietyUi->zrodlo((string) $kodZ)) ?>: <?= (int) $nZ ?>"></span>
+                                                        <?php endforeach; ?>
+                                                        <?php if ($bezZrodla > 0): ?>
+                                                            <span class="h-100"
+                                                                  style="flex:<?= $bezZrodla ?> <?= $bezZrodla ?> 0;background:#adb5bd"
+                                                                  title="bez źródła: <?= $bezZrodla ?>"></span>
+                                                        <?php endif; ?>
+                                                    </span>
+                                                    </span>
+                                                    <i class="bi bi-chevron-down small text-body-secondary mcs-dzien-chevron" aria-hidden="true"></i>
+                                                    </span>
+                                                </summary>
+                                                <ul class="list-unstyled small mb-0 mt-2" style="max-width:18rem">
+                                                    <?php foreach ($segmenty as $kodZ => $nZ): ?>
+                                                        <li class="d-flex justify-content-between align-items-center gap-2 py-1">
+                                                            <a class="link-body-emphasis text-decoration-none d-inline-flex align-items-center gap-2"
+                                                               href="<?= esc($hrefZrodla((string) $kodZ), 'attr') ?>">
+                                                                <span class="d-inline-block rounded-1"
+                                                                      style="width:.75rem;height:.75rem;background:<?= esc($kolorZrodla[$kodZ] ?? '#6c757d', 'attr') ?>"></span>
+                                                                <?= esc($etykietyUi->zrodlo((string) $kodZ)) ?>
+                                                            </a>
+                                                            <span class="fw-semibold"><?= (int) $nZ ?></span>
+                                                        </li>
+                                                    <?php endforeach; ?>
+                                                    <?php if ($bezZrodla > 0): ?>
+                                                        <li class="d-flex justify-content-between gap-2 py-1 text-body-secondary">
+                                                            <span>bez źródła</span>
+                                                            <span class="fw-semibold"><?= $bezZrodla ?></span>
+                                                        </li>
+                                                    <?php endif; ?>
+                                                </ul>
+                                            </details>
+                                        <?php else: ?>
+                                            <div class="progress" style="height:1.1rem" role="img" aria-label="Brak incydentów"></div>
+                                        <?php endif; ?>
                                     </td>
                                     <td class="text-end small"><?= $nowe ?></td>
                                     <td class="text-end small"><?= $powt ?></td>
@@ -195,8 +272,19 @@ $qs             = $queryEksport !== '' ? '?' . $queryEksport : '';
                             </tbody>
                         </table>
                     </div>
+                    <?php if ($kolorZrodla !== []): ?>
+                        <ul class="list-unstyled d-flex flex-wrap gap-3 small text-body-secondary mt-2 mb-0">
+                            <?php foreach ($kolorZrodla as $kodZ => $kolor): ?>
+                                <li class="d-inline-flex align-items-center gap-1">
+                                    <span class="d-inline-block rounded-1"
+                                          style="width:.75rem;height:.75rem;background:<?= esc($kolor, 'attr') ?>"></span>
+                                    <?= esc($etykietyUi->zrodlo((string) $kodZ)) ?>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
                     <p class="small text-body-secondary mt-2 mb-0">
-                        Pasek: ciemniejszy = nowe, jaśniejszy = powtarzające. Skala względem dnia z max. wolumenem.
+                        Długość paska to wolumen dnia względem maksimum w oknie. Kolory to źródła zgłoszeń.
                     </p>
                 </div>
                 <div class="col-lg-4">
@@ -208,16 +296,30 @@ $qs             = $queryEksport !== '' ? '?' . $queryEksport : '';
                             <?php
                             $maxZ = max(1, (int) max($trendyZrodla));
                             foreach ($trendyZrodla as $zKod => $zCnt):
+                                $zKod = (string) $zKod;
                                 $zPct = (int) round(100 * (int) $zCnt / $maxZ);
+                                $aktywneZ = ($filtrZrodlo ?? null) === $zKod;
+                                $kolor = $kolorZrodla[$zKod] ?? '#0dcaf0';
                                 ?>
                                 <li class="list-group-item bg-transparent px-0">
-                                    <div class="d-flex justify-content-between small mb-1">
-                                        <span><?= esc((new \App\Libraries\EtykietyUi())->zrodlo((string) $zKod)) ?></span>
-                                        <span class="fw-semibold"><?= (int) $zCnt ?></span>
-                                    </div>
-                                    <div class="progress" style="height:0.4rem">
-                                        <div class="progress-bar bg-info" style="width:<?= $zPct ?>%"></div>
-                                    </div>
+                                    <a class="d-block text-decoration-none link-body-emphasis"
+                                       href="<?= esc($hrefZrodla($zKod), 'attr') ?>"
+                                       aria-label="<?= esc($etykietyUi->zrodlo($zKod), 'attr') ?>: <?= (int) $zCnt ?>. <?= $aktywneZ ? 'Pokaż wszystkie źródła' : 'Pokaż tylko to źródło' ?>">
+                                        <span class="d-flex justify-content-between small mb-1">
+                                            <span>
+                                                <span class="d-inline-block rounded-1 me-1 align-middle"
+                                                      style="width:.75rem;height:.75rem;background:<?= esc($kolor, 'attr') ?>"></span>
+                                                <?= esc($etykietyUi->zrodlo($zKod)) ?>
+                                                <?php if ($aktywneZ): ?>
+                                                    <span class="badge text-bg-primary-subtle text-primary-emphasis ms-1">aktywne</span>
+                                                <?php endif; ?>
+                                            </span>
+                                            <span class="fw-semibold"><?= (int) $zCnt ?></span>
+                                        </span>
+                                        <span class="progress d-flex" style="height:0.4rem">
+                                            <span class="h-100" style="width:<?= $zPct ?>%;background:<?= esc($kolor, 'attr') ?>"></span>
+                                        </span>
+                                    </a>
                                 </li>
                             <?php endforeach; ?>
                         </ul>

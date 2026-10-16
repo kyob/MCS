@@ -39,6 +39,15 @@
         .payload { max-height: 24rem; overflow: auto; font-size: 0.8rem; }
         .navbar .form-control { min-width: 10rem; }
         .mcs-plugin-popover { max-width: 28rem; }
+        .mcs-dzien-zrodla > summary { list-style: none; cursor: pointer; }
+        .mcs-dzien-zrodla > summary::-webkit-details-marker { display: none; }
+        .mcs-dzien-zrodla > summary:hover .progress,
+        .mcs-dzien-zrodla[open] > summary .progress {
+            outline: 2px solid var(--bs-primary);
+            outline-offset: 1px;
+        }
+        .mcs-dzien-chevron { transition: transform .15s ease; }
+        .mcs-dzien-zrodla[open] .mcs-dzien-chevron { transform: rotate(180deg); }
         body { min-height: 100vh; display: flex; flex-direction: column; }
         main { flex: 1 0 auto; }
     </style>

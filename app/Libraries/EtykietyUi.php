@@ -23,6 +23,7 @@ class EtykietyUi
         'dnsbl'              => 'DNSBL',
         'spoofer'            => 'CAIDA Spoofer',
         'speedtest'          => 'Speedtest',
+        'wazuh'              => 'Wazuh',
         'spamhaus'           => 'Spamhaus DROP',
     ];
 
