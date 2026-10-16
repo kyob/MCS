@@ -21,6 +21,13 @@ final class DashboardViewTest extends CIUnitTestCase
         $this->assertStringContainsString('malware', $html);
         $this->assertStringContainsString('wyczysc=1', $html);
         $this->assertStringContainsString('Kolejka dnia', $html);
+        $this->assertStringContainsString('bi-list-check', $html);
+        $this->assertStringContainsString('bi-hdd-network', $html);
+        $this->assertStringContainsString('bi-clock-history', $html);
+        $this->assertStringContainsString('data-bs-toggle="tooltip"', $html);
+        $this->assertStringContainsString('Ranking&#x20;IP&#x20;wed&#x0142;ug&#x20;&#x017A;r&#xF3;de&#x0142;', $html);
+        $this->assertStringContainsString('Najnowsze&#x20;skr&#xF3;ty&#x20;incydent&#xF3;w', $html);
+        $this->assertStringContainsString('ostatnich&#x20;48&#x20;h.', $html);
         $this->assertStringContainsString('dashboard/kolejka', $html);
         $this->assertStringContainsString('dashboard/problematyczne-ip', $html);
         $this->assertStringContainsString('dashboard/incydenty', $html);

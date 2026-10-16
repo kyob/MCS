@@ -56,14 +56,31 @@ $hrefZrodla = static function (string $kod) use ($queryEksport): string {
                 <?= esc((string) $filtrCidrEfekt) ?>
             </span>
         <?php endif; ?>
-        <a class="btn btn-sm btn-primary" href="<?= site_url('dashboard/kolejka') ?>">
+        <?php
+        $kolejkaMinWaga = \App\Libraries\KolejkaDnia::minWaga();
+        $kolejkaWagi    = array_slice(
+            ['low', 'medium', 'high', 'critical'],
+            (int) array_search($kolejkaMinWaga, ['low', 'medium', 'high', 'critical'], true),
+        );
+        $tipKolejka = 'IP z wagą ' . implode('/', $kolejkaWagi)
+            . ' z ostatnich ' . (\App\Libraries\KolejkaDnia::oknoDni() * 24) . ' h.';
+        $tipIp = 'Ranking IP według źródeł, wagi i ostatniej aktywności w wybranym oknie.';
+        $tipInc = 'Najnowsze skróty incydentów z indeksu, z aktualnymi filtrami.';
+        ?>
+        <a class="btn btn-sm btn-primary" href="<?= site_url('dashboard/kolejka') ?>"
+           data-bs-toggle="tooltip" data-bs-placement="bottom"
+           title="<?= esc($tipKolejka, 'attr') ?>">
             <i class="bi bi-list-check me-1" aria-hidden="true"></i>Kolejka dnia
         </a>
-        <a class="btn btn-sm btn-outline-primary" href="<?= site_url('dashboard/problematyczne-ip') . $qs ?>">
-            Problematyczne IP
+        <a class="btn btn-sm btn-outline-primary" href="<?= site_url('dashboard/problematyczne-ip') . $qs ?>"
+           data-bs-toggle="tooltip" data-bs-placement="bottom"
+           title="<?= esc($tipIp, 'attr') ?>">
+            <i class="bi bi-hdd-network me-1" aria-hidden="true"></i>Problematyczne IP
         </a>
-        <a class="btn btn-sm btn-outline-primary" href="<?= site_url('dashboard/incydenty') . $qs ?>">
-            Ostatnie incydenty
+        <a class="btn btn-sm btn-outline-primary" href="<?= site_url('dashboard/incydenty') . $qs ?>"
+           data-bs-toggle="tooltip" data-bs-placement="bottom"
+           title="<?= esc($tipInc, 'attr') ?>">
+            <i class="bi bi-clock-history me-1" aria-hidden="true"></i>Ostatnie incydenty
         </a>
     </div>
 </div>
