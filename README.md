@@ -4,6 +4,8 @@ Panel i zbieracz zgłoszeń o reputacji sieci dla małego ISP. MCS zbiera zgłos
 
 ![PHP](https://img.shields.io/badge/PHP-%5E8.2-777bb4) ![CodeIgniter](https://img.shields.io/badge/CodeIgniter-4.7-ee4623) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-required-336791) ![License](https://img.shields.io/badge/license-MIT-green)
 
+![Panel MCS: filtry, liczniki incydentów i trendy dzienne źródeł zgłoszeń](docs/dashboard.jpg)
+
 ## Co robi
 
 - Importuje zgłoszenia z wielu źródeł przez wtyczki (IMAP, API, pliki): Shadowserver, SNDS, Play, MojeCert, CERT N6, Wanguard, Wazuh, Cloudflare Botnet, CAIDA Spoofer, speedtest.
