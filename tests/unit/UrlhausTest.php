@@ -29,6 +29,25 @@ CSV;
         $this->assertSame('2a0f:1700::5', $wynik['wiersze'][1]['ip']);
     }
 
+    public function testNaglowekWKomentarzuJakWZrzucieAbuseCh(): void
+    {
+        $csv = <<<CSV
+################################################################
+# abuse.ch URLhaus Database Dump (CSV - recent URLs only)      #
+#
+# id,dateadded,url,url_status,last_online,threat,tags,urlhaus_link,reporter
+"3955643","2026-10-22 13:27:09","http://91.231.80.9:42882/i","online","2026-10-22 13:27:09","malware_download","elf","https://urlhaus.abuse.ch/url/3955643/","geenensp"
+"3955642","2026-10-22 13:19:19","http://evil.example/b","online","2026-10-22 13:19:19","malware_download","elf","https://urlhaus.abuse.ch/url/3955642/","geenensp"
+CSV;
+        $wynik = (new Parser())->parsuj($csv);
+
+        $this->assertTrue($wynik['ok'], $wynik['blad']);
+        $this->assertSame(1, $wynik['pominiete_domeny']);
+        $this->assertCount(1, $wynik['wiersze']);
+        $this->assertSame('3955643', $wynik['wiersze'][0]['id']);
+        $this->assertSame('91.231.80.9', $wynik['wiersze'][0]['ip']);
+    }
+
     public function testZipIBrakKolumny(): void
     {
         $this->assertFalse((new Parser())->parsuj("PK\x03\x04zip")['ok']);

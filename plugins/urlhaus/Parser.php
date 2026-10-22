@@ -28,7 +28,14 @@ final class Parser
         $linie = preg_split("/\r\n|\n|\r/", $tresc) ?: [];
         $czyste = [];
         foreach ($linie as $linia) {
-            if (str_starts_with(ltrim($linia), '#')) {
+            $trim = ltrim($linia);
+            if (str_starts_with($trim, '#')) {
+                // Zrzut abuse.ch ma nagłówek jako komentarz: "# id,dateadded,..."
+                $poKrzyzyku = ltrim(substr($trim, 1));
+                if ($this->pierwszePole($poKrzyzyku) === 'id') {
+                    $czyste[] = $poKrzyzyku;
+                }
+
                 continue;
             }
             if (trim($linia) === '') {
@@ -108,6 +115,16 @@ final class Parser
         $i = $indeks[$nazwa];
 
         return trim((string) ($wiersz[$i] ?? ''));
+    }
+
+    private function pierwszePole(string $linia): string
+    {
+        if ($linia === '') {
+            return '';
+        }
+        $pola = str_getcsv($linia);
+
+        return strtolower(trim((string) ($pola[0] ?? '')));
     }
 
     private function host(string $url): ?string
