@@ -4,6 +4,8 @@ namespace McsPluginy\blocklist_de;
 
 /**
  * HTTPS GET list blocklist.de. Bez przekierowań. MD5 liczymy z treści po dekompresji.
+ * Gdy suma nie zgadza się z plikiem, a dwa pobrania .txt są identyczne, suma jest nieaktualna
+ * (blocklist.de publikuje listę i .md5 osobno) i przebieg idzie dalej.
  */
 final class Klient
 {
@@ -38,44 +40,159 @@ final class Klient
     /**
      * @param list<string> $listy
      *
-     * @return array{ok: bool, listy: array<string, list<string>>, md5_brak: list<string>, blad: string}
+     * @return array{ok: bool, listy: array<string, list<string>>, md5_brak: list<string>, md5_stare: list<string>, blad: string}
      */
     public function pobierz(array $listy): array
     {
-        $parser  = new Parser();
-        $zebrane = [];
-        $md5Brak = [];
+        $parser   = new Parser();
+        $zebrane  = [];
+        $md5Brak  = [];
+        $md5Stare = [];
 
         foreach ($listy as $nazwa) {
             if (! in_array($nazwa, Listy::DOZWOLONE, true)) {
                 return $this->blad('nieznana lista ' . $nazwa);
             }
 
-            $txt = $this->pobierzUrl(self::urlTxt($nazwa));
-            if (! $txt['ok']) {
-                return $this->blad($nazwa . '.txt: ' . $txt['error']);
-            }
+            $para = $this->para($nazwa, $parser);
+            if ($para['status'] === 'md5_niezgodne' && $para['stare']) {
+                $zebrane[$nazwa] = $para['ips'];
+                $md5Stare[]      = $nazwa;
 
-            $md5 = $this->pobierzUrl(self::urlTxt($nazwa) . '.md5');
-            if ($md5['ok']) {
-                $kawałki    = preg_split('/\s+/', trim($md5['body'])) ?: [];
-                $oczekiwany  = strtolower((string) ($kawałki[0] ?? ''));
-                $rzeczywisty = hash('md5', $txt['body']);
-                if (! preg_match('/^[a-f0-9]{32}$/', $oczekiwany) || ! hash_equals($oczekiwany, $rzeczywisty)) {
-                    return $this->blad($nazwa . '.txt.md5 nie zgadza się z treścią');
-                }
-            } else {
+                continue;
+            }
+            if ($para['status'] !== 'ok') {
+                return $this->blad($para['blad']);
+            }
+            if ($para['md5_brak']) {
                 $md5Brak[] = $nazwa;
             }
-
-            $parsed = $parser->parsuj($txt['body']);
-            if (! $parsed['ok']) {
-                return $this->blad($nazwa . '.txt: ' . $parsed['blad']);
-            }
-            $zebrane[$nazwa] = $parsed['ips'];
+            $zebrane[$nazwa] = $para['ips'];
         }
 
-        return ['ok' => true, 'listy' => $zebrane, 'md5_brak' => $md5Brak, 'blad' => ''];
+        return ['ok' => true, 'listy' => $zebrane, 'md5_brak' => $md5Brak, 'md5_stare' => $md5Stare, 'blad' => ''];
+    }
+
+    /**
+     * @return array{status: string, blad: string, stare: bool, ips: list<string>, md5_brak: bool}
+     */
+    private function para(string $nazwa, Parser $parser): array
+    {
+        $txt = $this->pobierzUrl(self::urlTxt($nazwa));
+        if (! $txt['ok']) {
+            return $this->paraBlad($nazwa . '.txt: ' . $txt['error']);
+        }
+
+        $md5 = $this->pobierzUrl(self::urlTxt($nazwa) . '.md5');
+        $werdykt = $this->werdyktMd5($txt['body'], $md5);
+        if ($werdykt === 'brak') {
+            return $this->poParsowaniu($nazwa, $parser, $txt['body'], true);
+        }
+        if ($werdykt === 'ok') {
+            return $this->poParsowaniu($nazwa, $parser, $txt['body'], false);
+        }
+        if ($werdykt === 'format') {
+            return $this->paraBlad($nazwa . '.txt.md5 nie zgadza się z treścią');
+        }
+
+        $poprzednie = $txt['body'];
+        for ($i = 0; $i < 2; $i++) {
+            $txt = $this->pobierzUrl(self::urlTxt($nazwa));
+            if (! $txt['ok']) {
+                return $this->paraBlad($nazwa . '.txt: ' . $txt['error']);
+            }
+            $md5     = $this->pobierzUrl(self::urlTxt($nazwa) . '.md5');
+            $werdykt = $this->werdyktMd5($txt['body'], $md5);
+            if ($werdykt === 'brak') {
+                return $this->poParsowaniu($nazwa, $parser, $txt['body'], true);
+            }
+            if ($werdykt === 'ok') {
+                return $this->poParsowaniu($nazwa, $parser, $txt['body'], false);
+            }
+            if ($werdykt === 'format') {
+                return $this->paraBlad($nazwa . '.txt.md5 nie zgadza się z treścią');
+            }
+            if ($txt['body'] === $poprzednie) {
+                return $this->nieaktualneMd5($nazwa, $parser, $txt['body']);
+            }
+            $poprzednie = $txt['body'];
+        }
+
+        return [
+            'status'   => 'md5_niezgodne',
+            'blad'     => $nazwa . '.txt.md5 nie zgadza się z treścią',
+            'stare'    => false,
+            'ips'      => [],
+            'md5_brak' => false,
+        ];
+    }
+
+    /**
+     * @return array{status: string, blad: string, stare: bool, ips: list<string>, md5_brak: bool}
+     */
+    private function nieaktualneMd5(string $nazwa, Parser $parser, string $body): array
+    {
+        $parsed = $parser->parsuj($body);
+        if (! $parsed['ok']) {
+            return $this->paraBlad($nazwa . '.txt: ' . $parsed['blad']);
+        }
+
+        return [
+            'status'   => 'md5_niezgodne',
+            'blad'     => $nazwa . '.txt.md5 nie zgadza się z treścią',
+            'stare'    => true,
+            'ips'      => $parsed['ips'],
+            'md5_brak' => false,
+        ];
+    }
+
+    /**
+     * @return array{status: string, blad: string, stare: bool, ips: list<string>, md5_brak: bool}
+     */
+    private function poParsowaniu(string $nazwa, Parser $parser, string $body, bool $md5Brak): array
+    {
+        $parsed = $parser->parsuj($body);
+        if (! $parsed['ok']) {
+            return $this->paraBlad($nazwa . '.txt: ' . $parsed['blad']);
+        }
+
+        return [
+            'status'   => 'ok',
+            'blad'     => '',
+            'stare'    => false,
+            'ips'      => $parsed['ips'],
+            'md5_brak' => $md5Brak,
+        ];
+    }
+
+    /**
+     * @param array{ok: bool, body: string} $md5
+     *
+     * @return 'brak'|'format'|'ok'|'rozjazd'
+     */
+    private function werdyktMd5(string $tresc, array $md5): string
+    {
+        if (! $md5['ok']) {
+            return 'brak';
+        }
+        $kawałki    = preg_split('/\s+/', trim($md5['body'])) ?: [];
+        $oczekiwany = strtolower((string) ($kawałki[0] ?? ''));
+        if (! preg_match('/^[a-f0-9]{32}$/', $oczekiwany)) {
+            return 'format';
+        }
+        if (hash_equals($oczekiwany, hash('md5', $tresc))) {
+            return 'ok';
+        }
+
+        return 'rozjazd';
+    }
+
+    /**
+     * @return array{status: string, blad: string, stare: bool, ips: list<string>, md5_brak: bool}
+     */
+    private function paraBlad(string $msg): array
+    {
+        return ['status' => 'blad', 'blad' => $msg, 'stare' => false, 'ips' => [], 'md5_brak' => false];
     }
 
     /**
@@ -96,11 +213,11 @@ final class Klient
     }
 
     /**
-     * @return array{ok: bool, listy: array<string, list<string>>, md5_brak: list<string>, blad: string}
+     * @return array{ok: bool, listy: array<string, list<string>>, md5_brak: list<string>, md5_stare: list<string>, blad: string}
      */
     private function blad(string $msg): array
     {
-        return ['ok' => false, 'listy' => [], 'md5_brak' => [], 'blad' => $msg];
+        return ['ok' => false, 'listy' => [], 'md5_brak' => [], 'md5_stare' => [], 'blad' => $msg];
     }
 
     /**

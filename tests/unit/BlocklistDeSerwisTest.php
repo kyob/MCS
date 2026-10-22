@@ -70,12 +70,31 @@ final class BlocklistDeSerwisTest extends CIUnitTestCase
         $this->assertSame(0, $this->db->table('mcs_incydenty')->countAllResults());
     }
 
-    public function testNiezgodneMd5NieZapisujeIncydentu(): void
+    public function testStabilneNiezgodneMd5ZapisujeIOznaczaSume(): void
     {
         $wynik = $this->serwis([
             'ssh'       => "91.231.80.9\n",
             'strongips' => "91.231.80.9\n",
         ], ['ssh' => str_repeat('a', 32)])->uruchom();
+
+        $this->assertSame('ok', $wynik['status'], $wynik['msg']);
+        $this->assertStringContainsString('MD5 starsze niż lista: ssh', $wynik['msg']);
+        $this->assertSame(1, $this->db->table('mcs_incydenty')->countAllResults());
+    }
+
+    public function testNiestabilnaTrescINiezgodneMd5NieZapisujeIncydentu(): void
+    {
+        $n      = 0;
+        $klient = new Klient(function (string $url) use (&$n): array {
+            $this->zapytania++;
+            if (str_ends_with($url, '.txt.md5')) {
+                return ['ok' => true, 'http_code' => 200, 'body' => str_repeat('a', 32), 'error' => ''];
+            }
+            $n++;
+
+            return ['ok' => true, 'http_code' => 200, 'body' => $n . ".2.3.4\n", 'error' => ''];
+        });
+        $wynik = (new Serwis($klient, null, null, null, null, 1_700_000_000))->uruchom();
 
         $this->assertSame('blad', $wynik['status']);
         $this->assertStringContainsString('md5', strtolower($wynik['msg']));

@@ -104,6 +104,7 @@ final class Serwis
             $this->koperta->zakonczOk($importId, [
                 'trafienia' => count($incydenty),
                 'md5_brak'  => $pobrane['md5_brak'],
+                'md5_stare' => $pobrane['md5_stare'],
             ]);
         } catch (Throwable $e) {
             if ($importId !== null) {
@@ -117,10 +118,17 @@ final class Serwis
         }
 
         $this->stan->zapisz(self::ZRODLO, $this->teraz, ImportHarmonogram::poSukcesie($this->teraz), 0);
+        $uwagi = [];
+        if ($pobrane['md5_brak'] !== []) {
+            $uwagi[] = 'bez MD5: ' . implode(', ', $pobrane['md5_brak']);
+        }
+        if ($pobrane['md5_stare'] !== []) {
+            $uwagi[] = 'MD5 starsze niż lista: ' . implode(', ', $pobrane['md5_stare']);
+        }
         $msg = sprintf(
             'blocklist.de: %d trafień w prefiksach%s',
             count($incydenty),
-            $pobrane['md5_brak'] === [] ? '' : ' (bez MD5: ' . implode(', ', $pobrane['md5_brak']) . ')',
+            $uwagi === [] ? '' : ' (' . implode('; ', $uwagi) . ')',
         );
 
         return ['status' => 'ok', 'msg' => $msg, 'trafienia' => count($incydenty)];
