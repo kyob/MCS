@@ -131,6 +131,10 @@ final class OpcjeMcsTest extends CIUnitTestCase
             'mcs.spoofer.maxPages'                  => 50,
             'mcs.spoofer.httpTimeout'               => 60,
             'mcs.spoofer.httpConnectTimeout'        => 10,
+            'mcs.spamhaus.httpTimeout'              => 30,
+            'mcs.blocklistDe.httpTimeout'           => 30,
+            'mcs.greynoise.cacheTtl'                => 604800,
+            'mcs.greynoise.httpTimeout'             => 15,
             'mcs.wazuh.oknoGodzin'                  => 48,
             'mcs.wazuh.minZdarzen'                  => 5,
             'mcs.wazuh.progHigh'                    => 20,
@@ -261,8 +265,12 @@ final class OpcjeMcsTest extends CIUnitTestCase
         }
 
         $this->assertSame('secret', OpcjeMcs::definicje()['mcs.snds.key']['typ'] ?? null);
+        $this->assertSame('secret', OpcjeMcs::definicje()['mcs.greynoise.apiKey']['typ'] ?? null);
+        $this->assertSame('secret', OpcjeMcs::definicje()['mcs.urlhaus.authKey']['typ'] ?? null);
         foreach (OpcjeMcs::doWidoku() as $opcje) {
             $this->assertArrayNotHasKey('mcs.snds.key', $opcje);
+            $this->assertArrayNotHasKey('mcs.greynoise.apiKey', $opcje);
+            $this->assertArrayNotHasKey('mcs.urlhaus.authKey', $opcje);
         }
     }
 
@@ -279,6 +287,21 @@ final class OpcjeMcsTest extends CIUnitTestCase
         OpcjeMcs::ustawModel($this->modelZ(['mcs.snds.key' => $uuid]));
         $this->assertSame($uuid, OpcjeMcs::tekst('mcs.snds.key'));
         $this->assertSame(OpcjeMcs::ZRODLO_DB, OpcjeMcs::odczyt('mcs.snds.key')['zrodlo']);
+    }
+
+    public function testKluczGreynoiseIUrlhausNieJestUuid(): void
+    {
+        foreach (['mcs.greynoise.apiKey', 'mcs.urlhaus.authKey'] as $klucz) {
+            $this->assertTrue(OpcjeMcs::waliduj($klucz, '')['ok'], $klucz);
+            $this->assertTrue(OpcjeMcs::waliduj($klucz, 'abcdEFGH1234')['ok'], $klucz);
+            $this->assertFalse(OpcjeMcs::waliduj($klucz, 'krotki')['ok'], $klucz);
+            $this->assertFalse(OpcjeMcs::waliduj($klucz, "ze\nspacja")['ok'], $klucz);
+        }
+
+        $this->ustawEnv('mcs.greynoise.apiKey', 'z-pliku-env-123');
+        OpcjeMcs::ustawModel($this->modelZ(['mcs.greynoise.apiKey' => 'z-panelu-1234']));
+        $this->assertSame('z-panelu-1234', OpcjeMcs::tekst('mcs.greynoise.apiKey'));
+        $this->assertSame(OpcjeMcs::ZRODLO_DB, OpcjeMcs::odczyt('mcs.greynoise.apiKey')['zrodlo']);
     }
 
     public function testZapiszPustySekretUsuwaWierszDb(): void

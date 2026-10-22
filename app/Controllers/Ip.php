@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Libraries\Enrichment\AbuseipdbSerwis;
 use App\Libraries\Enrichment\DnsblSerwis;
+use App\Libraries\Enrichment\GreynoiseSerwis;
 use App\Libraries\Enrichment\IsmaliciousClient;
 use App\Libraries\Enrichment\IsmaliciousSerwis;
 use App\Libraries\Enrichment\LmsMapowanieSerwis;
@@ -58,6 +59,13 @@ class Ip extends BaseController
         $dnsblTryb     = $dnsbl->tryb();
         $dnsblKomunikat = null;
 
+        $greynoise = new GreynoiseSerwis();
+        $greynoiseTryb = $greynoise->tryb();
+        $greynoiseKomunikat = null;
+        if ($greynoiseTryb === 'brak_klucza') {
+            $greynoiseKomunikat = 'Brak klucza GreyNoise. Wejdź w Wtyczki → GreyNoise → Klucz.';
+        }
+
         $lms = new LmsMapowanieSerwis();
         $lmsTryb = $lms->tryb();
         $lmsKomunikat = null;
@@ -108,6 +116,9 @@ class Ip extends BaseController
                     'dnsblTryb'            => $dnsblTryb,
                     'dnsblCache'           => null,
                     'dnsblKomunikat'       => $dnsblKomunikat,
+                    'greynoiseTryb'        => $greynoiseTryb,
+                    'greynoiseCache'       => null,
+                    'greynoiseKomunikat'   => $greynoiseKomunikat,
                     'speedtestCidr'        => null,
                     'speedtestLiczba24'    => 0,
                     'flashOk'            => null,
@@ -134,6 +145,14 @@ class Ip extends BaseController
         $ismCache      = $ism->podgladCache($ip);
         $spamratsCache = $spamrats->podgladCache($ip);
         $dnsblCache    = $dnsbl->podgladCache($ip);
+        $greynoiseCache = null;
+        try {
+            $greynoiseCache = $greynoise->podgladCache($ip);
+        } catch (\Throwable) {
+            if ($greynoiseKomunikat === null) {
+                $greynoiseKomunikat = 'Brak tabeli cache GreyNoise — uruchom php spark migrate.';
+            }
+        }
         // Skaner DNSBL (E2): tylko odczyt mcs_dnsbl_listingi, bez DNS przy otwarciu strony.
         $dnsblListingi   = [];
         $dnsblOstatniSkan = null;
@@ -196,6 +215,9 @@ class Ip extends BaseController
             'dnsblKomunikat'       => $dnsblKomunikat,
             'dnsblListingi'        => $dnsblListingi,
             'dnsblOstatniSkan'     => $dnsblOstatniSkan,
+            'greynoiseTryb'        => $greynoiseCache !== null ? 'cache' : $greynoiseTryb,
+            'greynoiseCache'       => $greynoiseCache,
+            'greynoiseKomunikat'   => $greynoiseKomunikat,
             'speedtestCidr'        => $stCidr,
             'speedtestLiczba24'    => $stLiczba,
             'flashOk'            => session()->getFlashdata('komunikat'),
@@ -244,6 +266,14 @@ class Ip extends BaseController
     public function lms(string $ip)
     {
         return $this->enrichment(LmsMapowanieSerwis::class, $ip, 'brak_konfiguracji');
+    }
+
+    /**
+     * Enrichment GreyNoise pod sesją. Nie pisze do indeksu/badge.
+     */
+    public function greynoise(string $ip)
+    {
+        return $this->enrichment(GreynoiseSerwis::class, $ip, 'brak_klucza');
     }
 
     /**

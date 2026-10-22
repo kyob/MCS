@@ -5,6 +5,10 @@ Format wzorowany na [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Added
+- Wtyczka `blocklist_de`: listy ataków z 48 h (ssh, mail, bruteforcelogin, bots, strongips), incydent tylko dla adresów z prefiksów AS.
+- Wtyczka `urlhaus`: zrzut recent abuse.ch, incydent gdy host URL-a jest adresem IP z prefiksów AS.
+- Enrichment GreyNoise Community na `/ip/{ip}` (poza badge, bez zapytań z crona).
+- Klucz GreyNoise i URLhaus wpisuje się w panelu: Wtyczki → przycisk Klucz. Puste pole wraca do wartości z `.env`.
 - Skaner DNSBL dla prefiksów AS: `php spark mcs:dnsbl-skan`, widok `/dashboard/dnsbl`, lokalny resolver, cache wyników.
 - Wtyczka `spamhaus`: lokalne dopasowanie Spamhaus DROP, DROPv6 i ASN-DROP, widok `/dashboard/spamhaus`.
 - Licencja MIT, SECURITY.md, opis projektu w README.

@@ -258,6 +258,26 @@ final class OpcjeMcs
         ];
         $d['mcs.spamhaus.httpTimeout'] = $http('Spamhaus DROP', 30, null)['timeout'];
 
+        $d['mcs.blocklistDe.httpTimeout'] = $http('blocklist.de', 30, null)['timeout'];
+        $d['mcs.greynoise.cacheTtl']      = $ttl('GreyNoise', 7 * self::DOBA);
+        $d['mcs.greynoise.httpTimeout']   = $http('GreyNoise', 15, null)['timeout'];
+        $d['mcs.greynoise.apiKey'] = [
+            'grupa'    => 'GreyNoise',
+            'etykieta' => 'Klucz API Community',
+            'typ'      => 'secret',
+            'domyslna' => '',
+            'wzorzec'  => '/^\S{8,256}$/',
+            'opis'     => 'Edycja: Wtyczki źródeł → GreyNoise → Klucz. Puste w DB = wartość z .env.',
+        ];
+        $d['mcs.urlhaus.authKey'] = [
+            'grupa'    => 'URLhaus',
+            'etykieta' => 'Auth-Key abuse.ch',
+            'typ'      => 'secret',
+            'domyslna' => '',
+            'wzorzec'  => '/^\S{8,256}$/',
+            'opis'     => 'Edycja: Wtyczki źródeł → URLhaus → Klucz. Puste w DB = wartość z .env.',
+        ];
+
         // --- Wazuh ---
         $d['mcs.wazuh.oknoGodzin'] = [
             'grupa' => 'Wazuh', 'etykieta' => 'Okno eksportu (h)', 'typ' => 'int', 'domyslna' => '48', 'min' => 1, 'max' => 168,

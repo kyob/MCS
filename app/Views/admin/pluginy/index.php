@@ -5,7 +5,7 @@
     <div>
         <h1 class="h3 mb-1">Wtyczki źródeł</h1>
         <p class="text-body-secondary mb-0">
-            Import i UI przełączasz kliknięciem stanu. Liczby ostatniego przebiegu są w kolumnie Status; pełny komunikat po najechaniu, szczegóły połączenia pod ikoną info.
+            Import i UI przełączasz kliknięciem stanu. Klucz GreyNoise i URLhaus wpisujesz przyciskiem <strong>Klucz</strong> w wierszu wtyczki.
             „Pobierz teraz” = ten sam tor co cron (<code>mcs:pobierz</code>).
         </p>
     </div>
@@ -30,6 +30,7 @@
         </div>
     </div>
 <?php else: ?>
+    <?php $kluczeZrodel = is_array($kluczeZrodel ?? null) ? $kluczeZrodel : []; ?>
     <div class="card border-0 shadow-sm rounded-3 mb-4">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -183,6 +184,24 @@
                                             <i class="bi bi-key me-1" aria-hidden="true"></i>Klucz
                                         </button>
                                     <?php endif; ?>
+                                    <?php
+                                    $stanKlucza = is_array(($kluczeZrodel[$zrodlo] ?? null)) ? $kluczeZrodel[$zrodlo] : null;
+                                    $modalKlucza = match ($zrodlo) {
+                                        'greynoise' => 'modalGreynoiseKlucz',
+                                        'urlhaus'   => 'modalUrlhausKlucz',
+                                        default     => '',
+                                    };
+                                    ?>
+                                    <?php if ($modalKlucza !== ''): ?>
+                                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                                data-bs-toggle="modal" data-bs-target="#<?= esc($modalKlucza, 'attr') ?>"
+                                                title="Wklej klucz API">
+                                            <i class="bi bi-key me-1" aria-hidden="true"></i>Klucz
+                                        </button>
+                                        <?php if ($stanKlucza !== null && empty($stanKlucza['ustawiony'])): ?>
+                                            <span class="badge text-bg-warning">brak klucza</span>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
                                     <form method="post" action="<?= site_url('admin/pluginy/pobierz') ?>" class="mb-0"
                                           onsubmit="return confirm('Uruchomić pobieranie dla <?= esc($zrodlo, 'js') ?>? Może potrwać dłużej.');">
                                         <?= csrf_field() ?>
@@ -252,6 +271,7 @@ $sndsZrodloEtykieta = match ($sndsZrodlo) {
                            name="mcs_snds_key" autocomplete="off"
                            placeholder="<?= $sndsUstawiony ? '••••••••-••••-••••-••••-••••••••••••' : 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' ?>">
                     <button type="button" class="btn btn-outline-secondary" id="mcs_snds_key_toggle"
+                            data-sekret-toggle="mcs_snds_key"
                             title="Pokaż / ukryj" aria-label="Pokaż lub ukryj klucz">
                         <i class="bi bi-eye" aria-hidden="true"></i>
                     </button>
@@ -269,16 +289,55 @@ $sndsZrodloEtykieta = match ($sndsZrodlo) {
         </form>
     </div>
 </div>
+<?php
+$kluczeZrodel = is_array($kluczeZrodel ?? null) ? $kluczeZrodel : [];
+$etykietaZrodlaKlucza = static function (string $zrodlo): string {
+    return match ($zrodlo) {
+        \App\Libraries\OpcjeMcs::ZRODLO_DB  => 'z panelu',
+        \App\Libraries\OpcjeMcs::ZRODLO_ENV => 'z pliku .env',
+        default                             => 'brak',
+    };
+};
+?>
+<?= view('admin/pluginy/_modal_klucz', [
+    'id'          => 'modalGreynoiseKlucz',
+    'tytul'       => 'Klucz API GreyNoise',
+    'zrodlo'      => 'greynoise',
+    'pole'        => 'mcs_greynoise_key',
+    'stan'        => is_array($kluczeZrodel['greynoise'] ?? null) ? $kluczeZrodel['greynoise'] : [],
+    'etykietaZrodla' => $etykietaZrodlaKlucza((string) ($kluczeZrodel['greynoise']['zrodlo'] ?? '')),
+    'link'        => 'https://viz.greynoise.io/account',
+    'linkTekst'   => 'Otwórz konto GreyNoise',
+    'opisLinku'   => 'Zaloguj się i skopiuj klucz API (Community). Darmowe konto to około 50 zapytań tygodniowo.',
+    'labelPola'   => 'Klucz API',
+    'placeholder' => 'wklej klucz z konta GreyNoise',
+]) ?>
+<?= view('admin/pluginy/_modal_klucz', [
+    'id'          => 'modalUrlhausKlucz',
+    'tytul'       => 'Klucz URLhaus (abuse.ch)',
+    'zrodlo'      => 'urlhaus',
+    'pole'        => 'mcs_urlhaus_key',
+    'stan'        => is_array($kluczeZrodel['urlhaus'] ?? null) ? $kluczeZrodel['urlhaus'] : [],
+    'etykietaZrodla' => $etykietaZrodlaKlucza((string) ($kluczeZrodel['urlhaus']['zrodlo'] ?? '')),
+    'link'        => 'https://auth.abuse.ch/',
+    'linkTekst'   => 'Otwórz auth.abuse.ch',
+    'opisLinku'   => 'Załóż darmowe konto i skopiuj Auth-Key. Ten sam klucz działa dla URLhaus.',
+    'labelPola'   => 'Auth-Key',
+    'placeholder' => 'wklej Auth-Key z abuse.ch',
+]) ?>
 <script>
 (function () {
-    var btn = document.getElementById('mcs_snds_key_toggle');
-    var inp = document.getElementById('mcs_snds_key');
-    if (!btn || !inp) return;
-    btn.addEventListener('click', function () {
-        var show = inp.type === 'password';
-        inp.type = show ? 'text' : 'password';
-        btn.querySelector('i')?.classList.toggle('bi-eye', !show);
-        btn.querySelector('i')?.classList.toggle('bi-eye-slash', show);
+    document.querySelectorAll('[data-sekret-toggle]').forEach(function (btn) {
+        var inp = document.getElementById(btn.getAttribute('data-sekret-toggle'));
+        if (!inp) return;
+        btn.addEventListener('click', function () {
+            var show = inp.type === 'password';
+            inp.type = show ? 'text' : 'password';
+            var ikona = btn.querySelector('i');
+            if (!ikona) return;
+            ikona.classList.toggle('bi-eye', !show);
+            ikona.classList.toggle('bi-eye-slash', show);
+        });
     });
 })();
 </script>

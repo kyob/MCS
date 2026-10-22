@@ -45,11 +45,33 @@ final class PluginyViewTest extends CIUnitTestCase
                     'health_msg'        => 'SNDS HTTP 404',
                     'health_at'         => '2026-10-06 07:15:00+00',
                 ],
+                [
+                    'zrodlo'            => 'greynoise',
+                    'nazwa'             => 'GreyNoise',
+                    'import_wstrzymany' => true,
+                    'ukryty_w_ui'       => false,
+                    'health_ok'         => null,
+                    'health_msg'        => '',
+                    'health_at'         => '',
+                ],
+                [
+                    'zrodlo'            => 'urlhaus',
+                    'nazwa'             => 'URLhaus',
+                    'import_wstrzymany' => true,
+                    'ukryty_w_ui'       => false,
+                    'health_ok'         => null,
+                    'health_msg'        => '',
+                    'health_at'         => '',
+                ],
             ],
             'sndsKlucz' => [
                 'ustawiony' => true,
                 'zrodlo'    => 'env',
                 'skrot'     => 'a1b2…7890',
+            ],
+            'kluczeZrodel' => [
+                'greynoise' => ['ustawiony' => false, 'zrodlo' => 'domyslna', 'skrot' => ''],
+                'urlhaus'   => ['ustawiony' => true, 'zrodlo' => 'db', 'skrot' => 'ab12…99zz'],
             ],
             'importy' => [
                 [
@@ -93,8 +115,18 @@ final class PluginyViewTest extends CIUnitTestCase
         $this->assertStringContainsString('Zapisz klucz', $html);
         $this->assertStringContainsString('Pobierz klucz z portalu Auto', $html);
         $this->assertStringContainsString('https://substrate.office.com/ip-domain-management-snds/SNDS/Auto', $html);
-        // Przycisk Klucz tylko przy SNDS (jeden modal + jeden przycisk w wierszu).
+        // Przycisk Klucz przy SNDS jest osobny od GreyNoise i URLhaus.
         $this->assertSame(1, substr_count($html, 'data-bs-target="#modalSndsKlucz"'));
+        $this->assertStringContainsString('data-bs-target="#modalGreynoiseKlucz"', $html);
+        $this->assertStringContainsString('data-bs-target="#modalUrlhausKlucz"', $html);
+        $this->assertStringContainsString('name="mcs_greynoise_key"', $html);
+        $this->assertStringContainsString('name="mcs_urlhaus_key"', $html);
+        $this->assertStringContainsString('admin/pluginy/klucz', $html);
+        $this->assertStringContainsString('https://viz.greynoise.io/account', $html);
+        $this->assertStringContainsString('https://auth.abuse.ch/', $html);
+        $this->assertStringContainsString('brak klucza', $html);
+        $this->assertStringContainsString('ab12…99zz', $html);
+        $this->assertStringContainsString('z panelu', $html);
 
         $this->assertStringContainsString('>Lp.</th>', $html);
         $this->assertStringContainsString('>Nazwa</th>', $html);

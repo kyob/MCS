@@ -32,12 +32,14 @@ $routes->get('ip/(:segment)/enrichment/ismalicious', 'Ip::ismalicious/$1');
 $routes->get('ip/(:segment)/enrichment/spamrats', 'Ip::spamrats/$1');
 $routes->get('ip/(:segment)/enrichment/dnsbl', 'Ip::dnsbl/$1');
 $routes->get('ip/(:segment)/enrichment/lms', 'Ip::lms/$1');
+$routes->get('ip/(:segment)/enrichment/greynoise', 'Ip::greynoise/$1');
 // GET enrichment = tylko cache. Zapytanie do API (Sprawdź / force) tylko POST z CSRF.
 $routes->post('ip/(:segment)/enrichment/abuseipdb', 'Ip::abuseipdb/$1');
 $routes->post('ip/(:segment)/enrichment/ismalicious', 'Ip::ismalicious/$1');
 $routes->post('ip/(:segment)/enrichment/spamrats', 'Ip::spamrats/$1');
 $routes->post('ip/(:segment)/enrichment/dnsbl', 'Ip::dnsbl/$1');
 $routes->post('ip/(:segment)/enrichment/lms', 'Ip::lms/$1');
+$routes->post('ip/(:segment)/enrichment/greynoise', 'Ip::greynoise/$1');
 $routes->get('watchlista', 'Watchlista::index');
 $routes->post('watchlista/dodaj', 'Watchlista::dodaj');
 $routes->post('watchlista/usun', 'Watchlista::usun');
@@ -48,6 +50,7 @@ $routes->group('admin', ['filter' => 'mcsRola:admin,superadmin'], static functio
     $routes->post('pluginy', 'Admin\Pluginy::zapisz');
     $routes->post('pluginy/pobierz', 'Admin\Pluginy::pobierz');
     $routes->post('pluginy/snds-klucz', 'Admin\Pluginy::zapiszKluczSnds');
+    $routes->post('pluginy/klucz', 'Admin\Pluginy::zapiszKluczZrodla');
     $routes->get('ustawienia', 'Admin\Ustawienia::index');
     $routes->post('ustawienia', 'Admin\Ustawienia::zapisz');
     $routes->post('ustawienia/przywroc-domyslne', 'Admin\Ustawienia::przywrocDomyslne');
@@ -75,3 +78,4 @@ $routes->get('api/enrichment/ismalicious', 'Api\EnrichmentIsmalicious::check');
 $routes->get('api/enrichment/spamrats', 'Api\EnrichmentSpamrats::check');
 $routes->get('api/enrichment/dnsbl', 'Api\EnrichmentDnsbl::check');
 $routes->get('api/enrichment/lms', 'Api\EnrichmentLms::check');
+$routes->get('api/enrichment/greynoise', 'Api\EnrichmentGreynoise::check');

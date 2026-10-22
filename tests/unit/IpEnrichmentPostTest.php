@@ -102,7 +102,7 @@ final class IpEnrichmentPostTest extends CIUnitTestCase
 
     public function testGetNieWywolujeApiDlaWszystkichZrodel(): void
     {
-        foreach (['abuseipdb', 'ismalicious', 'spamrats', 'dnsbl', 'lms'] as $akcja) {
+        foreach (['abuseipdb', 'ismalicious', 'spamrats', 'dnsbl', 'lms', 'greynoise'] as $akcja) {
             $a = $this->atrapa();
             $this->kontroler($a, 'GET')->{$akcja}('198.51.100.10');
             $this->assertSame(0, $a->sprawdz, $akcja);

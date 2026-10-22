@@ -5,7 +5,8 @@ Każde źródło zgłoszeń to osobna wtyczka w katalogu `plugins/{zrodlo}/`.
 W Fazie 1a katalog był pusty (placeholdery w `mcs_pluginy`).  
 Faza **1b** dokłada importery (Shadowserver / Play / SNDS).
 Dodatkowe streamy: MojeCert, CERT N6, Wanguard, Cloudflare Botnet (`cloudflare_botnet`), CAIDA Spoofer (`spoofer` — BCP38, filtr ASN, poza badge hosta).
-Enrichment + sync: LMS mapowanie (`lms_mapowanie` — IP→komputer/abonent, poza badge); isMalicious (`ismalicious`); SpamRats (`spamrats` — DNSBL RATS-All, panel `/ip/{ip}`, poza badge); DNSBL AS (`dnsbl` — UCEPROTECT/SpamCop/DroneBL, skan LMS codziennie + pełne AS raz/tydzień, incydenty + `/dashboard/dnsbl`); Speedtest (`speedtest` — portal Ookla lub CSV Servers reporting, filtr AS198050, **agregaty /24** na `/dashboard/speedtest`, poza badge).
+Enrichment + sync: LMS mapowanie (`lms_mapowanie` — IP→komputer/abonent, poza badge); isMalicious (`ismalicious`); SpamRats (`spamrats` — DNSBL RATS-All, panel `/ip/{ip}`, poza badge); GreyNoise (`greynoise` — Community API, panel `/ip/{ip}`, cron nie odpytuje API, poza badge); DNSBL AS (`dnsbl` — UCEPROTECT/SpamCop/DroneBL, skan LMS codziennie + pełne AS raz/tydzień, incydenty + `/dashboard/dnsbl`); Speedtest (`speedtest` — portal Ookla lub CSV Servers reporting, filtr AS198050, **agregaty /24** na `/dashboard/speedtest`, poza badge).
+Importery list: blocklist.de (`blocklist_de` — ataki z 48 h, ssh/mail/bruteforcelogin/bots/strongips, incydent w prefiksach AS); URLhaus (`urlhaus` — recent CSV, incydent tylko dla hosta będącego adresem IP).
 
 ## Kontrakt
 
@@ -17,7 +18,7 @@ Metody:
 
 - `zrodlo()` — stabilny identyfikator (np. `shadowserver`)
 - `pobierz()` — import (IMAP / API / plik) → koperta → tabela źródła → `IncydentZapis`  
-  (wyjątek: `lms_mapowanie` / `ismalicious` / `spamrats` / `speedtest` zapisują tylko enrichment, bez indeksu)
+  (wyjątek: `lms_mapowanie` / `ismalicious` / `spamrats` / `speedtest` / `greynoise` zapisują tylko enrichment, bez indeksu)
 - `health()` — tablica `['ok' => bool, 'msg' => string]`
 
 Rdzeń ładuje wtyczki przez `App\Libraries\PluginRegistry`.

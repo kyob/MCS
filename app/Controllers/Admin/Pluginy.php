@@ -21,6 +21,26 @@ class Pluginy extends BaseController
 
     private const HISTORIA_NA_STRONE = 25;
 
+    /**
+     * Klucze wpisywane przyciskiem Klucz, nie w pliku .env.
+     *
+     * @var array<string, array{opcja: string, pole: string, nazwa: string, poZapisie: string}>
+     */
+    private const KLUCZE_PANELU = [
+        'greynoise' => [
+            'opcja'     => 'mcs.greynoise.apiKey',
+            'pole'      => 'mcs_greynoise_key',
+            'nazwa'     => 'GreyNoise',
+            'poZapisie' => 'Na karcie IP użyj „Sprawdź GreyNoise”.',
+        ],
+        'urlhaus' => [
+            'opcja'     => 'mcs.urlhaus.authKey',
+            'pole'      => 'mcs_urlhaus_key',
+            'nazwa'     => 'URLhaus',
+            'poZapisie' => 'Włącz import i uruchom „Pobierz teraz”.',
+        ],
+    ];
+
     public function index()
     {
         OpcjeMcs::ustawModel(model(UstawieniaModel::class));
@@ -42,6 +62,10 @@ class Pluginy extends BaseController
                 'ustawiony' => $sndsOdczyt['wartosc'] !== '',
                 'zrodlo'    => $sndsOdczyt['zrodlo'],
                 'skrot'     => OpcjeMcs::skrotSekretu($sndsOdczyt['wartosc']),
+            ],
+            'kluczeZrodel' => [
+                'greynoise' => $this->stanKlucza('mcs.greynoise.apiKey'),
+                'urlhaus'   => $this->stanKlucza('mcs.urlhaus.authKey'),
             ],
         ]);
     }
@@ -139,6 +163,60 @@ class Pluginy extends BaseController
             'komunikat',
             'Zapisano klucz SNDS. Uruchom „Pobierz teraz”, żeby sprawdzić import.',
         );
+    }
+
+    /**
+     * Klucz GreyNoise albo URLhaus z panelu. Puste pole usuwa wpis z bazy.
+     */
+    public function zapiszKluczZrodla()
+    {
+        $zrodlo = trim((string) $this->request->getPost('zrodlo'));
+        $def    = self::KLUCZE_PANELU[$zrodlo] ?? null;
+        if ($def === null) {
+            return redirect()->to('/admin/pluginy')->with('blad', 'To źródło nie ma klucza w panelu.');
+        }
+
+        $klucz = trim((string) $this->request->getPost($def['pole']));
+        $wynik = OpcjeMcs::zapisz(
+            model(UstawieniaModel::class),
+            [$def['opcja'] => $klucz],
+        );
+
+        if (! $wynik['ok']) {
+            $blad = $wynik['bledy'][$def['opcja']] ?? ($wynik['bledy']['_'] ?? 'Nie udało się zapisać klucza.');
+            if ($blad === 'nieprawidłowy format tokenu') {
+                $blad = 'Klucz ma mieć od 8 do 256 znaków, bez spacji.';
+            }
+
+            return redirect()->to('/admin/pluginy')->with('blad', $blad);
+        }
+
+        $nazwa = $def['nazwa'];
+        if ($klucz === '') {
+            return redirect()->to('/admin/pluginy')->with(
+                'komunikat',
+                'Usunięto klucz ' . $nazwa . ' z panelu. Jeśli jest w pliku .env, wraca ten z pliku.',
+            );
+        }
+
+        return redirect()->to('/admin/pluginy')->with(
+            'komunikat',
+            'Zapisano klucz ' . $nazwa . '. ' . $def['poZapisie'],
+        );
+    }
+
+    /**
+     * @return array{ustawiony: bool, zrodlo: string, skrot: string}
+     */
+    private function stanKlucza(string $opcja): array
+    {
+        $odczyt = OpcjeMcs::odczyt($opcja);
+
+        return [
+            'ustawiony' => $odczyt['wartosc'] !== '',
+            'zrodlo'    => $odczyt['zrodlo'],
+            'skrot'     => OpcjeMcs::skrotSekretu($odczyt['wartosc']),
+        ];
     }
 
     /**

@@ -65,6 +65,21 @@ class PluginSeeder
             'nazwa'  => 'Spamhaus DROP',
             'opis'   => 'Darmowe listy Spamhaus DROP, DROPv6 i ASN-DROP (JSON, raz na dobę), dopasowane lokalnie do as198050_cidry i ASN. Trafienie = incydent. Stan na /dashboard/spamhaus.',
         ],
+        [
+            'zrodlo' => 'blocklist_de',
+            'nazwa'  => 'blocklist.de',
+            'opis'   => 'Listy ataków z 48 h (ssh, mail, bruteforcelogin, bots, strongips). Trafienie w prefiksach AS = incydent. Poza all.txt.',
+        ],
+        [
+            'zrodlo' => 'urlhaus',
+            'nazwa'  => 'URLhaus',
+            'opis'   => 'Zrzut recent abuse.ch. Incydent tylko gdy host URL-a (status online) jest adresem IP z prefiksów AS. Klucz: Wtyczki → URLhaus → Klucz.',
+        ],
+        [
+            'zrodlo' => 'greynoise',
+            'nazwa'  => 'GreyNoise',
+            'opis'   => 'Enrichment Community API (szum vs incydent). Lookup ręczny na karcie IP, cache 7 dni, poza indeksem badge. Klucz: Wtyczki → GreyNoise → Klucz.',
+        ],
     ];
 
     public function __construct(private readonly ?BaseConnection $db = null)

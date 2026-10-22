@@ -412,6 +412,72 @@ $badgeWaga = static function (string $waga): string {
     </div>
 </div>
 
+</div>
+
+<div class="card border-0 shadow-sm rounded-3 mt-4" id="panel-greynoise">
+    <div class="card-header bg-transparent border-0 pt-3 px-3 pb-0">
+        <h2 class="h5 mb-0">
+            <i class="bi bi-radar me-1 text-info" aria-hidden="true"></i>
+            Enrichment — GreyNoise
+        </h2>
+    </div>
+    <div class="card-body">
+        <p class="card-text text-body-secondary small">
+            Lookup Community (szum internetowy albo usługa RIOT). Cache 7 dni. Nie zmienia indeksu ani badge.
+            Cron nie odpytuje API — „Odśwież” zużywa limit darmowego konta.
+        </p>
+
+        <?php if (! empty($greynoiseKomunikat)): ?>
+            <div class="alert alert-danger border-0 rounded-3 py-2" id="greynoise-komunikat" role="alert"><?= esc($greynoiseKomunikat) ?></div>
+        <?php else: ?>
+            <div class="alert alert-danger border-0 rounded-3 py-2" id="greynoise-komunikat" role="alert" hidden></div>
+        <?php endif; ?>
+
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+            <button type="button" class="btn btn-primary" id="greynoise-sprawdz"
+                data-url="<?= site_url('ip/' . $ip . '/enrichment/greynoise') ?>" data-metoda="post"
+                <?= (! empty($greynoiseKomunikat) && ($greynoiseTryb ?? '') === 'brak_klucza') ? 'disabled' : '' ?>>
+                Sprawdź GreyNoise
+            </button>
+            <button type="button" class="btn btn-outline-secondary" id="greynoise-force"
+                data-url="<?= site_url('ip/' . $ip . '/enrichment/greynoise') ?>" data-metoda="post" data-force="1"
+                <?= (! empty($greynoiseKomunikat) && ($greynoiseTryb ?? '') === 'brak_klucza') ? 'disabled' : '' ?>>
+                Odśwież (force)
+            </button>
+            <span class="small text-body-secondary" id="greynoise-status">
+                tryb: <?= esc((string) ($greynoiseTryb ?? '—')) ?>
+            </span>
+        </div>
+
+        <?php $gn = is_array($greynoiseCache ?? null) ? $greynoiseCache : []; ?>
+        <div id="greynoise-wynik" class="enrichment-wynik" <?= $gn === [] ? 'hidden' : '' ?>>
+            <dl class="row mb-0 small">
+                <dt class="col-sm-3 col-md-2 text-body-secondary">Klasyfikacja</dt>
+                <dd class="col-sm-9 col-md-10" id="gn-class"><?= esc((string) (($gn['classification'] ?? '') !== '' ? $gn['classification'] : '—')) ?></dd>
+                <dt class="col-sm-3 col-md-2 text-body-secondary">Szum</dt>
+                <dd class="col-sm-9 col-md-10" id="gn-noise"><?= ($gn['noise'] ?? null) === null ? '—' : ($gn['noise'] ? 'tak' : 'nie') ?></dd>
+                <dt class="col-sm-3 col-md-2 text-body-secondary">RIOT</dt>
+                <dd class="col-sm-9 col-md-10" id="gn-riot"><?= ($gn['riot'] ?? null) === null ? '—' : ($gn['riot'] ? 'tak' : 'nie') ?></dd>
+                <dt class="col-sm-3 col-md-2 text-body-secondary">Nazwa</dt>
+                <dd class="col-sm-9 col-md-10" id="gn-name"><?= esc((string) (($gn['name'] ?? '') !== '' ? $gn['name'] : '—')) ?></dd>
+                <dt class="col-sm-3 col-md-2 text-body-secondary">Ostatnio widziany</dt>
+                <dd class="col-sm-9 col-md-10" id="gn-last"><?= esc((string) (($gn['last_seen'] ?? '') !== '' ? $gn['last_seen'] : '—')) ?></dd>
+                <dt class="col-sm-3 col-md-2 text-body-secondary">Link</dt>
+                <dd class="col-sm-9 col-md-10" id="gn-link"><?php
+                    $gnLink = (string) ($gn['link'] ?? '');
+                    if (str_starts_with($gnLink, 'https://')) {
+                        echo '<a href="' . esc($gnLink, 'attr') . '" rel="noopener noreferrer">' . esc($gnLink) . '</a>';
+                    } else {
+                        echo '—';
+                    }
+                ?></dd>
+                <dt class="col-sm-3 col-md-2 text-body-secondary">Komunikat</dt>
+                <dd class="col-sm-9 col-md-10" id="gn-message"><?= esc((string) (($gn['message'] ?? '') !== '' ? $gn['message'] : '—')) ?></dd>
+            </dl>
+        </div>
+    </div>
+</div>
+
 <div class="card border-0 shadow-sm rounded-3 mt-4" id="panel-spamrats">
     <div class="card-header bg-transparent border-0 pt-3 px-3 pb-0">
         <h2 class="h5 mb-0">
@@ -760,6 +826,79 @@ window.mcsZapytaj = function (btn, url) {
         var b = document.getElementById(id);
         if (b && !b.disabled) {
             b.addEventListener('click', function () { odpytajIsm(b); });
+        }
+    });
+})();
+</script>
+
+<script>
+(function () {
+    function tekst(v) {
+        return (v === null || v === undefined || v === '') ? '—' : String(v);
+    }
+    function takNie(v) {
+        if (v === true || v === 1 || v === '1' || v === 't' || v === 'true') return 'tak';
+        if (v === false || v === 0 || v === '0' || v === 'f' || v === 'false') return 'nie';
+        return '—';
+    }
+    function pokazGn(dane) {
+        var box = document.getElementById('greynoise-wynik');
+        if (!box) return;
+        box.hidden = false;
+        var w = dane.wynik || {};
+        document.getElementById('gn-class').textContent = tekst(w.classification);
+        document.getElementById('gn-noise').textContent = takNie(w.noise);
+        document.getElementById('gn-riot').textContent = takNie(w.riot);
+        document.getElementById('gn-name').textContent = tekst(w.name);
+        document.getElementById('gn-last').textContent = tekst(w.last_seen);
+        document.getElementById('gn-message').textContent = tekst(w.message);
+        var link = document.getElementById('gn-link');
+        if (link) {
+            var href = (typeof w.link === 'string' && w.link.indexOf('https://') === 0) ? w.link : '';
+            link.textContent = '';
+            if (href) {
+                var a = document.createElement('a');
+                a.href = href;
+                a.rel = 'noopener noreferrer';
+                a.textContent = href;
+                link.appendChild(a);
+            } else {
+                link.textContent = '—';
+            }
+        }
+        var st = document.getElementById('greynoise-status');
+        if (st) {
+            st.textContent = 'tryb: ' + tekst(dane.tryb) + (dane.z_cache ? ' (z cache)' : '');
+        }
+    }
+    function pokazGnBlad(msg) {
+        var el = document.getElementById('greynoise-komunikat');
+        if (!el) return;
+        el.hidden = false;
+        el.textContent = msg || 'Błąd enrichment GreyNoise.';
+    }
+    function odpytajGn(btn) {
+        var url = btn.getAttribute('data-url');
+        if (!url) return;
+        btn.disabled = true;
+        window.mcsZapytaj(btn, url)
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (x) {
+                if (!x.j || !x.j.ok) {
+                    pokazGnBlad((x.j && x.j.blad) ? x.j.blad : 'Błąd enrichment GreyNoise.');
+                    return;
+                }
+                var el = document.getElementById('greynoise-komunikat');
+                if (el) { el.hidden = true; el.textContent = ''; }
+                pokazGn(x.j);
+            })
+            .catch(function () { pokazGnBlad('Nie udało się połączyć z MCS.'); })
+            .finally(function () { btn.disabled = false; });
+    }
+    ['greynoise-sprawdz', 'greynoise-force'].forEach(function (id) {
+        var b = document.getElementById(id);
+        if (b && !b.disabled) {
+            b.addEventListener('click', function () { odpytajGn(b); });
         }
     });
 })();
