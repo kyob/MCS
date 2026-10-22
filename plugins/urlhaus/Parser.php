@@ -53,7 +53,7 @@ final class Parser
         }
         fwrite($fp, implode("\n", $czyste));
         rewind($fp);
-        $naglowek = fgetcsv($fp);
+        $naglowek = fgetcsv($fp, null, ',', '"', '');
         if (! is_array($naglowek)) {
             fclose($fp);
 
@@ -73,7 +73,7 @@ final class Parser
 
         $wiersze = [];
         $domeny  = 0;
-        while (($wiersz = fgetcsv($fp)) !== false) {
+        while (($wiersz = fgetcsv($fp, null, ',', '"', '')) !== false) {
             if ($wiersz === [null] || $wiersz === false) {
                 continue;
             }
@@ -122,7 +122,7 @@ final class Parser
         if ($linia === '') {
             return '';
         }
-        $pola = str_getcsv($linia);
+        $pola = str_getcsv($linia, ',', '"', '');
 
         return strtolower(trim((string) ($pola[0] ?? '')));
     }
