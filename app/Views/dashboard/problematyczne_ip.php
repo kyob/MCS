@@ -103,6 +103,9 @@ $pagerQuery   = ['okno', 'zrodlo', 'ip', 'waga', 'min_zrodel', 'kategoria', 'por
                             <tr class="<?= esc(ltrim($borderWaga), 'attr') ?>">
                                 <td>
                                     <a class="font-monospace text-decoration-none" href="<?= $urlIp ?>"><?= esc($ipWiersz) ?></a>
+                                    <?php if (! empty($wiersz['nowe'])): ?>
+                                        <span class="badge text-bg-success ms-1" title="Pierwszy raz w MCS w ostatnich <?= (int) ($noweDni ?? 7) ?> dniach">NEW</span>
+                                    <?php endif; ?>
                                     <?php if (! empty($revDnsWlaczone) && ! empty($wiersz['rev_dns'])): ?>
                                         <div class="small text-body-secondary font-monospace"><?= esc((string) $wiersz['rev_dns']) ?></div>
                                     <?php endif; ?>

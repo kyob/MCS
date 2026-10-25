@@ -108,6 +108,9 @@ $kolejkaGodzin  = (int) $okno * 24;
                             <tr class="<?= esc(ltrim($borderWaga), 'attr') ?>">
                                 <td>
                                     <a class="font-monospace text-decoration-none" href="<?= $urlIp ?>"><?= esc($ipWiersz) ?></a>
+                                    <?php if (! empty($wiersz['nowe'])): ?>
+                                        <span class="badge text-bg-success ms-1" title="Pierwszy raz w MCS w ostatnich <?= (int) ($noweDni ?? 7) ?> dniach">NEW</span>
+                                    <?php endif; ?>
                                     <?php if (! empty($revDnsWlaczone) && ! empty($wiersz['rev_dns'])): ?>
                                         <div class="small text-body-secondary font-monospace"><?= esc((string) $wiersz['rev_dns']) ?></div>
                                     <?php endif; ?>
@@ -160,6 +163,12 @@ $kolejkaGodzin  = (int) $okno * 24;
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
                     <p class="small text-body-secondary mb-0">
                         Wyniki <?= (int) ($listaOd ?? 0) ?>–<?= (int) ($listaDo ?? 0) ?> z <?= $listaTotal ?>
+                        ·
+                        <?php if (! empty($tylkoNowe)): ?>
+                            <a href="<?= site_url('dashboard/kolejka') ?>">pokaż wszystkie</a>
+                        <?php else: ?>
+                            <a href="<?= site_url('dashboard/kolejka') ?>?nowe=1">tylko NEW (<?= (int) ($noweDni ?? 7) ?> dni)</a>
+                        <?php endif; ?>
                     </p>
                     <?php if (! empty($pager) && $listaTotal > (int) ($listaNaStrone ?? 25)): ?>
                         <?= $pager->only($pagerQuery)->links() ?>

@@ -90,6 +90,14 @@ $filtrCidr      = (string) ($filtrCidr ?? '');
                        value="<?= esc((string) ($filtrIp ?? ''), 'attr') ?>"
                        placeholder="np. 198.51.100.10" autocomplete="off">
             </div>
+            <?php if (isset($tylkoNowe)): ?>
+                <div class="col-12 col-md-auto">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="filtr-nowe" name="nowe" value="1" <?= $tylkoNowe ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="filtr-nowe">Tylko NEW (<?= (int) ($noweDni ?? 7) ?> dni)</label>
+                    </div>
+                </div>
+            <?php endif; ?>
             <div class="col-12 col-md-auto d-flex flex-wrap gap-2">
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtruj

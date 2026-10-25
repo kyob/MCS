@@ -11,6 +11,7 @@ use App\Libraries\Enrichment\LmsMapowanieSerwis;
 use App\Libraries\Enrichment\SpamratsClient;
 use App\Libraries\Enrichment\SpamratsSerwis;
 use App\Libraries\Enrichment\SpeedtestSerwis;
+use App\Libraries\OpcjeMcs;
 use App\Libraries\ProblemyIp;
 use App\Libraries\Siec\As198050Matcher;
 use App\Libraries\Siec\RevDns;
@@ -136,6 +137,7 @@ class Ip extends BaseController
         $incydenty = $model->dlaPodmiotuIp($ip, $filtrZrodlo);
         $zrodla    = $model->zrodlaDlaPodmiotuIp($ip);
         $agregat   = (new ProblemyIp())->zbuduj($ip, $incydenty);
+        $ipNowe    = isset($model->ipNowe([$ip], OpcjeMcs::int('mcs.nowe.dni'))[$ip]);
 
         $matcher         = new As198050Matcher();
         $asMatchWlaczone = $matcher->jestWlaczone();
@@ -191,6 +193,7 @@ class Ip extends BaseController
             'ip'                 => $ip,
             'blad'               => null,
             'problemy'           => $agregat['problemy'],
+            'ipNowe'             => $ipNowe,
             'statusIp'           => $agregat['status'],
             'zrodla'             => $zrodla,
             'filtrZrodlo'        => $filtrZrodlo,

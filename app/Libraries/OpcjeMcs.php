@@ -70,6 +70,9 @@ final class OpcjeMcs
         $d['mcs.problemyIp.oknoTimelineDni'] = [
             'grupa' => 'Przegląd i badge', 'etykieta' => 'Problematyczne IP — oś czasu (dni)', 'typ' => 'int', 'domyslna' => '14', 'min' => 1, 'max' => 90,
         ];
+        $d['mcs.nowe.dni'] = [
+            'grupa' => 'Przegląd i badge', 'etykieta' => 'Znaczek NEW — IP pierwszy raz w MCS w ostatnich (dni)', 'typ' => 'int', 'domyslna' => '7', 'min' => 1, 'max' => 90,
+        ];
         $d['mcs.badge.maxIpsBatch'] = [
             'grupa' => 'Przegląd i badge', 'etykieta' => 'API badge — max IP w jednym żądaniu', 'typ' => 'int', 'domyslna' => '100', 'min' => 1, 'max' => 1000,
         ];

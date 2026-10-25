@@ -17,6 +17,9 @@ $badgeWaga = static function (string $waga): string {
     <div>
         <h1 class="h3 mb-1">
             IP <span class="font-monospace"><?= esc($ip !== '' ? $ip : '—') ?></span>
+            <?php if (! empty($ipNowe)): ?>
+                <span class="badge text-bg-success align-middle fs-6" title="Pierwszy raz w MCS w ostatnich dniach">NEW</span>
+            <?php endif; ?>
         </h1>
         <?php if (! empty($revDnsWlaczone)): ?>
             <?php if (! empty($revDns)): ?>

@@ -72,6 +72,41 @@ class IncydentModel extends Model
     }
 
     /**
+     * IP z listy, które pierwszy raz pojawiły się w MCS w ostatnich $dni dniach.
+     *
+     * Data = najwcześniejsze pierwsze_widziane po wszystkich źródłach (bez filtra ukrycia).
+     *
+     * @param list<string> $ips
+     *
+     * @return array<string, string> ip => najwcześniejsze pierwsze_widziane
+     */
+    public function ipNowe(array $ips, int $dni): array
+    {
+        $ips = array_values(array_unique(array_filter($ips, static fn (string $ip): bool => $ip !== '')));
+        if ($ips === []) {
+            return [];
+        }
+
+        $wynik = [];
+        foreach (array_chunk($ips, 500) as $paczka) {
+            $wiersze = $this->db->table($this->table)
+                ->select('podmiot, MIN(pierwsze_widziane) AS pierwsze', false)
+                ->where('podmiot_typ', 'ip')
+                ->whereIn('podmiot', $paczka)
+                ->groupBy('podmiot')
+                ->having('MIN(pierwsze_widziane) >= ' . $this->db->escape($this->odDatyOkna($dni)), null, false)
+                ->get()
+                ->getResultArray();
+
+            foreach ($wiersze as $w) {
+                $wynik[(string) $w['podmiot']] = (string) $w['pierwsze'];
+            }
+        }
+
+        return $wynik;
+    }
+
+    /**
      * Distinct źródła widoczne dla IP (bez filtra zrodlo) — do listy filtrów UI.
      *
      * @return list<string>

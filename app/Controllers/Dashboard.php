@@ -6,6 +6,7 @@ use App\Libraries\DashboardFiltry;
 use App\Libraries\Enrichment\SpeedtestSerwis;
 use App\Libraries\KolejkaDnia;
 use App\Libraries\KontekstIp;
+use App\Libraries\OpcjeMcs;
 use App\Libraries\Siec\As198050Matcher;
 use App\Libraries\Siec\RevDns;
 use App\Models\IncydentModel;
@@ -159,7 +160,8 @@ class Dashboard extends BaseController
             $filtry['kategoria'],
             $filtry['port'],
         );
-        $strona = $this->stronaListy($ostatnie, 'dashboard/incydenty');
+        $ostatnie = $this->dolaczNowe($ostatnie, 'podmiot');
+        $strona   = $this->stronaListy($ostatnie, 'dashboard/incydenty');
 
         return view('dashboard/incydenty', $this->daneWidoku('incydenty', array_merge(
             $this->daneFiltrow($ctx, 'dashboard/incydenty'),
@@ -558,6 +560,11 @@ class Dashboard extends BaseController
             $filtry['kategoria'],
             $filtry['port'],
         );
+        $topIp  = $this->dolaczNowe($topIp);
+        $tylkoNowe = $this->request->getGet('nowe') === '1';
+        if ($tylkoNowe) {
+            $topIp = array_values(array_filter($topIp, static fn (array $w): bool => ! empty($w['nowe'])));
+        }
         $topIp  = $this->dolaczKontekstIp($topIp);
         $topIp  = $this->dolaczRevDns($topIp);
         $strona = $this->stronaListy($topIp, $sciezka);
@@ -567,6 +574,8 @@ class Dashboard extends BaseController
             [
                 'blad'           => null,
                 'revDnsWlaczone' => (new RevDns())->jestWlaczone(),
+                'tylkoNowe'      => $tylkoNowe,
+                'noweDni'        => OpcjeMcs::int('mcs.nowe.dni'),
                 'topIp'          => $strona['wiersze'],
                 'pager'          => $strona['pager'],
                 'listaOd'        => $strona['od'],
@@ -576,6 +585,29 @@ class Dashboard extends BaseController
             ],
             $extra,
         );
+    }
+
+    /**
+     * Ustawia `nowe` = IP pierwszy raz w MCS w ostatnich mcs.nowe.dni dniach.
+     *
+     * @param list<array<string, mixed>> $wiersze
+     * @param string                     $poleIp  klucz z adresem IP w wierszu
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function dolaczNowe(array $wiersze, string $poleIp = 'ip'): array
+    {
+        $ips = [];
+        foreach ($wiersze as $w) {
+            $ips[] = (string) ($w[$poleIp] ?? '');
+        }
+        $nowe = model(IncydentModel::class)->ipNowe($ips, OpcjeMcs::int('mcs.nowe.dni'));
+        foreach ($wiersze as &$w) {
+            $w['nowe'] = isset($nowe[(string) ($w[$poleIp] ?? '')]);
+        }
+        unset($w);
+
+        return $wiersze;
     }
 
     private function dolaczKontekstIp(array $wiersze): array

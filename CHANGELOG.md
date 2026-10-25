@@ -12,6 +12,7 @@ Format wzorowany na [Keep a Changelog](https://keepachangelog.com/).
 - Skaner DNSBL dla prefiksów AS: `php spark mcs:dnsbl-skan`, widok `/dashboard/dnsbl`, lokalny resolver, cache wyników.
 - Wtyczka `spamhaus`: lokalne dopasowanie Spamhaus DROP, DROPv6 i ASN-DROP, widok `/dashboard/spamhaus`.
 - Licencja MIT, SECURITY.md, opis projektu w README.
+- Znaczek NEW dla IP widzianego pierwszy raz w MCS (okno `mcs.nowe.dni`, domyślnie 7 dni): listy IP, kolejka dnia, incydenty, `/ip/{ip}`. Filtr „Tylko NEW” na problematycznych IP i w kolejce.
 
 ### Changed
 - Opis i metadane `composer.json` dla projektu MCS.
