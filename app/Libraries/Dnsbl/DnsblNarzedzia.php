@@ -209,6 +209,16 @@ final class DnsblNarzedzia
         return str_replace('{ip}', rawurlencode($ip), $szablon);
     }
 
+    /**
+     * Link z konfiguracji (url_delisting) trafia do href: tylko http(s), inaczej „#” (blokuje javascript:).
+     */
+    public static function bezpiecznyUrl(string $url): string
+    {
+        $url = trim($url);
+
+        return preg_match('#^https?://#i', $url) === 1 ? $url : '#';
+    }
+
     private static function maskaLong(int $m): int
     {
         return $m === 0 ? 0 : ((0xFFFFFFFF << (32 - $m)) & 0xFFFFFFFF);

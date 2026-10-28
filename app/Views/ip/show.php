@@ -659,7 +659,7 @@ $badgeWaga = static function (string $waga): string {
                             kody <?= esc((string) $l['kody']) ?>
                             · od <?= esc((string) $l['pierwszy_raz']) ?> · ostatnio <?= esc((string) $l['ostatni_raz']) ?>
                             <?php if ((string) ($l['url'] ?? '') !== ''): ?>
-                                · <a href="<?= esc((string) $l['url'], 'attr') ?>" target="_blank" rel="noopener noreferrer">Request removal</a>
+                                · <a href="<?= esc(\App\Libraries\Dnsbl\DnsblNarzedzia::bezpiecznyUrl((string) $l['url']), 'attr') ?>" target="_blank" rel="noopener noreferrer">Request removal</a>
                             <?php endif; ?>
                             <?php if ((string) ($l['txt'] ?? '') !== ''): ?>
                                 <div class="text-body-secondary"><?= esc((string) $l['txt']) ?></div>

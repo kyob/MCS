@@ -40,8 +40,8 @@ $pager->setSurroundCount(2);
 
         <?php foreach ($pager->links() as $link) : ?>
             <li class="page-item<?= $link['active'] ? ' active' : '' ?>"<?= $link['active'] ? ' aria-current="page"' : '' ?>>
-                <a class="page-link" href="<?= $link['uri'] ?>">
-                    <?= $link['title'] ?>
+                <a class="page-link" href="<?= esc((string) $link['uri']) ?>">
+                    <?= esc((string) $link['title']) ?>
                 </a>
             </li>
         <?php endforeach ?>

@@ -133,6 +133,7 @@ class AbuseipdbClient
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER     => $headerLines,
+            CURLOPT_CONNECTTIMEOUT => 10,
             CURLOPT_TIMEOUT        => max(1, \App\Libraries\OpcjeMcs::int('mcs.abuseipdb.httpTimeout')),
             CURLOPT_FOLLOWLOCATION => false,
         ]);

@@ -116,7 +116,7 @@ $wiecejHref  = $formAkcja . '?' . http_build_query(array_merge($queryBaza, [
 
 <div class="card border-0 shadow-sm rounded-3 mb-4">
     <div class="card-body">
-        <form class="row g-3 align-items-end" method="get" action="<?= $formAkcja ?>" aria-label="Filtry Speedtest">
+        <form class="row g-3 align-items-end" method="get" action="<?= esc($formAkcja) ?>" aria-label="Filtry Speedtest">
             <div class="col-6 col-md-auto">
                 <label class="form-label mb-1" for="filtr-okno">Okno</label>
                 <select class="form-select" id="filtr-okno" name="okno">
@@ -156,8 +156,8 @@ $wiecejHref  = $formAkcja . '?' . http_build_query(array_merge($queryBaza, [
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtruj
                 </button>
-                <a class="btn btn-outline-secondary" href="<?= $wyczyscHref ?>">Wyczyść</a>
-                <a class="btn btn-outline-primary" href="<?= $presetHref ?>">
+                <a class="btn btn-outline-secondary" href="<?= esc($wyczyscHref) ?>">Wyczyść</a>
+                <a class="btn btn-outline-primary" href="<?= esc($presetHref) ?>">
                     Preset ≥900
                 </a>
             </div>
@@ -339,7 +339,7 @@ $wiecejHref  = $formAkcja . '?' . http_build_query(array_merge($queryBaza, [
                         <p class="text-body-secondary small mb-0">
                             Pokazano <?= $pokazano ?> z <?= $liczbaPasuj ?>.
                         </p>
-                        <a class="btn btn-sm btn-outline-primary" href="<?= $wiecejHref ?>">Więcej</a>
+                        <a class="btn btn-sm btn-outline-primary" href="<?= esc($wiecejHref) ?>">Więcej</a>
                     </div>
                 <?php endif; ?>
             <?php endif; ?>

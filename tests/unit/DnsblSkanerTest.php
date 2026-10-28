@@ -147,4 +147,13 @@ final class DnsblSkanerTest extends CIUnitTestCase
         $this->assertTrue(N::cidrZawieraCidr('91.231.70.0/23', '91.231.71.0/24'));
         $this->assertFalse(N::cidrZawieraCidr('91.231.70.0/24', '91.231.70.0/23'));
     }
+
+    public function testBezpiecznyUrlPuszczaTylkoHttp(): void
+    {
+        $this->assertSame('https://spamcop.net/w3m?ip=1.2.3.4', N::bezpiecznyUrl(' https://spamcop.net/w3m?ip=1.2.3.4 '));
+        $this->assertSame('http://x.example/', N::bezpiecznyUrl('http://x.example/'));
+        $this->assertSame('#', N::bezpiecznyUrl('javascript:alert(1)'));
+        $this->assertSame('#', N::bezpiecznyUrl('data:text/html,x'));
+        $this->assertSame('#', N::bezpiecznyUrl(''));
+    }
 }

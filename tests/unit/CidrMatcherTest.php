@@ -56,4 +56,15 @@ final class CidrMatcherTest extends CIUnitTestCase
         $this->assertSame([], iterator_to_array($m->enumerujIpv4('10.0.0.0/8'), false));
         $this->assertSame(['203.0.113.9'], iterator_to_array($m->enumerujIpv4('203.0.113.9'), false));
     }
+
+    public function testMaskaNienumerycznaNieDopasowujeNiczego(): void
+    {
+        $m = new CidrMatcher();
+
+        foreach (['10.0.0.0/x', '10.0.0.0/', '10.0.0.0/-1', '10.0.0.0/1a', '10.0.0.0/ 8x'] as $zly) {
+            $this->assertFalse($m->ipWCidr('203.0.113.5', $zly), $zly);
+        }
+        $this->assertFalse($m->ipWCidr('2001:db8::1', '2001:db8::/x'));
+        $this->assertTrue($m->ipWCidr('203.0.113.5', '0.0.0.0/0'), 'jawne /0 nadal działa');
+    }
 }

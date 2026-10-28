@@ -283,7 +283,8 @@ final class OpcjeMcsTest extends CIUnitTestCase
         $this->assertSame($uuid, OpcjeMcs::waliduj('mcs.snds.key', strtoupper($uuid))['wartosc']);
         $this->assertTrue(OpcjeMcs::waliduj('mcs.snds.key', '')['ok']);
         $this->assertFalse(OpcjeMcs::waliduj('mcs.snds.key', 'nie-uuid')['ok']);
-        $this->assertSame('a1b2…7890', OpcjeMcs::skrotSekretu($uuid));
+        $this->assertSame('…7890', OpcjeMcs::skrotSekretu($uuid));
+        $this->assertSame('••••', OpcjeMcs::skrotSekretu('abcdefghijkl'));
 
         $this->ustawEnv('mcs.snds.key', '11111111-2222-3333-4444-555555555555');
         OpcjeMcs::ustawModel($this->modelZ(['mcs.snds.key' => $uuid]));

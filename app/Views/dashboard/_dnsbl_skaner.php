@@ -206,7 +206,7 @@ $statusPl  = [
                                     <?php else: ?>
                                         <?php foreach (array_slice($tr, 0, 10) as $t): ?>
                                             <a class="btn btn-sm btn-outline-danger mb-1"
-                                               href="<?= esc(\App\Libraries\Dnsbl\DnsblNarzedzia::urlDelisting((string) $s['url'], (string) $t['ip']), 'attr') ?>"
+                                               href="<?= esc(\App\Libraries\Dnsbl\DnsblNarzedzia::bezpiecznyUrl(\App\Libraries\Dnsbl\DnsblNarzedzia::urlDelisting((string) $s['url'], (string) $t['ip'])), 'attr') ?>"
                                                target="_blank" rel="noopener noreferrer"
                                                title="<?= esc((string) ($t['txt'] ?? ''), 'attr') ?>">
                                                 Request removal <?= esc((string) $t['ip']) ?>
@@ -264,7 +264,7 @@ $statusPl  = [
                                     <td class="small">
                                         <?php foreach ($w['listy'] as $l): ?>
                                             <a class="badge <?= $l['info'] ? 'text-bg-secondary' : 'text-bg-danger' ?> text-decoration-none me-1"
-                                               href="<?= esc((string) $l['url'], 'attr') ?>" target="_blank" rel="noopener noreferrer"
+                                               href="<?= esc(\App\Libraries\Dnsbl\DnsblNarzedzia::bezpiecznyUrl((string) $l['url']), 'attr') ?>" target="_blank" rel="noopener noreferrer"
                                                title="Request removal (<?= esc((string) $l['kody'], 'attr') ?>)"><?= esc((string) $l['kod']) ?></a>
                                         <?php endforeach; ?>
                                         <?php if ($w['listy'] === []): ?><span class="text-body-secondary">—</span><?php endif; ?>

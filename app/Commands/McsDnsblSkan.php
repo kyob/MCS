@@ -133,7 +133,10 @@ class McsDnsblSkan extends BaseCommand
         $plik = WRITEPATH . 'cache/mcs-dnsbl-skan.lock';
         $fh   = @fopen($plik, 'c+e');
         if ($fh === false) {
-            return true;
+            // Bez blokady dwa skany mogłyby ruszyć równolegle, więc nie startujemy.
+            CLI::error('[dnsbl-skan] nie można otworzyć pliku blokady ' . $plik . ' (uprawnienia katalogu writable/cache).');
+
+            return false;
         }
         if (! flock($fh, LOCK_EX | LOCK_NB)) {
             fclose($fh);

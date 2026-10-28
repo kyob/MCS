@@ -47,6 +47,11 @@ final class CidrMatcher
         $subnet          = trim($subnet);
         $mask            = trim($mask);
 
+        // Maska nienumeryczna (np. „/x”) nie może przejść przez (int) jako /0 i dopasować wszystko.
+        if ($mask === '' || ! ctype_digit($mask)) {
+            return false;
+        }
+
         if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)
             && filter_var($subnet, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)
         ) {

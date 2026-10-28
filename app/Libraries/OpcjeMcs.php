@@ -454,11 +454,12 @@ final class OpcjeMcs
         if ($v === '') {
             return '';
         }
-        if (strlen($v) < 10) {
+        // Krótki klucz byłby widoczny prawie w całości, więc od 16 znaków i tylko ostatnie 4.
+        if (strlen($v) < 16) {
             return '••••';
         }
 
-        return substr($v, 0, 4) . '…' . substr($v, -4);
+        return '…' . substr($v, -4);
     }
 
     /**
