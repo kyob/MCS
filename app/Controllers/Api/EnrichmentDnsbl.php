@@ -18,6 +18,10 @@ class EnrichmentDnsbl extends BaseController
         $forceRaw = $this->request->getGet('force');
         $force    = filter_var($forceRaw, FILTER_VALIDATE_BOOLEAN);
 
+        if ($force && ($odmowa = $this->odmowaLimituForceApi()) !== null) {
+            return $odmowa;
+        }
+
         $wynik = (new DnsblSerwis())->sprawdz($ip, $force);
 
         if (! $wynik['ok']) {

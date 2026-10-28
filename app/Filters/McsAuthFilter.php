@@ -24,17 +24,24 @@ class McsAuthFilter implements FilterInterface
 
         if ($id !== null) {
             $user = model(UserModel::class)->find($id);
-            if (is_array($user) && $this->jestAktywny($user)) {
+            // Znacznik hasła: zmiana hasła unieważnia otwarte sesje tego konta.
+            // Sesje sprzed wdrożenia (bez znacznika) dostają go przy pierwszym żądaniu.
+            $znacznik = is_array($user) ? hash('sha256', (string) ($user['password_hash'] ?? '')) : '';
+            $wSesji   = $sesja->get('mcs_user_pw');
+            $hasloOk  = $wSesji === null || hash_equals($znacznik, (string) $wSesji);
+
+            if (is_array($user) && $this->jestAktywny($user) && $hasloOk) {
                 $sesja->set([
                     'mcs_user_id'    => $user['id'],
                     'mcs_user_email' => $user['email'],
                     'mcs_user_rola'  => $user['rola'],
+                    'mcs_user_pw'    => $znacznik,
                 ]);
 
                 return null;
             }
 
-            $sesja->remove(['mcs_user_id', 'mcs_user_email', 'mcs_user_rola']);
+            $sesja->remove(['mcs_user_id', 'mcs_user_email', 'mcs_user_rola', 'mcs_user_pw']);
         }
 
         if ($request instanceof IncomingRequest && $request->isAJAX()) {

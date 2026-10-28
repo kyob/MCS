@@ -55,6 +55,7 @@ class Auth extends BaseController
             'mcs_user_id'    => $user['id'],
             'mcs_user_email' => $user['email'],
             'mcs_user_rola'  => $user['rola'],
+            'mcs_user_pw'    => hash('sha256', (string) $user['password_hash']),
         ]);
 
         $cel = session()->get('mcs_po_logowaniu');

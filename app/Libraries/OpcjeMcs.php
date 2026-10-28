@@ -70,6 +70,12 @@ final class OpcjeMcs
         $d['mcs.problemyIp.oknoTimelineDni'] = [
             'grupa' => 'Przegląd i badge', 'etykieta' => 'Problematyczne IP — oś czasu (dni)', 'typ' => 'int', 'domyslna' => '14', 'min' => 1, 'max' => 90,
         ];
+        $d['mcs.force.limitUzytkownik'] = [
+            'grupa' => 'Przegląd i badge', 'etykieta' => 'Odśwież (force) płatnych API — limit na użytkownika (na godzinę)', 'typ' => 'int', 'domyslna' => '30', 'min' => 1, 'max' => 1000,
+        ];
+        $d['mcs.force.limitApi'] = [
+            'grupa' => 'Przegląd i badge', 'etykieta' => 'API enrichment z tokenem: force=1 — limit łączny (na godzinę)', 'typ' => 'int', 'domyslna' => '60', 'min' => 1, 'max' => 10000,
+        ];
         $d['mcs.nowe.dni'] = [
             'grupa' => 'Przegląd i badge', 'etykieta' => 'Znaczek NEW — IP pierwszy raz w MCS w ostatnich (dni)', 'typ' => 'int', 'domyslna' => '7', 'min' => 1, 'max' => 90,
         ];

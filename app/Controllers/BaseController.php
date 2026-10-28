@@ -42,4 +42,23 @@ abstract class BaseController extends Controller
         // Preload any models, libraries, etc, here.
         $this->session = service('session');
     }
+
+    /**
+     * API z tokenem: 429, gdy wyczerpany łączny limit force=1 (płatne API). Null = można iść dalej.
+     */
+    protected function odmowaLimituForceApi(): ?ResponseInterface
+    {
+        if ((new \App\Libraries\LimitForce())->pozwolApi()) {
+            return null;
+        }
+
+        return $this->response
+            ->setStatusCode(429)
+            ->setHeader('Retry-After', (string) \App\Libraries\LimitForce::retryAfter(\App\Libraries\OpcjeMcs::int('mcs.force.limitApi')))
+            ->setJSON([
+                'ok'   => false,
+                'blad' => 'Za dużo odświeżeń (force=1). Spróbuj później.',
+                'tryb' => 'limit_force',
+            ]);
+    }
 }

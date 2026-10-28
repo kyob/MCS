@@ -100,4 +100,41 @@ final class McsAuthFilterTest extends CIUnitTestCase
 
         return new IncomingRequest($config, $uri, 'php://input', new \CodeIgniter\HTTP\UserAgent());
     }
+
+    public function testZmianaHaslaUniewaznaOtwartaSesje(): void
+    {
+        $model = model(UserModel::class);
+        $id    = (int) $model->insert([
+            'email'         => 'ops@example.local',
+            'password_hash' => password_hash('stare-haslo1', PASSWORD_DEFAULT),
+            'rola'          => 'operator',
+            'aktywny'       => 1,
+        ], true);
+        session()->set(['mcs_user_id' => $id]);
+
+        $this->assertNull((new McsAuthFilter())->before($this->zrobRequest('/')));
+        $this->assertNotNull(session()->get('mcs_user_pw'));
+
+        $model->update($id, ['password_hash' => password_hash('nowe-haslo12', PASSWORD_DEFAULT)]);
+
+        $wynik = (new McsAuthFilter())->before($this->zrobRequest('/'));
+
+        $this->assertInstanceOf(\CodeIgniter\HTTP\RedirectResponse::class, $wynik);
+        $this->assertNull(session()->get('mcs_user_id'));
+        $this->assertNull(session()->get('mcs_user_pw'));
+    }
+
+    public function testSesjaSprzedWdrozeniaBezZnacznikaDostajeGoIDziala(): void
+    {
+        $id = (int) model(UserModel::class)->insert([
+            'email'         => 'stara@example.local',
+            'password_hash' => password_hash('sekretne1', PASSWORD_DEFAULT),
+            'rola'          => 'operator',
+            'aktywny'       => 1,
+        ], true);
+        session()->set(['mcs_user_id' => $id]);
+
+        $this->assertNull((new McsAuthFilter())->before($this->zrobRequest('/')));
+        $this->assertNotNull(session()->get('mcs_user_pw'));
+    }
 }

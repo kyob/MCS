@@ -11,6 +11,7 @@ use App\Libraries\Enrichment\LmsMapowanieSerwis;
 use App\Libraries\Enrichment\SpamratsClient;
 use App\Libraries\Enrichment\SpamratsSerwis;
 use App\Libraries\Enrichment\SpeedtestSerwis;
+use App\Libraries\LimitForce;
 use App\Libraries\OpcjeMcs;
 use App\Libraries\ProblemyIp;
 use App\Libraries\Siec\As198050Matcher;
@@ -326,7 +327,20 @@ class Ip extends BaseController
             ]);
         }
 
-        $wynik = $serwis->sprawdz($ip, $this->czyForce());
+        $force = $this->czyForce();
+        if ($force && ! (new LimitForce())->pozwolUzytkownik((string) session()->get('mcs_user_email'))) {
+            return $this->odpowiedzZCsrf()
+                ->setStatusCode(429)
+                ->setHeader('Retry-After', (string) LimitForce::retryAfter(OpcjeMcs::int('mcs.force.limitUzytkownik')))
+                ->setJSON([
+                    'ok'   => false,
+                    'blad' => 'Za dużo odświeżeń (force) płatnych API. Spróbuj później.',
+                    'ip'   => $ip,
+                    'tryb' => 'limit_force',
+                ]);
+        }
+
+        $wynik = $serwis->sprawdz($ip, $force);
 
         if (! $wynik['ok']) {
             $kod = ($trybBrakuKonfiguracji !== '' && $wynik['tryb'] === $trybBrakuKonfiguracji) ? 503 : 400;

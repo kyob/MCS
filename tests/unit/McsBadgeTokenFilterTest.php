@@ -13,7 +13,7 @@ use Config\Mcs;
  */
 final class McsBadgeTokenFilterTest extends CIUnitTestCase
 {
-    private string $token = 'test-badge-token-nie-prod';
+    private string $token = 'test-badge-token-nie-prod-0123456789';
 
     protected function setUp(): void
     {
@@ -77,5 +77,22 @@ final class McsBadgeTokenFilterTest extends CIUnitTestCase
         $uri = new SiteURI($config, 'api/badge');
 
         return new IncomingRequest($config, $uri, 'php://input', new \CodeIgniter\HTTP\UserAgent());
+    }
+
+    public function testTokenPrzykladowyIKrotkiNieOtwieraApi(): void
+    {
+        foreach (['ZMIEN_TOKEN', 'zmien_token', 'krotki-token', str_repeat('a', 31)] as $slaby) {
+            $this->assertFalse(McsBadgeTokenFilter::tokenDopuszczalny($slaby), $slaby);
+
+            config(Mcs::class)->badgeToken = $slaby;
+            $request = $this->zrobRequest();
+            $request->setHeader('Authorization', 'Bearer ' . $slaby);
+            $wynik = (new McsBadgeTokenFilter())->before($request);
+
+            $this->assertInstanceOf(Response::class, $wynik);
+            $this->assertSame(401, $wynik->getStatusCode());
+        }
+
+        $this->assertTrue(McsBadgeTokenFilter::tokenDopuszczalny(str_repeat('a', 32)));
     }
 }

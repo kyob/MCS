@@ -7,7 +7,9 @@ use CodeIgniter\Throttle\ThrottlerInterface;
 /**
  * Limit prób logowania: osobny kubełek tokenów dla adresu IP i dla e-maila.
  *
- * E-mail: 5 prób na 10 minut (Throttler CI4: 5 tokenów, odnawianie 1 token / 120 s).
+ * Para e-mail + IP: 5 prób na 10 minut (Throttler CI4: 5 tokenów, odnawianie 1 token / 120 s).
+ * Obca osoba z innego adresu nie zablokuje więc konta ofiary.
+ * E-mail łącznie (wszystkie adresy): 30 prób na 10 minut, przeciw rozproszonemu zgadywaniu.
  * IP: 20 prób na 10 minut. Wyższy limit, bo wielu pracowników może wychodzić
  * przez jeden adres NAT.
  * Liczone są wszystkie próby (także udane), żeby nie ujawniać, czy konto istnieje.
@@ -16,6 +18,7 @@ class LimitLogowania
 {
     public const PROBY    = 5;
     public const PROBY_IP = 20;
+    public const PROBY_EMAIL_LACZNIE = 30;
     public const OKNO     = 600;
 
     private ThrottlerInterface $throttler;
@@ -40,7 +43,11 @@ class LimitLogowania
             return true;
         }
 
-        return $this->throttler->check(self::klucz('em', $email), self::PROBY, self::OKNO);
+        if (! $this->throttler->check(self::klucz('em', $email . '|' . $ip), self::PROBY, self::OKNO)) {
+            return false;
+        }
+
+        return $this->throttler->check(self::klucz('emall', $email), self::PROBY_EMAIL_LACZNIE, self::OKNO);
     }
 
     /**

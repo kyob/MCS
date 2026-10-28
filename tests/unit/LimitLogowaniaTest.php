@@ -59,11 +59,36 @@ final class LimitLogowaniaTest extends CIUnitTestCase
         $limit = new LimitLogowania($this->throttler);
 
         for ($i = 0; $i < LimitLogowania::PROBY; $i++) {
-            // Różne IP: liczy się kubełek e-maila.
-            $this->assertTrue($limit->pozwol('198.51.100.' . $i, 'Ofiara@example.net'));
+            $this->assertTrue($limit->pozwol('198.51.100.1', 'Ofiara@example.net'));
         }
-        $this->assertFalse($limit->pozwol('198.51.100.99', 'ofiara@example.net'));
-        $this->assertTrue($limit->pozwol('198.51.100.99', 'inny@example.net'));
+        $this->assertFalse($limit->pozwol('198.51.100.1', 'ofiara@example.net'));
+        $this->assertTrue($limit->pozwol('198.51.100.1', 'inny@example.net'));
+    }
+
+    public function testObcyAdresNieBlokujeKontaOfiary(): void
+    {
+        $limit = new LimitLogowania($this->throttler);
+
+        for ($i = 0; $i < LimitLogowania::PROBY + 3; $i++) {
+            $limit->pozwol('203.0.113.50', 'ofiara@example.net');
+        }
+
+        $this->assertTrue($limit->pozwol('198.51.100.7', 'ofiara@example.net'));
+    }
+
+    public function testRozproszoneZgadywanieBlokujeEmailLacznie(): void
+    {
+        $limit = new LimitLogowania($this->throttler);
+
+        $dozwolone = 0;
+        for ($i = 1; $i <= LimitLogowania::PROBY_EMAIL_LACZNIE + 10; $i++) {
+            if ($limit->pozwol('198.51.100.' . $i, 'ofiara@example.net')) {
+                $dozwolone++;
+            }
+        }
+
+        $this->assertSame(LimitLogowania::PROBY_EMAIL_LACZNIE, $dozwolone);
+        $this->assertFalse($limit->pozwol('198.51.100.200', 'ofiara@example.net'));
     }
 
     public function testPiecProbPotemBlokadaPoIp(): void

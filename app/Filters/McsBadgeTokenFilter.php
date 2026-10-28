@@ -20,7 +20,7 @@ class McsBadgeTokenFilter implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         $oczekiwany = (string) config(Mcs::class)->badgeToken;
-        if ($oczekiwany === '') {
+        if (! self::tokenDopuszczalny($oczekiwany)) {
             return $this->odrzuc();
         }
 
@@ -38,6 +38,14 @@ class McsBadgeTokenFilter implements FilterInterface
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
         return null;
+    }
+
+    /**
+     * Fail-closed: pusty, krótki (< 32 znaki) lub wartość z .env.example nie otwiera API.
+     */
+    public static function tokenDopuszczalny(string $token): bool
+    {
+        return strlen($token) >= 32 && strcasecmp($token, 'ZMIEN_TOKEN') !== 0;
     }
 
     private function wyciagnijToken(RequestInterface $request): ?string
