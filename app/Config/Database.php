@@ -42,6 +42,9 @@ class Database extends Config
         'strictOn'     => false,
         'failover'     => [],
         'port'         => 3306,
+        // PostgreSQL: sesja zawsze w UTC (granice okien dat i dzień w osi czasu liczone w UTC),
+        // niezależnie od ustawienia timezone serwera. Dla MySQL i SQLite ignorowane.
+        'options'      => '-c timezone=UTC',
         'numberNative' => false,
         'foundRows'    => false,
         'dateFormat'   => [
