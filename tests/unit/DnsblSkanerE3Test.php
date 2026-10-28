@@ -62,6 +62,29 @@ final class DnsblSkanerE3Test extends CIUnitTestCase
         }
     }
 
+    public function testStrefaPrzerwanaNieDajeCzystychIp(): void
+    {
+        // spamcop odpowiada kodem błędu strefy przy pierwszym IP: strefa przerwana, reszta IP nieodpytana.
+        $silnik = new FakeSilnikPrzerywajacy(['spamcop|91.231.70.0' => ['127.255.255.254']]);
+        $skaner = new Skaner($this->db, $silnik);
+
+        $w = $skaner->wykonaj($skaner->utworzSkan(['91.231.70.0/30'], null, 'cli', 'test'));
+
+        $this->assertSame(4, $w['liczba_ip']);
+        $this->assertSame(0, $w['czyste'], 'IP nieodpytane przez przerwaną strefę nie są czyste');
+        $this->assertGreaterThan(0, $w['bledy']);
+    }
+
+    public function testBezListingowWszystkieIpCzyste(): void
+    {
+        $skaner = new Skaner($this->db, new FakeSilnik([]));
+
+        $w = $skaner->wykonaj($skaner->utworzSkan(['91.231.70.0/30'], null, 'cli', 'test'));
+
+        $this->assertSame(4, $w['czyste']);
+        $this->assertSame(0, $w['listowane']);
+    }
+
     // --- diff nowy / zdjęty (pełny przebieg Skanera) ---
 
     public function testSkanZapisujeNowyIZdjetyListingOrazZdarzenia(): void
@@ -342,6 +365,58 @@ final class FakeSilnik extends SilnikZapytan
             }
             if (str_starts_with($k, 't')) {
                 $this->klucze[] = $k;
+            }
+            $out[$k] = $w;
+            if ($poOdpowiedzi !== null) {
+                $poOdpowiedzi($k, $w, $z);
+            }
+        }
+
+        return $out;
+    }
+}
+
+/**
+ * Jak FakeSilnik, ale respektuje anulujGrupe(): zapytania anulowanej strefy nie dostają odpowiedzi.
+ */
+final class FakeSilnikPrzerywajacy extends SilnikZapytan
+{
+    /** @var array<string, true> */
+    private array $anulowaneGrupy = [];
+
+    /**
+     * @param array<string, list<string>> $odpowiedzi klucz zapytania => kody A
+     */
+    public function __construct(private array $odpowiedzi)
+    {
+        parent::__construct();
+    }
+
+    public function anulujGrupe(string $grupa): void
+    {
+        $this->anulowaneGrupy[$grupa] = true;
+        parent::anulujGrupe($grupa);
+    }
+
+    public function wykonaj(array $zadania, ?callable $poOdpowiedzi = null): array
+    {
+        $out = [];
+        foreach ($zadania as $z) {
+            $k      = $z['klucz'];
+            $kontrol = str_starts_with($k, 't+|') || str_starts_with($k, 't-|');
+            if (! $kontrol && isset($this->anulowaneGrupy[$z['grupa']])) {
+                continue;
+            }
+            if ($z['typ'] === DnsPakiet::TYP_TXT) {
+                $w = SilnikZapytan::wynik('odp', 0, [], ['listed ' . $k], '');
+            } elseif (str_starts_with($k, 't+|')) {
+                $w = SilnikZapytan::wynik('odp', 0, ['127.0.0.2'], [], '');
+            } elseif (str_starts_with($k, 't-|')) {
+                $w = SilnikZapytan::wynik('odp', DnsPakiet::RCODE_NXDOMAIN, [], [], '');
+            } else {
+                $w = isset($this->odpowiedzi[$k])
+                    ? SilnikZapytan::wynik('odp', 0, $this->odpowiedzi[$k], [], '')
+                    : SilnikZapytan::wynik('odp', DnsPakiet::RCODE_NXDOMAIN, [], [], '');
             }
             $out[$k] = $w;
             if ($poOdpowiedzi !== null) {

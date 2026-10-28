@@ -28,7 +28,7 @@ class McsPobierz extends BaseCommand
         if ($cel === null || $cel === '') {
             CLI::error('Podaj źródło: php spark mcs:pobierz shadowserver');
 
-            return;
+            return EXIT_ERROR;
         }
 
         $wyniki = (new PobierzSerwis())->uruchom((string) $cel);
@@ -54,5 +54,8 @@ class McsPobierz extends BaseCommand
                     break;
             }
         }
+
+        // Kod wyjścia != 0 przy błędzie wtyczki: cron i monitoring widzą awarię.
+        return PobierzSerwis::kodWyjscia($wyniki);
     }
 }

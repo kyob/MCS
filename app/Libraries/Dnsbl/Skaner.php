@@ -363,6 +363,8 @@ class Skaner
         }
 
         $zad = [];
+        /** @var array<string, array<string, true>> $zapytano strefa => klucze, które zaplanowano do odpytania */
+        $zapytano = [];
         foreach ($strefy as $s) {
             if ($info[$s['kod']]['status'] !== 'ok') {
                 continue;
@@ -380,6 +382,7 @@ class Skaner
                     'typ'   => DnsPakiet::TYP_A,
                 ];
                 $info[$s['kod']]['zapytan']++;
+                $zapytano[$s['kod']][$kluczIp] = true;
             }
         }
         $this->aktualizuj($skanId, ['zapytan_plan' => count($zad), 'liczba_ip' => count($ips)]);
@@ -531,9 +534,24 @@ class Skaner
             }
         }
         unset($i);
+        // „Czyste” = potwierdzone NXDOMAIN w każdej odpytywanej strefie (poza informacyjnymi i /24).
+        // Strefa przerwana w trakcie skanu nie potwierdziła pozostałych IP, więc nie są czyste.
         $czysteIp = 0;
         foreach ($ips as $ip) {
-            if (! isset($ipListed[$ip]) && ! isset($ipBlad[$ip])) {
+            if (isset($ipListed[$ip]) || isset($ipBlad[$ip])) {
+                continue;
+            }
+            $potwierdzone = true;
+            foreach ($info as $kod => $i) {
+                if ($i['informacyjna'] || $i['typ'] === 'siec24' || ! isset($zapytano[$kod][$ip])) {
+                    continue;
+                }
+                if (! isset($czyste[$kod][$ip])) {
+                    $potwierdzone = false;
+                    break;
+                }
+            }
+            if ($potwierdzone) {
                 $czysteIp++;
             }
         }

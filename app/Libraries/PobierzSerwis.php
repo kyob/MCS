@@ -26,6 +26,24 @@ class PobierzSerwis
     }
 
     /**
+     * Kod wyjścia dla CLI: EXIT_ERROR, gdy którekolwiek źródło zakończyło się błędem.
+     * Pominięte i zajęte źródła nie są błędem.
+     *
+     * @param list<array{zrodlo?: string, status?: string, msg?: string}> $wyniki
+     */
+    public static function kodWyjscia(array $wyniki): int
+    {
+        foreach ($wyniki as $w) {
+            $status = (string) ($w['status'] ?? '');
+            if ($status !== 'ok' && $status !== 'pominiety' && $status !== 'zajety') {
+                return EXIT_ERROR;
+            }
+        }
+
+        return EXIT_SUCCESS;
+    }
+
+    /**
      * @return list<array{zrodlo: string, status: string, msg: string}>
      *         status: ok|blad|pominiety|zajety
      */
@@ -104,6 +122,15 @@ class PobierzSerwis
             }
             $health = $plugin->health();
             $msg    = trim((string) ($health['msg'] ?? ''));
+
+            // Wtyczka, która nie rzuciła wyjątku, ale zgłasza health ok=false, to też awaria.
+            if (($health['ok'] ?? true) === false) {
+                return [
+                    'zrodlo' => $zrodlo,
+                    'status' => 'blad',
+                    'msg'    => $msg !== '' ? $msg : 'health: błąd bez komunikatu',
+                ];
+            }
 
             return [
                 'zrodlo' => $zrodlo,

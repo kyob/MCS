@@ -161,6 +161,31 @@ final class PobierzSerwisTest extends CIUnitTestCase
         $this->assertSame('pominięto (następne po 2026-10-15 03:12 UTC)', $wyniki[0]['msg']);
     }
 
+    public function testHealthFalseBezWyjatkuToBlad(): void
+    {
+        $this->db->table('mcs_pluginy')->insert(['zrodlo' => 'chory', 'nazwa' => 'Chory', 'import_wstrzymany' => 0, 'ukryty_w_ui' => 0]);
+        $this->zapiszPlugin('chory', false, '', false);
+
+        $wyniki = $this->serwis()->uruchom('chory');
+
+        $this->assertSame('blad', $wyniki[0]['status']);
+        $this->assertSame('chory-ok', $wyniki[0]['msg']);
+    }
+
+    public function testKodWyjsciaPrzyBleduIPominieciu(): void
+    {
+        $this->assertSame(EXIT_SUCCESS, PobierzSerwis::kodWyjscia([
+            ['zrodlo' => 'a', 'status' => 'ok', 'msg' => ''],
+            ['zrodlo' => 'b', 'status' => 'pominiety', 'msg' => ''],
+            ['zrodlo' => 'c', 'status' => 'zajety', 'msg' => ''],
+        ]));
+        $this->assertSame(EXIT_ERROR, PobierzSerwis::kodWyjscia([
+            ['zrodlo' => 'a', 'status' => 'ok', 'msg' => ''],
+            ['zrodlo' => 'b', 'status' => 'blad', 'msg' => 'x'],
+        ]));
+        $this->assertSame(EXIT_SUCCESS, PobierzSerwis::kodWyjscia([]));
+    }
+
     public function testZlecWTleZlecaZarejestrowaneZrodlo(): void
     {
         $s = $this->serwisTlo();
@@ -223,13 +248,14 @@ final class PobierzSerwisTest extends CIUnitTestCase
         );
     }
 
-    private function zapiszPlugin(string $zrodlo, bool $rzucBlad, string $dodatek = ''): void
+    private function zapiszPlugin(string $zrodlo, bool $rzucBlad, string $dodatek = '', bool $healthOk = true): void
     {
         $dir = $this->katalogPluginow . '/' . $zrodlo;
         mkdir($dir, 0777, true);
         $cialo = $rzucBlad
             ? "throw new \\RuntimeException('boom');"
             : '// ok';
+        $healthOkTekst = $healthOk ? 'true' : 'false';
 
         file_put_contents($dir . '/Plugin.php', <<<PHP
 <?php
@@ -252,7 +278,7 @@ class Plugin implements SourcePluginInterface
 
     public function health(): array
     {
-        return ['ok' => true, 'msg' => '{$zrodlo}-ok'];
+        return ['ok' => {$healthOkTekst}, 'msg' => '{$zrodlo}-ok'];
     }
 
 {$dodatek}
