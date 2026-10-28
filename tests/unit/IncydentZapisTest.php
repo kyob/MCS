@@ -162,4 +162,39 @@ final class IncydentZapisTest extends CIUnitTestCase
         $this->assertSame('ip', $inc['podmiot_typ']);
         $this->assertSame('91.231.70.0', $inc['podmiot']);
     }
+
+    /**
+     * Po błędzie zapisu (tu: brak tabeli obserwacji) kolejny zapis na tym samym połączeniu
+     * ma działać. transStrict zostawia transStatus=false, jeśli go nie wyzerować.
+     */
+    public function testZapisPoBledzieNaTymSamymPolaczeniuDziala(): void
+    {
+        $zapis = new IncydentZapis($this->db);
+        $dane  = [
+            'zrodlo'           => 'shadowserver',
+            'klucz_dedupu'     => '198.51.100.20|open|22',
+            'podmiot'          => '198.51.100.20',
+            'zaobserwowano_at' => '2026-09-11 10:00:00+00',
+            'waga'             => 'high',
+            'kategoria'        => 'exposure',
+            'tytul'            => 'test',
+        ];
+
+        $obserwacje = $this->db->prefixTable('mcs_obserwacje');
+        $this->db->query("ALTER TABLE {$obserwacje} RENAME TO {$obserwacje}_x");
+
+        try {
+            $zapis->zapisz($dane);
+            $this->fail('Oczekiwano wyjątku przy braku tabeli obserwacji.');
+        } catch (\Throwable $e) {
+            $this->assertNotSame('', $e->getMessage());
+        }
+
+        $this->db->query("ALTER TABLE {$obserwacje}_x RENAME TO {$obserwacje}");
+
+        $wynik = $zapis->zapisz($dane);
+
+        $this->assertGreaterThan(0, $wynik['obserwacja_id']);
+        $this->assertSame(1, (int) $this->db->table('mcs_obserwacje')->countAllResults());
+    }
 }

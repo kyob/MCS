@@ -144,6 +144,9 @@ class IncydentZapis
             if ($this->db->transStatus() !== false) {
                 $this->db->transRollback();
             }
+            // Przy błędzie zapytania CI4 sam cofa transakcję, ale (transStrict) zostawia
+            // transStatus=false. Bez resetu każdy kolejny zapis na tym połączeniu pada.
+            $this->db->resetTransStatus();
             throw $e;
         }
     }
