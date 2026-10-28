@@ -7,7 +7,9 @@ use App\Libraries\Enrichment\DnsblClient;
 use App\Libraries\Enrichment\DnsblSerwis;
 use App\Libraries\ImportKoperta;
 use App\Libraries\SourcePluginInterface;
+use App\Libraries\OpcjeMcs;
 use App\Models\PluginModel;
+use Config\Database;
 use RuntimeException;
 
 /**
@@ -41,7 +43,20 @@ class Plugin implements SourcePluginInterface
     {
         $e3 = $this->krokSkanera();
 
-        $zakres   = $this->serwis->wybierzZakres();
+        $zakres = $this->serwis->wybierzZakres();
+
+        // Stary skan odpytuje wszystkie IP (4805 IP × strefy, ok. 23 min), więc nie może iść przy
+        // każdym przebiegu crona. Odstęp liczony osobno dla zakresu lms i as.
+        $interwal = max(1, OpcjeMcs::int('mcs.dnsbl.skanLmsCoGodzin'));
+        if ($zakres !== 'none' && ! self::czyPoraNaStarySkan($zakres, $this->ostatnieUdaneSkany(), time(), $interwal)) {
+            $this->aktualizujHealth(
+                ! $e3['fala'],
+                $this->zHealthSkanera('skan ' . $zakres . ': pominięto (odstęp ' . $interwal . ' h)', $e3),
+            );
+
+            return;
+        }
+
         $importId = $this->koperta->rozpocznij($this->zrodlo(), null, null, [
             'opis'   => 'skan DNSBL zakres=' . $zakres,
             'zakres' => $zakres,
@@ -74,6 +89,51 @@ class Plugin implements SourcePluginInterface
             $this->aktualizujHealth(false, $e->getMessage());
             throw $e instanceof RuntimeException ? $e : new RuntimeException($e->getMessage(), 0, $e);
         }
+    }
+
+    /**
+     * Czy minął odstęp od ostatniego udanego skanu tego samego zakresu (5 min luzu na rozjazd crona).
+     *
+     * @param list<array{ts: int, zakres: string}> $ostatnieUdane od najnowszego
+     */
+    public static function czyPoraNaStarySkan(string $zakres, array $ostatnieUdane, int $teraz, int $interwalGodzin): bool
+    {
+        foreach ($ostatnieUdane as $s) {
+            if ($s['zakres'] === $zakres) {
+                return $teraz - $s['ts'] >= max(1, $interwalGodzin) * 3600 - 300;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Ostatnie udane przebiegi starego skanu (mcs_importy), od najnowszego.
+     *
+     * @return list<array{ts: int, zakres: string}>
+     */
+    private function ostatnieUdaneSkany(): array
+    {
+        $wiersze = Database::connect()->table('mcs_importy')
+            ->select('rozpoczeto_at, meta_json')
+            ->where('zrodlo', $this->zrodlo())
+            ->where('status', 'ok')
+            ->orderBy('rozpoczeto_at', 'DESC')
+            ->limit(20)
+            ->get()
+            ->getResultArray();
+
+        $out = [];
+        foreach ($wiersze as $w) {
+            $meta   = json_decode((string) ($w['meta_json'] ?? ''), true);
+            $zakres = is_array($meta) ? (string) ($meta['zakres'] ?? '') : '';
+            $ts     = strtotime((string) ($w['rozpoczeto_at'] ?? ''));
+            if ($zakres !== '' && $ts !== false) {
+                $out[] = ['ts' => $ts, 'zakres' => $zakres];
+            }
+        }
+
+        return $out;
     }
 
     /**

@@ -285,6 +285,35 @@ final class DnsblSerwisTest extends CIUnitTestCase
             )",
         );
     }
+
+    public function testStarySkanPomijanyPrzySwiezymPrzebiegu(): void
+    {
+        $teraz = 1_800_000_000;
+        $udane = [['ts' => $teraz - 1800, 'zakres' => 'lms']];
+
+        $this->assertFalse(\McsPluginy\dnsbl\Plugin::czyPoraNaStarySkan('lms', $udane, $teraz, 24));
+    }
+
+    public function testStarySkanIdzieGdyMinalOdstepLubBrakPrzebiegu(): void
+    {
+        $teraz = 1_800_000_000;
+
+        $this->assertTrue(\McsPluginy\dnsbl\Plugin::czyPoraNaStarySkan('lms', [['ts' => $teraz - 86400, 'zakres' => 'lms']], $teraz, 24));
+        $this->assertTrue(\McsPluginy\dnsbl\Plugin::czyPoraNaStarySkan('lms', [], $teraz, 24));
+    }
+
+    public function testOdstepLiczonyOsobnoDlaZakresuAs(): void
+    {
+        $teraz = 1_800_000_000;
+        // Ostatni udany skan lms był godzinę temu, a as tydzień temu: as ma ruszyć.
+        $udane = [
+            ['ts' => $teraz - 3600, 'zakres' => 'lms'],
+            ['ts' => $teraz - 7 * 86400, 'zakres' => 'as'],
+        ];
+
+        $this->assertTrue(\McsPluginy\dnsbl\Plugin::czyPoraNaStarySkan('as', $udane, $teraz, 24));
+        $this->assertFalse(\McsPluginy\dnsbl\Plugin::czyPoraNaStarySkan('lms', $udane, $teraz, 24));
+    }
 }
 
 /**

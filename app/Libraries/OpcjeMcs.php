@@ -140,6 +140,10 @@ final class OpcjeMcs
         $d['mcs.dnsbl.skanAs'] = [
             'grupa' => 'DNSBL', 'etykieta' => 'Skan tygodniowy — całe AS (IPv4)', 'typ' => 'enum', 'domyslna' => 'tak', 'opcje' => $takNie,
         ];
+        $d['mcs.dnsbl.skanLmsCoGodzin'] = [
+            'grupa' => 'DNSBL', 'etykieta' => 'Skan IP z LMS i AS — odstęp między skanami (godziny)', 'typ' => 'int', 'domyslna' => '24', 'min' => 1, 'max' => 168,
+            'opis' => 'Skan odpytuje wszystkie IP (ok. 23 min). Nowe listingi wykrywa osobno skaner z recheckiem co godzinę.',
+        ];
         $d['mcs.dnsbl.forceZakres'] = [
             'grupa' => 'DNSBL', 'etykieta' => 'Wymuś zakres skanu', 'typ' => 'enum', 'domyslna' => 'auto',
             'opcje' => ['auto', 'lms', 'as'],

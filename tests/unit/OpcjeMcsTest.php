@@ -85,6 +85,7 @@ final class OpcjeMcsTest extends CIUnitTestCase
             'mcs.kolejkaDnia.oknoDni'               => 2,
             'mcs.problemyIp.oknoTimelineDni'        => 14,
             'mcs.nowe.dni'                          => 7,
+            'mcs.dnsbl.skanLmsCoGodzin'             => 24,
             'mcs.badge.maxIpsBatch'                 => 100,
             'mcs.speedtest.minDownloadMbps'         => 500,
             'mcs.speedtest.minUploadMbps'           => 500,
