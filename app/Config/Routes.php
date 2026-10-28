@@ -72,6 +72,9 @@ $routes->group('admin/uzytkownicy', ['filter' => 'mcsRola:superadmin'], static f
 $routes->get('api/badge', 'Api\Badge::index');
 $routes->post('api/badge', 'Api\Badge::index');
 
+// Zdrowie wtyczek dla monitoringu (Icinga): 200 OK, 503 błąd/nieaktualne.
+$routes->get('api/health', 'Api\Health::index');
+
 // Enrichment AbuseIPDB / LMS (ten sam token co badge; poza indeksem/badge streamowym).
 $routes->get('api/enrichment/abuseipdb', 'Api\EnrichmentAbuseipdb::check');
 $routes->get('api/enrichment/ismalicious', 'Api\EnrichmentIsmalicious::check');

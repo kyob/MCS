@@ -133,6 +133,7 @@ class Filters extends BaseFilters
         'mcsBadgeToken' => [
             'before' => [
                 'api/badge',
+                'api/health',
                 'api/enrichment/*',
             ],
         ],
