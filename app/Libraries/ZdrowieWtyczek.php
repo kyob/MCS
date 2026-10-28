@@ -15,6 +15,28 @@ class ZdrowieWtyczek
     public const STALE_GODZIN = 48;
 
     /**
+     * Dane paska ostrzeżenia w panelu: null, gdy wszystko OK albo gdy nie da się odczytać stanu
+     * (pasek nigdy nie psuje strony).
+     *
+     * @param list<array<string, mixed>>|null $wiersze null = odczyt z bazy
+     *
+     * @return array{status: string, opis: string}|null
+     */
+    public static function pasek(?array $wiersze = null, ?\DateTimeImmutable $teraz = null): ?array
+    {
+        try {
+            $wynik = self::ocen($wiersze ?? model(PluginModel::class)->wszystkie(), $teraz);
+        } catch (\Throwable) {
+            return null;
+        }
+        if ($wynik['status'] === 'OK') {
+            return null;
+        }
+
+        return ['status' => $wynik['status'], 'opis' => mb_substr($wynik['opis'], 0, 300)];
+    }
+
+    /**
      * @param list<array<string, mixed>> $wiersze wiersze z PluginModel::wszystkie()
      *
      * @return array{

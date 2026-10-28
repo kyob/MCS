@@ -56,9 +56,13 @@ final class LayoutNavTest extends CIUnitTestCase
         $this->assertStringContainsString('dashboard/dnsbl', $html);
     }
 
-    private function html(string $rola): string
+    /**
+     * @param array{status: string, opis: string}|null $pasek
+     */
+    private function html(string $rola, ?array $pasek = null): string
     {
         return view('watchlista/index', [
+            'pasekZdrowia' => $pasek,
             'title'      => 'Watchlista IP — MCS',
             'navAktywny' => 'watchlista',
             'email'      => 'test@example.com',
@@ -68,5 +72,32 @@ final class LayoutNavTest extends CIUnitTestCase
             'asAsn'      => 198050,
             'lista'      => [],
         ]);
+    }
+
+    public function testPasekZdrowiaPokazujeAwarieZLinkiemDlaAdmina(): void
+    {
+        $html = $this->html('admin', ['status' => 'CRITICAL', 'opis' => 'urlhaus: API 500']);
+
+        $this->assertStringContainsString('id="pasek-zdrowia"', $html);
+        $this->assertStringContainsString('alert-danger', $html);
+        $this->assertStringContainsString('urlhaus: API 500', $html);
+        $this->assertStringContainsString('Szczegóły', $html);
+    }
+
+    public function testPasekZdrowiaBezLinkuDlaOperatoraIEscapuje(): void
+    {
+        $html = $this->html('operator', ['status' => 'WARNING', 'opis' => '<script>x</script>']);
+
+        $this->assertStringContainsString('alert-warning', $html);
+        $this->assertStringNotContainsString('<script>x</script>', $html);
+        $this->assertStringContainsString('&lt;script&gt;x&lt;/script&gt;', $html);
+        $this->assertStringNotContainsString('admin/pluginy', $html);
+    }
+
+    public function testBezAwariiBrakPaska(): void
+    {
+        $html = $this->html('admin');
+
+        $this->assertStringNotContainsString('id="pasek-zdrowia"', $html);
     }
 }

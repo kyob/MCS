@@ -193,6 +193,24 @@ $mozeUzytkownicy = \App\Libraries\Rola::mozeUzytkownicy($rolaKod);
     </div>
 </nav>
 
+<?php
+// Pasek ostrzeżenia o wtyczkach (tylko zalogowani). Zmienna $pasekZdrowia pozwala podać dane w testach.
+$pasekZdrowia = ! empty($email)
+    ? ($pasekZdrowia ?? \App\Libraries\ZdrowieWtyczek::pasek())
+    : null;
+?>
+<?php if ($pasekZdrowia !== null): ?>
+    <div class="alert alert-<?= $pasekZdrowia['status'] === 'CRITICAL' ? 'danger' : 'warning' ?> rounded-0 border-0 border-bottom mb-0 py-2" role="alert" id="pasek-zdrowia">
+        <div class="container small">
+            <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
+            <strong>Wtyczki:</strong> <?= esc((string) $pasekZdrowia['opis']) ?>
+            <?php if ($mozePanelAdmin): ?>
+                <a class="alert-link ms-1" href="<?= site_url('admin/pluginy') ?>">Szczegóły</a>
+            <?php endif; ?>
+        </div>
+    </div>
+<?php endif; ?>
+
 <main class="container py-4 py-lg-5">
     <?= $this->renderSection('content') ?>
 </main>

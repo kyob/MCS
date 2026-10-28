@@ -91,4 +91,28 @@ final class ZdrowieWtyczekTest extends CIUnitTestCase
 
         $this->assertContains('api/health', $filtry);
     }
+
+    public function testPasekNullGdyWszystkoOk(): void
+    {
+        $this->assertNull(ZdrowieWtyczek::pasek([
+            $this->wtyczka('a', true, '2026-10-28 11:50:00+00'),
+        ], $this->teraz()));
+    }
+
+    public function testPasekZOpisemGdyAwaria(): void
+    {
+        $p = ZdrowieWtyczek::pasek([
+            $this->wtyczka('zla', false, '2026-10-28 11:50:00+00', false, 'API 500'),
+        ], $this->teraz());
+
+        $this->assertNotNull($p);
+        $this->assertSame('CRITICAL', $p['status']);
+        $this->assertStringContainsString('zla: API 500', $p['opis']);
+    }
+
+    public function testPasekNieRzucaPrzyBrakuTabeliPluginow(): void
+    {
+        // Bez tabeli mcs_pluginy odczyt z bazy rzuca wyjątek: pasek ma zwrócić null, nie przerwać strony.
+        $this->assertNull(ZdrowieWtyczek::pasek());
+    }
 }
