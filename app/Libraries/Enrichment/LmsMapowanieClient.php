@@ -119,6 +119,7 @@ class LmsMapowanieClient
         $all     = [];
         $last    = null;
         $maxPage = max(1, \App\Libraries\OpcjeMcs::int('mcs.lms.syncMaxPages'));
+        $obciety = false;
 
         for ($page = 0; $page < $maxPage; $page++) {
             $url  = $this->endpointUrl([
@@ -154,6 +155,18 @@ class LmsMapowanieClient
                 break;
             }
             $offset += $limit;
+            $obciety = ($page === $maxPage - 1);
+        }
+
+        // Obcięty sync nie może wyglądać na pełny: zapis niepełnej listy zostawiłby stare mapowania.
+        if ($obciety) {
+            return [
+                'ok'        => false,
+                'http_code' => (int) ($last['http_code'] ?? 200),
+                'data'      => null,
+                'error'     => 'Sync LMS obcięty: osiągnięto limit ' . $maxPage . ' stron (mcs.lms.syncMaxPages), dane niepełne.',
+                'raw_body'  => '',
+            ];
         }
 
         $data = is_array($last['data'] ?? null) ? $last['data'] : [];

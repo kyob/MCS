@@ -127,6 +127,16 @@ class ApiClient
 
             $next = $this->nastepnaStrona($decoded);
             $url  = $next !== null ? $this->absolutnyUrl($next) : null;
+            if ($next !== null && $url === null) {
+                return [
+                    'ok'         => false,
+                    'http_code'  => $res['http_code'],
+                    'sessions'   => [],
+                    'error'      => 'Spoofer: hydra:next wskazuje inny host niż baseUrl (pominięto, ochrona przed SSRF)',
+                    'raw_bodies' => $bodies,
+                    'pages'      => $pages,
+                ];
+            }
         }
 
         return [
@@ -170,10 +180,24 @@ class ApiClient
         return trim($next);
     }
 
-    private function absolutnyUrl(string $pathOrUrl): string
+    /**
+     * Pełny URL z odpowiedzi API przyjmujemy tylko dla tego samego schematu, hosta i portu co baseUrl.
+     */
+    private function absolutnyUrl(string $pathOrUrl): ?string
     {
         if (str_starts_with($pathOrUrl, 'http://') || str_starts_with($pathOrUrl, 'https://')) {
-            return $pathOrUrl;
+            $cel  = parse_url($pathOrUrl);
+            $baza = parse_url($this->baseUrl);
+            if (! is_array($cel) || ! is_array($baza)) {
+                return null;
+            }
+            $portCel  = $cel['port'] ?? ($cel['scheme'] === 'https' ? 443 : 80);
+            $portBaza = $baza['port'] ?? (($baza['scheme'] ?? '') === 'https' ? 443 : 80);
+            $ten = strtolower((string) ($cel['scheme'] ?? '')) === strtolower((string) ($baza['scheme'] ?? ''))
+                && strtolower((string) ($cel['host'] ?? '')) === strtolower((string) ($baza['host'] ?? ''))
+                && $portCel === $portBaza;
+
+            return $ten ? $pathOrUrl : null;
         }
         if (! str_starts_with($pathOrUrl, '/')) {
             $pathOrUrl = '/' . $pathOrUrl;

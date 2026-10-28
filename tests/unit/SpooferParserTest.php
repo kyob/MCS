@@ -180,4 +180,53 @@ final class SpooferParserTest extends CIUnitTestCase
         $this->assertNotNull($asnPozycja);
         $this->assertSame('198050', $asnPozycja['wartosc']);
     }
+
+    public function testHydraNextNaObcyHostJestOdrzucony(): void
+    {
+        $zapytania = [];
+        $client    = new \McsPluginy\spoofer\ApiClient(
+            'https://api.example.test',
+            true,
+            static function (string $url) use (&$zapytania): array {
+                $zapytania[] = $url;
+
+                return [
+                    'ok'        => true,
+                    'http_code' => 200,
+                    'body'      => json_encode(['hydra:member' => [], 'hydra:view' => ['hydra:next' => 'http://169.254.169.254/latest']]),
+                    'error'     => '',
+                ];
+            },
+        );
+
+        $w = $client->fetchSessions(198050);
+
+        $this->assertFalse($w['ok']);
+        $this->assertStringContainsString('inny host', $w['error']);
+        $this->assertCount(1, $zapytania, 'drugie zapytanie na obcy host nie może wyjść');
+    }
+
+    public function testHydraNextWzgledneIWTymSamymHosciePrzechodzi(): void
+    {
+        $zapytania = [];
+        $strony    = [
+            ['hydra:view' => ['hydra:next' => '/sessions?page=2']],
+            ['hydra:view' => ['hydra:next' => 'https://API.example.test/sessions?page=3']],
+            ['hydra:member' => []],
+        ];
+        $client = new \McsPluginy\spoofer\ApiClient(
+            'https://api.example.test',
+            true,
+            static function (string $url) use (&$zapytania, &$strony): array {
+                $zapytania[] = $url;
+
+                return ['ok' => true, 'http_code' => 200, 'body' => json_encode(array_shift($strony) + ['hydra:member' => []]), 'error' => ''];
+            },
+        );
+
+        $w = $client->fetchSessions(198050);
+
+        $this->assertTrue($w['ok']);
+        $this->assertCount(3, $zapytania);
+    }
 }

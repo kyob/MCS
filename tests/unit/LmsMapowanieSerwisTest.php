@@ -306,4 +306,55 @@ final class LmsMapowanieSerwisTest extends CIUnitTestCase
         $this->assertStringNotContainsString('haslo-bazy', $json);
         $this->assertSame('ustawiony', $poNazwie['Token mapowania']['wartosc']);
     }
+
+    public function testSyncObcietyPrzezLimitStronToBlad(): void
+    {
+        $_SERVER['mcs.lms.syncMaxPages'] = '2';
+        \App\Libraries\OpcjeMcs::resetuj();
+
+        try {
+            $strony  = 0;
+            $client = new LmsMapowanieClient('https://lms.example.test', 'tok', 'api.php', 15, true, static function () use (&$strony): array {
+                $strony++;
+
+                return [
+                    'ok'        => true,
+                    'http_code' => 200,
+                    'data'      => ['items' => [['ip' => '198.51.100.' . $strony]], 'has_more' => true],
+                    'error'     => '',
+                    'raw_body'  => '{}',
+                ];
+            });
+
+            $w = $client->sync();
+
+            $this->assertFalse($w['ok']);
+            $this->assertStringContainsString('limit 2 stron', $w['error']);
+            $this->assertSame(2, $strony);
+        } finally {
+            unset($_SERVER['mcs.lms.syncMaxPages']);
+            \App\Libraries\OpcjeMcs::resetuj();
+        }
+    }
+
+    public function testSyncKonczacySieWPorzadkuNieJestObciety(): void
+    {
+        $strony  = 0;
+        $client = new LmsMapowanieClient('https://lms.example.test', 'tok', 'api.php', 15, true, static function () use (&$strony): array {
+            $strony++;
+
+            return [
+                'ok'        => true,
+                'http_code' => 200,
+                'data'      => ['items' => [['ip' => '198.51.100.' . $strony]], 'has_more' => $strony < 3],
+                'error'     => '',
+                'raw_body'  => '{}',
+            ];
+        });
+
+        $w = $client->sync();
+
+        $this->assertTrue($w['ok']);
+        $this->assertCount(3, $w['data']['items']);
+    }
 }
