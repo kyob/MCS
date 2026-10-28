@@ -38,4 +38,19 @@ final class ShadowserverZipCsvTest extends CIUnitTestCase
         $this->assertTrue($wynik['z_zip']);
         $this->assertStringContainsString('198.51.100.50', $wynik['tresc']);
     }
+
+    public function testPomijaZbytDuzyZalacznik(): void
+    {
+        $plugin = new Plugin();
+        $ref    = new ReflectionMethod(Plugin::class, 'wyciagnijCsvZZalacznika');
+        $ref->setAccessible(true);
+
+        $wynik = $ref->invoke($plugin, [
+            'filename' => 'duzy.csv',
+            'mime'     => 'text/csv',
+            'tresc'    => str_repeat('a', 20 * 1024 * 1024 + 1),
+        ]);
+
+        $this->assertNull($wynik);
+    }
 }

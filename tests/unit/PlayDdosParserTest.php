@@ -46,4 +46,14 @@ final class PlayDdosParserTest extends CIUnitTestCase
         $w = (new Parser())->parsujPowiadomienie('test', 'Witamy w skrzynce');
         $this->assertSame([], $w);
     }
+
+    public function testCzyOdNadawcyWymagaDokladnegoAdresu(): void
+    {
+        $this->assertTrue(Parser::czyOdNadawcy('antyddos@play.pl'));
+        $this->assertTrue(Parser::czyOdNadawcy(' AntyDDoS@Play.pl '));
+        $this->assertFalse(Parser::czyOdNadawcy('x@play.pl.evil.com'));
+        $this->assertFalse(Parser::czyOdNadawcy('antyddos@play.pl.evil.com'));
+        $this->assertFalse(Parser::czyOdNadawcy('inny@play.pl'));
+        $this->assertFalse(Parser::czyOdNadawcy(''));
+    }
 }

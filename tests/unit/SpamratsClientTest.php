@@ -180,4 +180,24 @@ final class SpamratsClientTest extends CIUnitTestCase
         $this->assertStringNotContainsString('SECRETKEY', $wynik['error']);
         $this->assertStringContainsString('198.51.100.10', $wynik['error']);
     }
+
+    public function testAwariaResolweraNieJestCzysto(): void
+    {
+        $client = new SpamratsClient('KEY', 'all.spamrats.com', static fn () => false);
+
+        $wynik = $client->checkIp('198.51.100.10');
+
+        $this->assertFalse($wynik['ok']);
+        $this->assertStringContainsString('Błąd DNS', $wynik['error']);
+    }
+
+    public function testPustaOdpowiedzToNielistowany(): void
+    {
+        $client = new SpamratsClient('KEY', 'all.spamrats.com', static fn () => []);
+
+        $wynik = $client->checkIp('198.51.100.10');
+
+        $this->assertTrue($wynik['ok']);
+        $this->assertFalse($wynik['data']['listed']);
+    }
 }

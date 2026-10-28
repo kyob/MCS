@@ -171,9 +171,9 @@ class Plugin implements SourcePluginInterface
             $subject   = (string) ($wiadomosc['subject'] ?? '');
             $tresc     = (string) ($wiadomosc['tresc'] ?? '');
 
-            $wygladaNaDdos = $this->parser->toPowiadomienieDdos($subject, $tresc)
-                || $from === Parser::nadawca()
-                || str_contains($from, Parser::domenaNadawcy());
+            // Sam temat lub podciąg domeny nie wystarcza: tylko dokładny nadawca alertów.
+            $wygladaNaDdos = Parser::czyOdNadawcy($from)
+                && $this->parser->toPowiadomienieDdos($subject, $tresc);
 
             if (! $wygladaNaDdos) {
                 continue;

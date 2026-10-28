@@ -24,6 +24,12 @@ use RuntimeException;
  */
 class Plugin implements SourcePluginInterface
 {
+    /** Maks. rozmiar załącznika z maila (bajty). */
+    private const MAX_ZALACZNIK_B = 20 * 1024 * 1024;
+
+    /** Maks. rozmiar CSV po rozpakowaniu (bajty), ochrona przed zip bomb. */
+    private const MAX_CSV_B = 100 * 1024 * 1024;
+
     private Parser $parser;
     private ImportKoperta $koperta;
     private IncydentZapis $zapis;
@@ -194,10 +200,15 @@ class Plugin implements SourcePluginInterface
                     continue;
                 }
                 $checksum = hash('sha256', $csv['tresc']);
+                // Jeden mail może mieć kilka załączników: id musi być unikalne per załącznik,
+                // bo koperta dedupuje po checksum LUB id_wiadomosci.
+                $idZalacznika = $wiadomosc['message_id'] !== null && $wiadomosc['message_id'] !== ''
+                    ? $wiadomosc['message_id'] . '#' . $csv['filename']
+                    : null;
                 $liczba   = $this->importujTrescCsv(
                     $csv['tresc'],
                     $checksum,
-                    $wiadomosc['message_id'],
+                    $idZalacznika,
                     [
                         'tryb'     => 'imap',
                         'uid'      => $uid,
@@ -234,6 +245,10 @@ class Plugin implements SourcePluginInterface
      */
     private function wyciagnijCsvZZalacznika(array $zal): ?array
     {
+        if (strlen($zal['tresc']) > self::MAX_ZALACZNIK_B) {
+            return null;
+        }
+
         $nazwa = strtolower($zal['filename']);
         if (str_ends_with($nazwa, '.csv') && ! str_ends_with($nazwa, '.csv.zip')) {
             return [
@@ -271,6 +286,10 @@ class Plugin implements SourcePluginInterface
                     continue;
                 }
                 if (str_ends_with(strtolower($entry), '.csv') && ! str_contains($entry, '..')) {
+                    $stat = $zip->statIndex($i);
+                    if ($stat === false || (int) $stat['size'] > self::MAX_CSV_B) {
+                        continue;
+                    }
                     $body = $zip->getFromIndex($i);
                     if ($body !== false) {
                         $csvNazwa = basename($entry);

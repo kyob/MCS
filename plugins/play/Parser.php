@@ -26,6 +26,14 @@ final class Parser
     }
 
     /**
+     * Czy adres From (goły adres, bez nazwy) to dokładnie skonfigurowany nadawca alertów.
+     */
+    public static function czyOdNadawcy(string $from): bool
+    {
+        return strtolower(trim($from)) === self::nadawca();
+    }
+
+    /**
      * Domena nadawcy z „@” (np. „@play.pl”).
      */
     public static function domenaNadawcy(): string

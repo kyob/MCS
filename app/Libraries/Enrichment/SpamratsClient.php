@@ -200,6 +200,9 @@ class SpamratsClient
     {
         if ($this->resolver !== null) {
             $wynik = ($this->resolver)($fqdn);
+            if ($wynik === false) {
+                throw new \RuntimeException('DNS SpamRats: awaria resolvera');
+            }
             if (! is_array($wynik)) {
                 return [];
             }
@@ -214,7 +217,11 @@ class SpamratsClient
         }
 
         $rekordy = @dns_get_record($fqdn, DNS_A);
-        if ($rekordy === false || $rekordy === []) {
+        if ($rekordy === false) {
+            // SERVFAIL/timeout. NXDOMAIN daje [] (nielistowany), więc false to awaria, nie „czysto”.
+            throw new \RuntimeException('DNS SpamRats: awaria resolvera');
+        }
+        if ($rekordy === []) {
             return [];
         }
 

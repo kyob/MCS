@@ -228,12 +228,14 @@ class Plugin implements SourcePluginInterface
             return $stats;
         }
 
-        $db = Database::connect();
+        $db    = Database::connect();
+        $bledy = [];
 
         try {
             foreach (array_keys($orgSlugs) as $orgSlug) {
                 $rg = $client->getOrganization($orgSlug);
                 if (! $rg['ok'] || ! is_array($rg['data'])) {
+                    $bledy[] = $orgSlug . ': ' . (string) ($rg['error'] ?? 'brak danych organizacji');
                     continue;
                 }
                 $detail  = $rg['data'];
@@ -261,6 +263,7 @@ class Plugin implements SourcePluginInterface
                         }
                         $rs = $client->listOrganizationSubnetScanResults($orgSlug, $subnetPath, $scanQuery);
                         if (! $rs['ok']) {
+                            $bledy[] = $orgSlug . ' ' . $subnetStorage . ' str. ' . $p . ': ' . (string) ($rs['error'] ?? 'błąd API');
                             break;
                         }
                         $sd = $rs['data'];
@@ -297,6 +300,14 @@ class Plugin implements SourcePluginInterface
                         }
                     }
                 }
+            }
+
+            if ($bledy !== []) {
+                // Niepełny import nie może wyglądać jak „czysto”: koperta = błąd, health = błąd.
+                throw new \RuntimeException(
+                    'MojeCert API: ' . count($bledy) . ' błędów (zapisano ' . $stats['skany'] . ' wierszy). '
+                    . implode('; ', array_slice($bledy, 0, 3)),
+                );
             }
 
             $this->koperta->zakonczOk($importId, [
