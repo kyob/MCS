@@ -4,8 +4,8 @@ namespace McsPluginy\blocklist_de;
 
 /**
  * HTTPS GET list blocklist.de. Bez przekierowań. MD5 liczymy z treści po dekompresji.
- * Gdy suma nie zgadza się z plikiem, a dwa pobrania .txt są identyczne, suma jest nieaktualna
- * (blocklist.de publikuje listę i .md5 osobno) i przebieg idzie dalej.
+ * Gdy suma nie zgadza się z plikiem (CDN/origin publikują .txt i .md5 osobno), po kilku
+ * ponowieniach bierzemy ostatnią treść i oznaczamy MD5 jako nieaktualne — przebieg idzie dalej.
  */
 final class Klient
 {
@@ -97,6 +97,10 @@ final class Klient
 
         $poprzednie = $txt['body'];
         for ($i = 0; $i < 2; $i++) {
+            // Krótka przerwa tylko przy prawdziwym HTTP — CDN często dogania MD5 po chwili.
+            if ($this->http === null) {
+                usleep(250_000);
+            }
             $txt = $this->pobierzUrl(self::urlTxt($nazwa));
             if (! $txt['ok']) {
                 return $this->paraBlad($nazwa . '.txt: ' . $txt['error']);
@@ -118,13 +122,8 @@ final class Klient
             $poprzednie = $txt['body'];
         }
 
-        return [
-            'status'   => 'md5_niezgodne',
-            'blad'     => $nazwa . '.txt.md5 nie zgadza się z treścią',
-            'stare'    => false,
-            'ips'      => [],
-            'md5_brak' => false,
-        ];
+        // Lista wciąż się zmienia albo MD5 jest w tyle — nie przerywamy całego importu.
+        return $this->nieaktualneMd5($nazwa, $parser, $txt['body']);
     }
 
     /**
@@ -230,28 +229,22 @@ final class Klient
             return ['ok' => false, 'http_code' => 0, 'body' => '', 'error' => 'niedozwolony URL listy'];
         }
 
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => false,
-            CURLOPT_ENCODING       => '',
-            CURLOPT_CONNECTTIMEOUT => min(15, $this->timeout),
-            CURLOPT_TIMEOUT        => $this->timeout,
-            CURLOPT_USERAGENT      => self::USER_AGENT,
-            CURLOPT_HTTPHEADER     => ['Accept: text/plain'],
+        $res = \App\Libraries\Siec\KlientHttp::wykonaj($url, [
+            'timeout'    => max(\App\Libraries\Siec\KlientHttp::MAKS_CZAS_POBRANIA, $this->timeout),
+            'polaczenie' => min(15, $this->timeout),
+            'zastoj'     => $this->timeout,
+            'kompresja'  => true,
+            'user_agent' => self::USER_AGENT,
+            'naglowki'   => ['Accept: text/plain'],
         ]);
-        $out  = curl_exec($ch);
-        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $err  = curl_error($ch);
-        curl_close($ch);
 
-        if ($out === false) {
-            return ['ok' => false, 'http_code' => $code, 'body' => '', 'error' => 'cURL: ' . $err];
+        if (! $res['ok']) {
+            return ['ok' => false, 'http_code' => $res['http_code'], 'body' => '', 'error' => 'cURL: ' . $res['error']];
         }
-        if ($code !== 200) {
-            return ['ok' => false, 'http_code' => $code, 'body' => '', 'error' => 'HTTP ' . $code];
+        if ($res['http_code'] !== 200) {
+            return ['ok' => false, 'http_code' => $res['http_code'], 'body' => '', 'error' => 'HTTP ' . $res['http_code']];
         }
 
-        return ['ok' => true, 'http_code' => 200, 'body' => (string) $out, 'error' => ''];
+        return ['ok' => true, 'http_code' => 200, 'body' => $res['body'], 'error' => ''];
     }
 }

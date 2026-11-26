@@ -385,7 +385,7 @@ class Plugin implements SourcePluginInterface
     {
         $explicit = \App\Libraries\OpcjeMcs::tekst('mcs.cloudflare_botnet.asn');
 
-        return $explicit !== '' ? $explicit : (string) \App\Libraries\Siec\As198050Matcher::asn();
+        return $explicit !== '' ? $explicit : (string) \App\Libraries\Siec\AsMatcher::asn();
     }
 
     public function resolveAsn(?ApiClient $client = null): int
@@ -401,8 +401,8 @@ class Plugin implements SourcePluginInterface
             return $listed['asns'][0];
         }
 
-        // Domyślnie ASN globalny (mcs.as198050.asn).
-        return \App\Libraries\Siec\As198050Matcher::asn();
+        // Domyślnie ASN globalny (mcs.as.asn).
+        return \App\Libraries\Siec\AsMatcher::asn();
     }
 
     private function opisKonfiguracji(): string

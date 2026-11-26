@@ -3,7 +3,7 @@
 use App\Libraries\Enrichment\DnsblClient;
 use App\Libraries\Enrichment\DnsblSerwis;
 use App\Libraries\IncydentZapis;
-use App\Libraries\Siec\As198050Matcher;
+use App\Libraries\Siec\AsMatcher;
 use App\Libraries\Siec\CidrMatcher;
 use App\Libraries\WagaV1;
 use App\Models\DnsblWierszeModel;
@@ -166,7 +166,7 @@ final class DnsblSerwisTest extends CIUnitTestCase
             model(EnrichmentDnsblModel::class),
             model(DnsblWierszeModel::class),
             model(EnrichmentLmsModel::class),
-            new As198050Matcher(new CidrMatcher()),
+            new AsMatcher(new CidrMatcher()),
             new CidrMatcher(),
             new IncydentZapis($this->db),
             new WagaV1(),
@@ -193,7 +193,7 @@ final class DnsblSerwisTest extends CIUnitTestCase
             model(EnrichmentDnsblModel::class),
             model(DnsblWierszeModel::class),
             model(EnrichmentLmsModel::class),
-            new As198050Matcher(new CidrMatcher()),
+            new AsMatcher(new CidrMatcher()),
             new CidrMatcher(),
             new IncydentZapis($this->db),
             new WagaV1(),

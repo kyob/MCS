@@ -38,7 +38,7 @@
                         <th scope="col">Nazwa</th>
                         <th scope="col" title="Kliknij stan, żeby włączyć lub wstrzymać pobieranie (cron i Pobierz teraz).">Import</th>
                         <th scope="col" title="Kliknij, żeby pokazać lub ukryć źródło w listach i badge.">UI</th>
-                        <th scope="col" class="text-nowrap">Ostatni update</th>
+                        <th scope="col" class="text-nowrap">Ostatnia aktualizacja</th>
                         <th scope="col" title="Najedź, żeby zobaczyć komunikat.">Status</th>
                         <th scope="col" class="pe-3">Akcje</th>
                     </tr>
@@ -357,7 +357,10 @@ $etykietaZrodlaKlucza = static function (string $zrodlo): string {
         </div>
         <div class="card-body pt-3">
             <?php if (empty($importy)): ?>
-                <p class="text-body-secondary mb-0">Brak przebiegów importu.</p>
+                <?= view('partials/_pusty_stan', [
+                    'tekst' => 'Brak przebiegów importu.',
+                    'ikona' => 'bi-clock-history',
+                ], ['saveData' => false]) ?>
             <?php else: ?>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">

@@ -4,7 +4,7 @@ namespace App\Libraries\Enrichment;
 
 use App\Libraries\IncydentZapis;
 use App\Libraries\PluginOpisPolaczenia;
-use App\Libraries\Siec\As198050Matcher;
+use App\Libraries\Siec\AsMatcher;
 use App\Libraries\Siec\CidrMatcher;
 use App\Libraries\WagaV1;
 use App\Models\DnsblWierszeModel;
@@ -28,7 +28,7 @@ class DnsblSerwis extends EnrichmentSerwisBaza
     private EnrichmentDnsblModel $enrichment;
     private DnsblWierszeModel $wiersze;
     private EnrichmentLmsModel $lms;
-    private As198050Matcher $asMatcher;
+    private AsMatcher $asMatcher;
     private CidrMatcher $cidr;
     private IncydentZapis $zapis;
     private WagaV1 $waga;
@@ -40,7 +40,7 @@ class DnsblSerwis extends EnrichmentSerwisBaza
         ?EnrichmentDnsblModel $enrichment = null,
         ?DnsblWierszeModel $wiersze = null,
         ?EnrichmentLmsModel $lms = null,
-        ?As198050Matcher $asMatcher = null,
+        ?AsMatcher $asMatcher = null,
         ?CidrMatcher $cidr = null,
         ?IncydentZapis $zapis = null,
         ?WagaV1 $waga = null,
@@ -53,7 +53,7 @@ class DnsblSerwis extends EnrichmentSerwisBaza
         $this->enrichment     = $enrichment ?? model(EnrichmentDnsblModel::class);
         $this->wiersze        = $wiersze ?? model(DnsblWierszeModel::class);
         $this->lms            = $lms ?? model(EnrichmentLmsModel::class);
-        $this->asMatcher      = $asMatcher ?? new As198050Matcher();
+        $this->asMatcher      = $asMatcher ?? new AsMatcher();
         $this->cidr           = $cidr ?? $this->asMatcher->cidrMatcher();
         $this->zapis          = $zapis ?? new IncydentZapis();
         $this->waga           = $waga ?? new WagaV1();

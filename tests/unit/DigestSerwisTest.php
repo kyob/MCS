@@ -1,6 +1,6 @@
 <?php
 
-use App\Libraries\Siec\As198050Matcher;
+use App\Libraries\Siec\AsMatcher;
 use App\Libraries\Siec\CidrMatcher;
 use App\Libraries\Watchlista\DigestSerwis;
 use App\Models\UstawieniaModel;
@@ -97,7 +97,7 @@ final class DigestSerwisTest extends CIUnitTestCase
         $this->assertSame(24, $wynik['okno_godzin']);
         $this->assertSame(0, $wynik['liczba_ip_watchlista']);
         $this->assertSame([], $wynik['incydenty']);
-        $this->assertFalse($wynik['tylko_as198050']);
+        $this->assertFalse($wynik['tylko_as']);
     }
 
     public function testZwracaTylkoHighCriticalDlaObserwowanych(): void
@@ -130,7 +130,7 @@ final class DigestSerwisTest extends CIUnitTestCase
         $this->assertSame(['critical', 'high'], $wagi);
     }
 
-    public function testFiltrAs198050(): void
+    public function testFiltrAs(): void
     {
         $watch = model(WatchlistaModel::class);
         $watch->dodaj('91.231.81.10'); // nasze
@@ -143,15 +143,15 @@ final class DigestSerwisTest extends CIUnitTestCase
         $ustawienia = $this->createMock(UstawieniaModel::class);
         $ustawienia->method('pobierz')->willReturnCallback(static function (string $klucz): ?string {
             return match ($klucz) {
-                As198050Matcher::KLUCZ_WLACZONE => '1',
-                As198050Matcher::KLUCZ_CIDRY    => '91.231.80.0/22',
+                AsMatcher::KLUCZ_WLACZONE => '1',
+                AsMatcher::KLUCZ_CIDRY    => '91.231.80.0/22',
                 default                         => null,
             };
         });
-        $matcher = new As198050Matcher(new CidrMatcher(), $ustawienia);
+        $matcher = new AsMatcher(new CidrMatcher(), $ustawienia);
 
         $wynik = (new DigestSerwis($watch, $matcher))->zbierz(24, true);
-        $this->assertTrue($wynik['tylko_as198050']);
+        $this->assertTrue($wynik['tylko_as']);
         $this->assertCount(1, $wynik['incydenty']);
         $this->assertSame('91.231.81.10', $wynik['incydenty'][0]['podmiot']);
     }

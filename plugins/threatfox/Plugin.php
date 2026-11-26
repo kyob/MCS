@@ -9,7 +9,7 @@ use RuntimeException;
 
 /**
  * Plugin ThreatFox (abuse.ch) — zbiorcze IOC (get_iocs, ostatnie 1–7 dni) dopasowane lokalnie
- * do prefiksów AS (mcs_ustawienia.as198050_cidry). Tylko ioc_type ip / ip:port dają trafienia.
+ * do prefiksów AS (mcs_ustawienia.as_cidry). Tylko ioc_type ip / ip:port dają trafienia.
  *
  * API wymaga Auth-Key (mcs.threatfox.authKey). Cron mcs-pobierz.sh woła pobierz() co 15 min;
  * plugin sam pilnuje harmonogramu (domyślnie raz na 6 h + losowa minuta, backoff po błędzie,

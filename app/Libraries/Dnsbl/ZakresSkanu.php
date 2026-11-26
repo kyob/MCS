@@ -3,7 +3,7 @@
 namespace App\Libraries\Dnsbl;
 
 /**
- * Walidacja zakresu skanu: tylko IPv4 z mcs_ustawienia.as198050_cidry, maska /21–/32.
+ * Walidacja zakresu skanu: tylko IPv4 z mcs_ustawienia.as_cidry, maska /21–/32.
  */
 final class ZakresSkanu
 {
@@ -11,7 +11,7 @@ final class ZakresSkanu
     public const MASKA_MAX = 32;
 
     /**
-     * @param list<string> $prefiksyAs prefiksy IPv4 z as198050_cidry
+     * @param list<string> $prefiksyAs prefiksy IPv4 z as_cidry
      *
      * @return array{ok: bool, cidry: list<string>, blad: string}
      */
@@ -47,7 +47,7 @@ final class ZakresSkanu
                 }
             }
             if (! $nasz) {
-                return ['ok' => false, 'cidry' => [], 'blad' => 'Poza prefiksami AS198050 (as198050_cidry): ' . $c];
+                return ['ok' => false, 'cidry' => [], 'blad' => 'Poza prefiksami naszego AS: ' . $c];
             }
             $out[$n] = $n;
         }

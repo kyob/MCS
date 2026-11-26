@@ -9,7 +9,7 @@ use RuntimeException;
 
 /**
  * Plugin Spamhaus DROP — darmowe listy DROP (IPv4), DROPv6 i ASN-DROP dopasowane lokalnie
- * do prefiksów AS (mcs_ustawienia.as198050_cidry) i ASN (mcs.as198050.asn).
+ * do prefiksów AS (mcs_ustawienia.as_cidry) i ASN (mcs.as.asn).
  *
  * Bez zapytań DNS (zen/DQS) i bez scrapingu check.spamhaus.org.
  * Cron mcs-pobierz.sh woła pobierz() co 15 min; plugin sam pilnuje harmonogramu

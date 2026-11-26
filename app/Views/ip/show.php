@@ -11,7 +11,7 @@ $badgeWaga = static function (string $waga): string {
         default => 'text-bg-light text-dark border',
     };
 };
-$asAsn = (int) ($asAsn ?? \App\Libraries\Siec\As198050Matcher::asn());
+$asAsn = (int) ($asAsn ?? \App\Libraries\Siec\AsMatcher::asn());
 $wtyczki = array_merge(
     ['lms' => true, 'abuseipdb' => true, 'ismalicious' => true, 'greynoise' => true, 'spamrats' => true, 'speedtest' => true],
     is_array($wtyczkiIp ?? null) ? $wtyczkiIp : [],
@@ -23,7 +23,7 @@ $wtyczki = array_merge(
         <h1 class="h3 mb-1">
             IP <span class="font-monospace"><?= esc($ip !== '' ? $ip : '—') ?></span>
             <?php if (! empty($ipNowe)): ?>
-                <span class="badge text-bg-success align-middle fs-6" title="Pierwszy raz w MCS w ostatnich dniach">NEW</span>
+                <span class="badge text-bg-success align-middle fs-6" title="Pierwszy raz w MCS w ostatnich dniach">NOWE</span>
             <?php endif; ?>
             <?php if (! empty($asMatchWlaczone) && empty($blad)): ?>
                 <?php if (! empty($naszeIp)): ?>
@@ -332,7 +332,7 @@ $wtyczki = array_merge(
                 <dd class="col-sm-9 col-md-10" id="ab-usage"><?= esc((string) (($ab['usage_type'] ?? '') !== '' ? $ab['usage_type'] : '—')) ?></dd>
                 <dt class="col-sm-3 col-md-2 text-body-secondary">Ostatni raport</dt>
                 <dd class="col-sm-9 col-md-10" id="ab-last"><?= esc(\App\Libraries\CzasUi::pokaz((string) ($ab['last_reported_at'] ?? ''), '—')) ?></dd>
-                <dt class="col-sm-3 col-md-2 text-body-secondary">Checked at</dt>
+                <dt class="col-sm-3 col-md-2 text-body-secondary">Sprawdzono</dt>
                 <dd class="col-sm-9 col-md-10" id="ab-checked"><?= esc(\App\Libraries\CzasUi::pokaz((string) ($ab['checked_at'] ?? ''), '—')) ?></dd>
                 <dt class="col-sm-3 col-md-2 text-body-secondary">Źródło danych</dt>
                 <dd class="col-sm-9 col-md-10" id="ab-zrodlo"><?= esc((string) (($ab['zrodlo_danych'] ?? '') !== '' ? $ab['zrodlo_danych'] : '—')) ?></dd>
@@ -399,7 +399,7 @@ $wtyczki = array_merge(
                 <dd class="col-sm-9 col-md-10" id="im-listed"><?= $imListed === null ? '—' : ($imListed ? 'tak' : 'nie') ?></dd>
                 <dt class="col-sm-3 col-md-2 text-body-secondary">Klasyfikacja</dt>
                 <dd class="col-sm-9 col-md-10" id="im-class"><?= esc((string) (($im['classification'] ?? '') !== '' ? $im['classification'] : '—')) ?></dd>
-                <dt class="col-sm-3 col-md-2 text-body-secondary">Checked at</dt>
+                <dt class="col-sm-3 col-md-2 text-body-secondary">Sprawdzono</dt>
                 <dd class="col-sm-9 col-md-10" id="im-checked"><?= esc(\App\Libraries\CzasUi::pokaz((string) ($im['checked_at'] ?? ''), '—')) ?></dd>
                 <dt class="col-sm-3 col-md-2 text-body-secondary">Źródło danych</dt>
                 <dd class="col-sm-9 col-md-10" id="im-zrodlo"><?= esc((string) (($im['zrodlo_danych'] ?? '') !== '' ? $im['zrodlo_danych'] : '—')) ?></dd>
@@ -565,7 +565,7 @@ $wtyczki = array_merge(
                     }
                     echo esc(is_array($srKody) && $srKody !== [] ? implode(', ', $srKody) : '—');
                 ?></dd>
-                <dt class="col-sm-3 col-md-2 text-body-secondary">Checked at</dt>
+                <dt class="col-sm-3 col-md-2 text-body-secondary">Sprawdzono</dt>
                 <dd class="col-sm-9 col-md-10" id="sr-checked"><?= esc(\App\Libraries\CzasUi::pokaz((string) ($sr['checked_at'] ?? ''), '—')) ?></dd>
                 <dt class="col-sm-3 col-md-2 text-body-secondary">Źródło danych</dt>
                 <dd class="col-sm-9 col-md-10" id="sr-zrodlo"><?= esc((string) (($sr['zrodlo_danych'] ?? '') !== '' ? $sr['zrodlo_danych'] : '—')) ?></dd>
@@ -647,7 +647,7 @@ $wtyczki = array_merge(
                             kody <?= esc((string) $l['kody']) ?>
                             · od <?= esc(\App\Libraries\CzasUi::pokaz((string) $l['pierwszy_raz'])) ?> · ostatnio <?= esc(\App\Libraries\CzasUi::pokaz((string) $l['ostatni_raz'])) ?>
                             <?php if ((string) ($l['url'] ?? '') !== ''): ?>
-                                · <a href="<?= esc(\App\Libraries\Dnsbl\DnsblNarzedzia::bezpiecznyUrl((string) $l['url']), 'attr') ?>" target="_blank" rel="noopener noreferrer">Request removal</a>
+                                · <a href="<?= esc(\App\Libraries\Dnsbl\DnsblNarzedzia::bezpiecznyUrl((string) $l['url']), 'attr') ?>" target="_blank" rel="noopener noreferrer">Zgłoś usunięcie</a>
                             <?php endif; ?>
                             <?php if ((string) ($l['txt'] ?? '') !== ''): ?>
                                 <div class="text-body-secondary"><?= esc((string) $l['txt']) ?></div>
@@ -710,7 +710,7 @@ $wtyczki = array_merge(
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </dd>
-                <dt class="col-sm-3 col-md-2 text-body-secondary">Checked at</dt>
+                <dt class="col-sm-3 col-md-2 text-body-secondary">Sprawdzono</dt>
                 <dd class="col-sm-9 col-md-10" id="dnsbl-checked"><?= esc(\App\Libraries\CzasUi::pokaz((string) ($dbCache['checked_at'] ?? ''), '—')) ?></dd>
                 <dt class="col-sm-3 col-md-2 text-body-secondary">Źródło danych</dt>
                 <dd class="col-sm-9 col-md-10" id="dnsbl-zrodlo"><?= esc((string) (($dbCache['zrodlo_danych'] ?? '') !== '' ? $dbCache['zrodlo_danych'] : '—')) ?></dd>
@@ -802,7 +802,7 @@ window.mcsPrzyciskZajety = function (btn, zajety) {
         var st = document.getElementById('ismalicious-status');
         if (st) {
             st.textContent = 'tryb: ' + tekst(dane.tryb)
-                + (dane.z_cache ? ' (z cache)' : '');
+                + (dane.z_cache ? ' (z pamięci podręcznej)' : '');
         }
     }
     function pokazIsmBlad(msg) {
@@ -876,7 +876,7 @@ window.mcsPrzyciskZajety = function (btn, zajety) {
         }
         var st = document.getElementById('greynoise-status');
         if (st) {
-            st.textContent = 'tryb: ' + tekst(dane.tryb) + (dane.z_cache ? ' (z cache)' : '');
+            st.textContent = 'tryb: ' + tekst(dane.tryb) + (dane.z_cache ? ' (z pamięci podręcznej)' : '');
         }
     }
     function pokazGnBlad(msg) {
@@ -954,7 +954,7 @@ window.mcsPrzyciskZajety = function (btn, zajety) {
         var st = document.getElementById('spamrats-status');
         if (st) {
             st.textContent = 'tryb: ' + tekst(dane.tryb)
-                + (dane.z_cache ? ' (z cache)' : '');
+                + (dane.z_cache ? ' (z pamięci podręcznej)' : '');
         }
     }
     function pokazSrBlad(msg) {
@@ -1040,7 +1040,7 @@ window.mcsPrzyciskZajety = function (btn, zajety) {
         document.getElementById('dnsbl-zrodlo').textContent = tekst(w.zrodlo_danych);
         var st = document.getElementById('dnsbl-status');
         if (st) {
-            st.textContent = 'tryb: ' + tekst(dane.tryb) + (dane.z_cache ? ' (z cache)' : '');
+            st.textContent = 'tryb: ' + tekst(dane.tryb) + (dane.z_cache ? ' (z pamięci podręcznej)' : '');
         }
     }
     function pokazDnsblBlad(msg) {
@@ -1119,7 +1119,7 @@ window.mcsPrzyciskZajety = function (btn, zajety) {
         var st = document.getElementById('lms-status');
         if (st) {
             st.textContent = 'tryb: ' + tekst(dane.tryb)
-                + (dane.z_cache ? ' (z cache)' : '');
+                + (dane.z_cache ? ' (z pamięci podręcznej)' : '');
         }
     }
     function pokazLmsBlad(msg) {
@@ -1178,7 +1178,7 @@ window.mcsPrzyciskZajety = function (btn, zajety) {
         var st = document.getElementById('abuseipdb-status');
         if (st) {
             st.textContent = 'tryb: ' + tekst(dane.tryb)
-                + (dane.z_cache ? ' (z cache)' : '');
+                + (dane.z_cache ? ' (z pamięci podręcznej)' : '');
         }
     }
     function pokazBlad(msg) {

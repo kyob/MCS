@@ -8,7 +8,7 @@ use Config\Database;
 /**
  * Skaner DNSBL, E3: harmonogram automatycznych skanów, wołany z plugins/dnsbl Plugin::pobierz() (cron co 15 min).
  *
- * - „noc”: pełny skan prefiksów IPv4 z as198050_cidry raz na dobę, okno 03:30–05:00 (czas Europe/Warsaw).
+ * - „noc”: pełny skan prefiksów IPv4 z as_cidry raz na dobę, okno 03:30–05:00 (czas Europe/Warsaw).
  * - „recheck”: co godzinę tylko pary ip+strefa z aktywnych listingów.
  * Skan zawsze w tle (setsid, --skan-id); nigdy dwa skany naraz (trwający skan = pomiń).
  */
@@ -85,7 +85,7 @@ class HarmonogramSkanera
         if ($d === self::TRYB_NOC) {
             $prefiksy = Skaner::prefiksyAs();
             if ($prefiksy === []) {
-                return 'noc: puste as198050_cidry';
+                return 'noc: puste as_cidry';
             }
             $id = $skaner->utworzSkan($prefiksy, null, self::TRYB_NOC, 'auto');
         } else {

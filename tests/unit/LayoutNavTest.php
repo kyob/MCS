@@ -12,6 +12,8 @@ final class LayoutNavTest extends CIUnitTestCase
         $html = $this->html('superadmin');
 
         $this->assertStringContainsString('admin/uzytkownicy', $html);
+        $this->assertStringContainsString('assets/css/mcs.css', $html);
+        $this->assertStringNotContainsString('<style>', $html);
         $this->assertStringContainsString('Użytkownicy', $html);
         $this->assertStringContainsString('admin/pluginy', $html);
         $this->assertStringContainsString('admin/ustawienia', $html);

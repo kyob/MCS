@@ -5,7 +5,7 @@ namespace McsPluginy\urlhaus;
 use App\Libraries\ImportHarmonogram;
 use App\Libraries\ImportKoperta;
 use App\Libraries\IncydentZapis;
-use App\Libraries\Siec\As198050Matcher;
+use App\Libraries\Siec\AsMatcher;
 use App\Libraries\StanGodzinny;
 use Throwable;
 
@@ -18,7 +18,7 @@ final class Serwis
 
     private Klient $klient;
 
-    private As198050Matcher $matcher;
+    private AsMatcher $matcher;
 
     private IncydentZapis $zapis;
 
@@ -30,14 +30,14 @@ final class Serwis
 
     public function __construct(
         ?Klient $klient = null,
-        ?As198050Matcher $matcher = null,
+        ?AsMatcher $matcher = null,
         ?IncydentZapis $zapis = null,
         ?ImportKoperta $koperta = null,
         ?StanGodzinny $stan = null,
         ?int $teraz = null,
     ) {
         $this->klient  = $klient ?? Klient::fromOpcje();
-        $this->matcher = $matcher ?? new As198050Matcher();
+        $this->matcher = $matcher ?? new AsMatcher();
         $this->zapis   = $zapis ?? new IncydentZapis();
         $this->koperta = $koperta ?? new ImportKoperta();
         $this->stan    = $stan ?? new StanGodzinny();

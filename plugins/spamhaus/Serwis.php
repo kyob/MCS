@@ -65,8 +65,8 @@ class Serwis
         $this->koperta        = $koperta ?? new ImportKoperta(null, $this->db);
         $this->waga           = new WagaV1();
         $this->zegar          = $zegar ?? static fn (): int => time();
-        $this->naszeCidry     = $naszeCidry ?? static fn (): array => (new \App\Libraries\Siec\As198050Matcher())->cidry();
-        $this->naszAsn        = $naszAsn ?? static fn (): int => \App\Libraries\Siec\As198050Matcher::asn();
+        $this->naszeCidry     = $naszeCidry ?? static fn (): array => (new \App\Libraries\Siec\AsMatcher())->cidry();
+        $this->naszAsn        = $naszAsn ?? static fn (): int => \App\Libraries\Siec\AsMatcher::asn();
         $this->interwalGodzin = $interwalGodzin ?? \App\Libraries\OpcjeMcs::int('mcs.spamhaus.interwalGodzin');
         $this->losowaMinuta   = $losowaMinuta ?? static fn (): int => random_int(0, 59);
     }
@@ -114,7 +114,7 @@ class Serwis
                 static fn ($c) => $c !== null,
             ));
             if ($nasze === []) {
-                throw new RuntimeException('Spamhaus: brak prefiksów w mcs_ustawienia.as198050_cidry — nie można ocenić');
+                throw new RuntimeException('Spamhaus: brak prefiksów w mcs_ustawienia.as_cidry — nie można ocenić');
             }
             $asn = ($this->naszAsn)();
 

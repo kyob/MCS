@@ -1,7 +1,7 @@
 <?php
 
 use App\Libraries\Enrichment\SpeedtestSerwis;
-use App\Libraries\Siec\As198050Matcher;
+use App\Libraries\Siec\AsMatcher;
 use App\Libraries\Siec\CidrMatcher;
 use App\Models\EnrichmentSpeedtestModel;
 use CodeIgniter\Events\Events;
@@ -281,7 +281,7 @@ final class SpeedtestDbBottlenecksTest extends CIUnitTestCase
         return new SpeedtestSerwis(
             new Parser(),
             model(EnrichmentSpeedtestModel::class),
-            new As198050Matcher(new CidrMatcher(), null),
+            new AsMatcher(new CidrMatcher(), null),
             '',
             '',
             new PortalClient('', ''),

@@ -301,42 +301,22 @@ class PortalClient
             }
         }
 
-        $headerLines = [];
-        $ch          = curl_init();
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            // Redirecty tylko po https (egress https wymuszony także po redirectach).
-            CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTPS,
-            CURLOPT_MAXREDIRS      => 3,
-            CURLOPT_SSL_VERIFYPEER => $this->tlsVerifyPeer,
-            CURLOPT_SSL_VERIFYHOST => $this->tlsVerifyPeer ? 2 : 0,
-            CURLOPT_USERAGENT      => 'MCS-Speedtest/1.0',
-            CURLOPT_URL            => $url,
-            CURLOPT_CUSTOMREQUEST  => $method,
-            CURLOPT_TIMEOUT        => max(1, \App\Libraries\OpcjeMcs::int('mcs.speedtest.httpTimeout')),
-            CURLOPT_CONNECTTIMEOUT => max(1, \App\Libraries\OpcjeMcs::int('mcs.speedtest.httpConnectTimeout')),
-            CURLOPT_HTTPHEADER     => $headers,
-            CURLOPT_HEADERFUNCTION => static function ($ch, string $line) use (&$headerLines): int {
-                $len = strlen($line);
-                $line = trim($line);
-                if ($line !== '' && str_contains($line, ':')) {
-                    [$name, $value] = explode(':', $line, 2);
-                    $headerLines[strtolower(trim($name))] = trim($value);
-                }
-
-                return $len;
-            },
+        $body = isset($opts['body']) && is_string($opts['body']) && $opts['body'] !== '' ? $opts['body'] : null;
+        $res  = \App\Libraries\Siec\KlientHttp::wykonaj($url, [
+            'metoda'         => $method,
+            'body'           => $body,
+            'timeout'        => max(1, \App\Libraries\OpcjeMcs::int('mcs.speedtest.httpTimeout')),
+            'polaczenie'     => max(1, \App\Libraries\OpcjeMcs::int('mcs.speedtest.httpConnectTimeout')),
+            'przekierowania' => 3,
+            'tls'            => $this->tlsVerifyPeer,
+            'user_agent'     => 'MCS-Speedtest/1.0',
+            'naglowki'       => $headers,
         ]);
-        if (isset($opts['body']) && is_string($opts['body']) && $opts['body'] !== '') {
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $opts['body']);
-        }
-
-        $output   = curl_exec($ch);
-        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $errno    = curl_errno($ch);
-        $errstr   = curl_error($ch);
-        curl_close($ch);
+        $headerLines = $res['naglowki'];
+        $output      = $res['ok'] ? $res['body'] : false;
+        $httpCode    = $res['http_code'];
+        $errno       = $res['errno'];
+        $errstr      = $res['ok'] ? '' : ($res['error'] === 'curl_exec failed' ? '' : $res['error']);
 
         if ($output === false) {
             return [

@@ -3,7 +3,7 @@
 use CodeIgniter\Test\CIUnitTestCase;
 
 /**
- * Widok skanera DNSBL na /dashboard/dnsbl (kafelki, tabela per strefa, filtry, Request removal).
+ * Widok skanera DNSBL na /dashboard/dnsbl (kafelki, tabela per strefa, filtry, zgłoszenie usunięcia).
  *
  * @internal
  */
@@ -45,9 +45,12 @@ final class DnsblSkanerViewTest extends CIUnitTestCase
             ],
         ]);
 
-        foreach (['Total (IP)', 'Clean', 'Blacklisted', 'Duration', 'Błędy', 'Skanuj ponownie', 'Request removal 91.231.70.1', 'Listed (1)', 'All (2)', 'Clean (1)', 'Błędy (0)'] as $t) {
+        foreach (['Wszystkie IP', 'Czyste', 'Na listach', 'Czas', 'Błędy', 'Skanuj ponownie', 'Zgłoś usunięcie 91.231.70.1', 'Na listach (1)', 'Wszystkie (2)', 'Czyste (1)', 'Błędy (0)'] as $t) {
             $this->assertStringContainsString($t, $html);
         }
+        $this->assertStringNotContainsString('Request removal', $html);
+        $this->assertStringContainsString('aria-label="Zastosuj filtry"', $html);
+        $this->assertStringNotContainsString('aria-label="Wyczyść filtry"', $html);
         $this->assertStringContainsString('bl.shtml&#x3F;91.231.70.1', $html);
         $this->assertStringNotContainsString('dnsbl-postep-bar', $html);
     }

@@ -16,7 +16,7 @@ $paletaZrodel   = [
 ];
 $kolorZrodla = [];
 $iKolor      = 0;
-$asAsn       = (int) ($asAsn ?? \App\Libraries\Siec\As198050Matcher::asn());
+$asAsn       = (int) ($asAsn ?? \App\Libraries\Siec\AsMatcher::asn());
 foreach (array_keys($trendyZrodla) as $kodZ) {
     $kolorZrodla[(string) $kodZ] = $paletaZrodel[$iKolor % count($paletaZrodel)];
     $iKolor++;

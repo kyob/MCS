@@ -5,7 +5,7 @@ use App\Libraries\Enrichment\SpeedtestSerwis;
 use App\Libraries\KolejkaDnia;
 use App\Libraries\OpcjeMcs;
 use App\Libraries\ProblemyIp;
-use App\Libraries\Siec\As198050Matcher;
+use App\Libraries\Siec\AsMatcher;
 use App\Models\UstawieniaModel;
 use CodeIgniter\Test\CIUnitTestCase;
 use McsPluginy\play\Parser as PlayParser;
@@ -80,7 +80,7 @@ final class OpcjeMcsTest extends CIUnitTestCase
     public function testDomyslneRownePoprzednimHardkodom(): void
     {
         $oczekiwane = [
-            'mcs.as198050.asn'                      => 198050,
+            'mcs.as.asn'                      => 198050,
             'mcs.revDns.cacheTtl'                   => 3600,
             'mcs.revDns.timeoutMs'                  => 300,
             'mcs.api.rateLimit'                     => 60,
@@ -172,7 +172,7 @@ final class OpcjeMcsTest extends CIUnitTestCase
         $this->assertSame(KolejkaDnia::MIN_WAGA, KolejkaDnia::minWaga());
         $this->assertSame(ProblemyIp::OKNO_TIMELINE_DNI, ProblemyIp::oknoTimelineDni());
         $this->assertSame(SpeedtestSerwis::DOMYSLNY_TOP_N, SpeedtestSerwis::domyslnyTopN());
-        $this->assertSame(As198050Matcher::ASN, As198050Matcher::asn());
+        $this->assertSame(AsMatcher::DOMYSLNY_ASN, AsMatcher::asn());
         $this->assertSame(PlayParser::FROM_PLAY, PlayParser::nadawca());
         $this->assertSame('@play.pl', PlayParser::domenaNadawcy());
 
@@ -221,9 +221,9 @@ final class OpcjeMcsTest extends CIUnitTestCase
 
     public function testAsnGlobalnyZDbUzywanyPrzezPluginy(): void
     {
-        OpcjeMcs::ustawModel($this->modelZ(['mcs.as198050.asn' => '65001']));
+        OpcjeMcs::ustawModel($this->modelZ(['mcs.as.asn' => '65001']));
 
-        $this->assertSame(65001, As198050Matcher::asn());
+        $this->assertSame(65001, AsMatcher::asn());
         $this->assertSame(65001, (new \McsPluginy\spoofer\Plugin())->resolveAsn());
     }
 
@@ -235,10 +235,10 @@ final class OpcjeMcsTest extends CIUnitTestCase
         $this->assertFalse(OpcjeMcs::waliduj('mcs.badge.maxIpsBatch', '10.5')['ok']);
         $this->assertFalse(OpcjeMcs::waliduj('mcs.badge.maxIpsBatch', '')['ok']);
 
-        $this->assertSame('198050', OpcjeMcs::waliduj('mcs.as198050.asn', 'AS198050')['wartosc']);
-        $this->assertFalse(OpcjeMcs::waliduj('mcs.as198050.asn', '0')['ok']);
-        $this->assertFalse(OpcjeMcs::waliduj('mcs.as198050.asn', '4294967296')['ok']);
-        $this->assertFalse(OpcjeMcs::waliduj('mcs.as198050.asn', '')['ok']);
+        $this->assertSame('198050', OpcjeMcs::waliduj('mcs.as.asn', 'AS198050')['wartosc']);
+        $this->assertFalse(OpcjeMcs::waliduj('mcs.as.asn', '0')['ok']);
+        $this->assertFalse(OpcjeMcs::waliduj('mcs.as.asn', '4294967296')['ok']);
+        $this->assertFalse(OpcjeMcs::waliduj('mcs.as.asn', '')['ok']);
         $this->assertTrue(OpcjeMcs::waliduj('mcs.spoofer.asn', '')['ok']);
 
         $this->assertTrue(OpcjeMcs::waliduj('mcs.play.fromAddress', 'Alert@Example.com')['ok']);

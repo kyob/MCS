@@ -53,7 +53,11 @@
     </div>
     <div class="card-body pt-3">
         <?php if ($lista === []): ?>
-            <p class="text-body-secondary mb-0">Lista jest pusta.</p>
+            <?= view('partials/_pusty_stan', [
+                'tekst' => 'Watchlista jest pusta.',
+                'opis'  => 'Dodaj adres IP, aby uwzględnić go w digescie.',
+                'ikona' => 'bi-eye',
+            ], ['saveData' => false]) ?>
         <?php else: ?>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -102,7 +106,7 @@
         </h3>
         <p class="mb-2">
             <code>php spark mcs:digest</code> — high|critical z ostatnich 24 h dla IP z listy.<br>
-            <code>php spark mcs:digest --godziny=6 --tylko-as198050</code> — węższe okno + filtr AS<?= (int) $asAsn ?>.
+            <code>php spark mcs:digest --godziny=6 --tylko-as</code> — węższe okno + filtr AS<?= (int) $asAsn ?>.
         </p>
         <h3 class="h6 text-body">Zakres</h3>
         <p class="mb-0">

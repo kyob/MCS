@@ -2,7 +2,7 @@
 
 namespace App\Libraries\Watchlista;
 
-use App\Libraries\Siec\As198050Matcher;
+use App\Libraries\Siec\AsMatcher;
 use App\Models\WatchlistaModel;
 use Config\Database;
 
@@ -13,37 +13,37 @@ final class DigestSerwis
 {
     private WatchlistaModel $watchlista;
 
-    private As198050Matcher $matcher;
+    private AsMatcher $matcher;
 
     /** @var \CodeIgniter\Database\BaseConnection|null */
     private $db;
 
     public function __construct(
         ?WatchlistaModel $watchlista = null,
-        ?As198050Matcher $matcher = null,
+        ?AsMatcher $matcher = null,
         $db = null,
     ) {
         $this->watchlista = $watchlista ?? model(WatchlistaModel::class);
-        $this->matcher    = $matcher ?? new As198050Matcher();
+        $this->matcher    = $matcher ?? new AsMatcher();
         $this->db         = $db;
     }
 
     /**
      * @return array{
      *   okno_godzin: int,
-     *   tylko_as198050: bool,
+     *   tylko_as: bool,
      *   liczba_ip_watchlista: int,
      *   wygenerowano_at: string,
      *   incydenty: list<array<string, mixed>>
      * }
      */
-    public function zbierz(int $oknoGodzin = 24, bool $tylkoAs198050 = false): array
+    public function zbierz(int $oknoGodzin = 24, bool $tylkoAs = false): array
     {
         $oknoGodzin = max(1, min(168, $oknoGodzin));
         $wszystkie  = $this->watchlista->listaIp();
         $ips        = $wszystkie;
 
-        if ($tylkoAs198050) {
+        if ($tylkoAs) {
             $ips = array_values(array_filter(
                 $ips,
                 fn (string $ip): bool => $this->matcher->czyNaszeIp($ip),
@@ -54,7 +54,7 @@ final class DigestSerwis
 
         return [
             'okno_godzin'          => $oknoGodzin,
-            'tylko_as198050'       => $tylkoAs198050,
+            'tylko_as'       => $tylkoAs,
             'liczba_ip_watchlista' => count($wszystkie),
             'wygenerowano_at'      => (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))
                 ->format('Y-m-d\TH:i:s\Z'),
@@ -65,7 +65,7 @@ final class DigestSerwis
     /**
      * @param array{
      *   okno_godzin: int,
-     *   tylko_as198050: bool,
+     *   tylko_as: bool,
      *   liczba_ip_watchlista: int,
      *   wygenerowano_at: string,
      *   incydenty: list<array<string, mixed>>
@@ -76,11 +76,12 @@ final class DigestSerwis
         $linie   = [];
         $linie[] = '=== Digest operacyjny MCS (INFO — bez auto-blokad) ===';
         $linie[] = sprintf(
-            'Wygenerowano: %s | okno: %dh | IP na watchliście: %d | filtr AS198050: %s',
+            'Wygenerowano: %s | okno: %dh | IP na watchliście: %d | filtr AS%d: %s',
             $wynik['wygenerowano_at'],
             $wynik['okno_godzin'],
             $wynik['liczba_ip_watchlista'],
-            $wynik['tylko_as198050'] ? 'tak' : 'nie',
+            AsMatcher::asn(),
+            $wynik['tylko_as'] ? 'tak' : 'nie',
         );
         $linie[] = '';
 

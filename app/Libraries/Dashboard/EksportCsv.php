@@ -4,7 +4,7 @@ namespace App\Libraries\Dashboard;
 
 use App\Libraries\CsvBezpieczenstwo;
 use App\Libraries\DashboardFiltry;
-use App\Libraries\Siec\As198050Matcher;
+use App\Libraries\Siec\AsMatcher;
 use App\Models\IncydentModel;
 
 /**
@@ -23,16 +23,16 @@ final class EksportCsv
 
     private IncydentModel $model;
 
-    private As198050Matcher $matcher;
+    private AsMatcher $matcher;
 
     public function __construct(
         ?DashboardFiltry $filtry = null,
         ?IncydentModel $model = null,
-        ?As198050Matcher $matcher = null,
+        ?AsMatcher $matcher = null,
     ) {
         $this->filtryLib = $filtry ?? new DashboardFiltry();
         $this->model     = $model ?? model(IncydentModel::class);
-        $this->matcher   = $matcher ?? new As198050Matcher();
+        $this->matcher   = $matcher ?? new AsMatcher();
     }
 
     /**

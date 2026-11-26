@@ -8,7 +8,7 @@ use App\Libraries\Enrichment\SpeedtestSerwis;
 use App\Libraries\KolejkaDnia;
 use App\Libraries\KontekstIp;
 use App\Libraries\OpcjeMcs;
-use App\Libraries\Siec\As198050Matcher;
+use App\Libraries\Siec\AsMatcher;
 use App\Libraries\Siec\RevDns;
 use App\Models\IncydentModel;
 use App\Models\ObserwacjaModel;
@@ -121,7 +121,7 @@ class Dashboard extends BaseController
         $ctx['queryEksport'] = $this->queryEksport($filtry);
         // CIDR z sesji jest celowo wyzerowany — przebuduj filtr AS, żeby wąski CIDR
         // z innych widoków nie zawężał kolejki dnia.
-        $matcher            = new As198050Matcher();
+        $matcher            = new AsMatcher();
         $ctx['akceptujIp']  = $matcher->filtrAkceptujIp(null);
         $ctx['grupyCidr']   = $this->grupyCidr($matcher, null);
 
@@ -236,13 +236,14 @@ class Dashboard extends BaseController
         $blad = $blad === [] ? null : 'Nie udało się pobrać sekcji: ' . implode(', ', $blad) . '.';
 
         return view('dashboard/speedtest', $this->daneWidoku('speedtest', [
-            'filtry'   => $filtry,
-            'okno'     => $filtry['okno'],
-            'blad'     => $blad,
-            'kpi'      => $kpi,
-            'agregaty' => $agregaty,
-            'dzienne'  => $dzienne,
-            'anomalie' => $anomalie,
+            'filtry'         => $filtry,
+            'pokazWyczysc'   => $filtry !== SpeedtestSerwis::parsujFiltry([]),
+            'okno'           => $filtry['okno'],
+            'blad'           => $blad,
+            'kpi'            => $kpi,
+            'agregaty'       => $agregaty,
+            'dzienne'        => $dzienne,
+            'anomalie'       => $anomalie,
         ]));
     }
 
@@ -254,7 +255,7 @@ class Dashboard extends BaseController
         $lista = trim((string) ($this->request->getGet('lista') ?? ''));
         $cidr  = trim((string) ($this->request->getGet('cidr') ?? ''));
 
-        $matcher    = new As198050Matcher();
+        $matcher    = new AsMatcher();
         $akceptujIp = $matcher->filtrAkceptujIp($cidr !== '' ? $cidr : null);
 
         $model = model(\App\Models\EnrichmentDnsblModel::class);
@@ -316,12 +317,13 @@ class Dashboard extends BaseController
         ];
 
         return view('dashboard/dnsbl', $this->daneWidoku('dnsbl', [
-            'blad'   => $blad,
-            'kpi'    => $kpi,
-            'wiersze'=> $wiersze,
-            'lista'  => $lista,
-            'cidr'   => $cidr,
-            'skaner' => $this->daneSkanera(),
+            'blad'         => $blad,
+            'kpi'          => $kpi,
+            'wiersze'      => $wiersze,
+            'lista'        => $lista,
+            'cidr'         => $cidr,
+            'pokazWyczysc' => $lista !== '' || $cidr !== '',
+            'skaner'       => $this->daneSkanera(),
         ]));
     }
 
@@ -708,7 +710,7 @@ class Dashboard extends BaseController
     private function przygotujKontekst(): array
     {
         $filtry          = $this->parsujFiltry();
-        $matcher         = new As198050Matcher();
+        $matcher         = new AsMatcher();
         $asMatchWlaczone = $matcher->jestWlaczone();
         $cidr            = ! empty($filtry['bladCidr']) ? null : ($filtry['cidr'] ?? null);
         $akceptujIp      = $matcher->filtrAkceptujIp(is_string($cidr) ? $cidr : null);
@@ -733,7 +735,7 @@ class Dashboard extends BaseController
      *
      * @return list<list<string>>
      */
-    private function grupyCidr(As198050Matcher $matcher, ?string $cidr): array
+    private function grupyCidr(AsMatcher $matcher, ?string $cidr): array
     {
         $grupy = [];
         if ($matcher->jestWlaczone()) {
@@ -757,10 +759,11 @@ class Dashboard extends BaseController
      */
     private function daneFiltrow(array $ctx, string $sciezka): array
     {
-        $filtry    = $ctx['filtry'];
-        $akcja     = site_url($sciezka);
-        $podsieci  = is_array($ctx['podsieciAs'] ?? null) ? $ctx['podsieciAs'] : [];
-        $formularz = (new DashboardFiltry())->doFormularza($filtry, $podsieci);
+        $filtry       = $ctx['filtry'];
+        $akcja        = site_url($sciezka);
+        $podsieci     = is_array($ctx['podsieciAs'] ?? null) ? $ctx['podsieciAs'] : [];
+        $filtryHelper = new DashboardFiltry();
+        $formularz    = $filtryHelper->doFormularza($filtry, $podsieci);
 
         return [
             'okno'            => $filtry['okno'],
@@ -780,6 +783,7 @@ class Dashboard extends BaseController
             'queryEksport'    => $ctx['queryEksport'],
             'formAkcja'       => $akcja,
             'wyczyscHref'     => $akcja . '?wyczysc=1',
+            'pokazWyczysc'    => $filtryHelper->czyAktywne($filtry),
         ];
     }
 

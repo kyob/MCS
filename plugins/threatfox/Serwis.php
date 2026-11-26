@@ -93,7 +93,7 @@ class Serwis
         $this->koperta        = $koperta ?? new ImportKoperta(null, $this->db);
         $this->waga           = new WagaV1();
         $this->zegar          = $zegar ?? static fn (): int => time();
-        $this->naszeCidry     = $naszeCidry ?? static fn (): array => (new \App\Libraries\Siec\As198050Matcher())->cidry();
+        $this->naszeCidry     = $naszeCidry ?? static fn (): array => (new \App\Libraries\Siec\AsMatcher())->cidry();
         $this->interwalGodzin = $interwalGodzin ?? \App\Libraries\OpcjeMcs::int('mcs.threatfox.interwalGodzin');
         $this->losowaMinuta   = $losowaMinuta ?? static fn (): int => random_int(0, 59);
     }
@@ -145,7 +145,7 @@ class Serwis
                 static fn ($c) => $c !== null,
             ));
             if ($nasze === []) {
-                throw new RuntimeException('ThreatFox: brak prefiksów w mcs_ustawienia.as198050_cidry — nie można ocenić');
+                throw new RuntimeException('ThreatFox: brak prefiksów w mcs_ustawienia.as_cidry — nie można ocenić');
             }
 
             $trafienia = Dopasowanie::dopasujIps($rekordy, $nasze);

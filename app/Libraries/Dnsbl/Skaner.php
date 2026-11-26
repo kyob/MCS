@@ -3,12 +3,12 @@
 namespace App\Libraries\Dnsbl;
 
 use App\Libraries\OpcjeMcs;
-use App\Libraries\Siec\As198050Matcher;
+use App\Libraries\Siec\AsMatcher;
 use CodeIgniter\Database\BaseConnection;
 use Config\Database;
 
 /**
- * Skaner DNSBL dla IPv4 AS198050 (plugin dnsbl, E1).
+ * Skaner DNSBL dla IPv4 naszego AS (plugin dnsbl, E1).
  *
  * Resolver: lokalny unbound (mcs.dnsbl.skanerResolver, domyślnie 127.0.0.1) — nie systemowy resolv.conf.
  * Zapisuje mcs_dnsbl_skany / _wyniki / _listingi. E3: zdarzenia nowy/zdjęty (mcs_dnsbl_zdarzenia),
@@ -69,14 +69,14 @@ class Skaner
     }
 
     /**
-     * Prefiksy IPv4 z as198050_cidry.
+     * Prefiksy IPv4 z as_cidry.
      *
      * @return list<string>
      */
     public static function prefiksyAs(): array
     {
         return array_values(array_filter(
-            (new As198050Matcher())->cidryIpv4(),
+            (new AsMatcher())->cidryIpv4(),
             static fn ($c) => ! str_contains((string) $c, ':'),
         ));
     }

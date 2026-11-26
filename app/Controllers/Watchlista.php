@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Libraries\Siec\As198050Matcher;
+use App\Libraries\Siec\AsMatcher;
 use App\Models\WatchlistaModel;
 
 /**
@@ -14,7 +14,7 @@ class Watchlista extends BaseController
     {
         $model   = model(WatchlistaModel::class);
         $lista   = $model->wszystkie();
-        $matcher = new As198050Matcher();
+        $matcher = new AsMatcher();
 
         foreach ($lista as &$wiersz) {
             $ip                 = (string) ($wiersz['ip'] ?? '');
@@ -30,7 +30,7 @@ class Watchlista extends BaseController
             'komunikat'  => session()->getFlashdata('komunikat'),
             'blad'       => session()->getFlashdata('blad'),
             'lista'      => $lista,
-            'asAsn'      => As198050Matcher::asn(),
+            'asAsn'      => AsMatcher::asn(),
         ]);
     }
 

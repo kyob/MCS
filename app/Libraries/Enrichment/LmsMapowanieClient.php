@@ -263,33 +263,17 @@ class LmsMapowanieClient
             ];
         }
 
-        $ch = curl_init($url);
-        if ($ch === false) {
-            return [
-                'ok'        => false,
-                'http_code' => 0,
-                'data'      => null,
-                'error'     => 'curl_init failed',
-                'raw_body'  => '',
-            ];
-        }
-
-        curl_setopt_array($ch, [
-            CURLOPT_CUSTOMREQUEST  => $method,
-            CURLOPT_RETURNTRANSFER => true,
-            // Bez śledzenia redirectów: każdy kolejny cel musiałby przejść walidację egress.
-            CURLOPT_FOLLOWLOCATION => false,
-            CURLOPT_CONNECTTIMEOUT => 10,
-            CURLOPT_TIMEOUT        => $this->timeout,
-            CURLOPT_HTTPHEADER     => $headers,
-            CURLOPT_SSL_VERIFYPEER => $this->tlsVerifyPeer,
-            CURLOPT_SSL_VERIFYHOST => $this->tlsVerifyPeer ? 2 : 0,
+        // Bez śledzenia redirectów: każdy kolejny cel musiałby przejść walidację egress.
+        $res  = \App\Libraries\Siec\KlientHttp::wykonaj($url, [
+            'metoda'     => $method,
+            'timeout'    => $this->timeout,
+            'polaczenie' => 10,
+            'naglowki'   => $headers,
+            'tls'        => $this->tlsVerifyPeer,
         ]);
-
-        $body = curl_exec($ch);
-        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $err  = curl_error($ch);
-        curl_close($ch);
+        $body = $res['ok'] ? $res['body'] : false;
+        $code = $res['http_code'];
+        $err  = $res['ok'] ? '' : ($res['error'] === 'curl_exec failed' ? '' : $res['error']);
 
         if ($body === false) {
             return [

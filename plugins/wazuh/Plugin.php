@@ -7,7 +7,7 @@ use App\Libraries\ImportLimity;
 use App\Libraries\IncydentZapis;
 use App\Libraries\PrzekroczonyLimitImportu;
 use App\Libraries\PluginOpisPolaczenia;
-use App\Libraries\Siec\As198050Matcher;
+use App\Libraries\Siec\AsMatcher;
 use App\Libraries\SourcePluginInterface;
 use App\Libraries\WagaV1;
 use App\Models\PluginModel;
@@ -15,7 +15,7 @@ use Config\Database;
 use RuntimeException;
 
 /**
- * Plugin źródła Wazuh — IP z AS198050, które spamują / atakują nasze serwery (SMTP, SSH, WWW).
+ * Plugin źródła Wazuh — IP z naszego AS, które spamują / atakują nasze serwery (SMTP, SSH, WWW).
  *
  * Tryby pobierz():
  * 1) fixture JSON — mcs.wazuh.fixturePath
@@ -32,7 +32,7 @@ class Plugin implements SourcePluginInterface
     private IncydentZapis $zapis;
     private WagaV1 $waga;
     private ?ApiClient $apiClient;
-    private ?As198050Matcher $as;
+    private ?AsMatcher $as;
 
     public function __construct(
         ?Parser $parser = null,
@@ -40,7 +40,7 @@ class Plugin implements SourcePluginInterface
         ?IncydentZapis $zapis = null,
         ?WagaV1 $waga = null,
         ?ApiClient $apiClient = null,
-        ?As198050Matcher $as = null,
+        ?AsMatcher $as = null,
     ) {
         $this->parser    = $parser ?? new Parser();
         $this->koperta   = $koperta ?? new ImportKoperta();
@@ -88,8 +88,8 @@ class Plugin implements SourcePluginInterface
                 $s = $this->importujJson($res['stdout'], 'ssh:' . $client->getHost());
             }
             $this->aktualizujHealth(true, sprintf(
-                'import OK (eksport=%d, AS198050=%d, nowe/zmienione=%d, incydenty=%d%s)',
-                $s['eksport'], $s['as'], $s['zmienione'], $s['incydenty'], $s['duplikat'] ? ', bez zmian' : '',
+                'import OK (eksport=%d, AS%d=%d, nowe/zmienione=%d, incydenty=%d%s)',
+                $s['eksport'], AsMatcher::asn(), $s['as'], $s['zmienione'], $s['incydenty'], $s['duplikat'] ? ', bez zmian' : '',
             ));
         } catch (\Throwable $e) {
             $this->aktualizujHealth(false, $e->getMessage());
@@ -155,7 +155,7 @@ class Plugin implements SourcePluginInterface
             $this->koperta->oznaczBlad($this->zrodlo(), hash('sha256', $json), $idWiadomosci, ['id_wiadomosci' => $idWiadomosci], $e->getMessage());
             throw $e;
         }
-        $as = $this->as ?? new As198050Matcher();
+        $as = $this->as ?? new AsMatcher();
 
         $nasze = [];
         foreach ($eksport['wiersze'] as $w) {

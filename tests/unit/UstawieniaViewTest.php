@@ -94,7 +94,7 @@ final class UstawieniaViewTest extends CIUnitTestCase
     {
         $sesjaPrzed = $_SESSION ?? null;
         $_SESSION = [];
-        session()->set('_ci_old_input', ['post' => ['as198050_cidry' => "91.231.80.0/22\nzly-cidr-123\n176.97.24.0/21"]]);
+        session()->set('_ci_old_input', ['post' => ['as_cidry' => "91.231.80.0/22\nzly-cidr-123\n176.97.24.0/21"]]);
 
         try {
             $html = view('admin/ustawienia/index', [
@@ -118,7 +118,7 @@ final class UstawieniaViewTest extends CIUnitTestCase
         $this->assertStringContainsString('91.231.80.0/22', $html);
         // textarea nie pokazuje starej wartości z DB
         $this->assertMatchesRegularExpression(
-            '/<textarea[^>]*name="as198050_cidry"[^>]*>(?:(?!10\.0\.0\.0\/8).)*<\/textarea>/s',
+            '/<textarea[^>]*name="as_cidry"[^>]*>(?:(?!10\.0\.0\.0\/8).)*<\/textarea>/s',
             $html,
         );
     }
@@ -147,7 +147,7 @@ final class UstawieniaViewTest extends CIUnitTestCase
         }
 
         $this->assertMatchesRegularExpression(
-            '/<textarea[^>]*name="as198050_cidry"[^>]*>10\.0\.0\.0\/8/s',
+            '/<textarea[^>]*name="as_cidry"[^>]*>10\.0\.0\.0\/8/s',
             $html,
         );
     }

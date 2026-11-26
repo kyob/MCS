@@ -214,28 +214,18 @@ class ApiClient
      */
     private function curlGet(string $url): array
     {
-        $ch = curl_init();
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            // Redirecty tylko po https (egress https wymuszony także po redirectach).
-            CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTPS,
-            CURLOPT_MAXREDIRS      => 3,
-            CURLOPT_SSL_VERIFYPEER => $this->tlsVerifyPeer,
-            CURLOPT_SSL_VERIFYHOST => $this->tlsVerifyPeer ? 2 : 0,
-            CURLOPT_USERAGENT      => 'MCS-Spoofer/1.0',
-            CURLOPT_URL            => $url,
-            CURLOPT_TIMEOUT        => max(1, \App\Libraries\OpcjeMcs::int('mcs.spoofer.httpTimeout')),
-            CURLOPT_CONNECTTIMEOUT => max(1, \App\Libraries\OpcjeMcs::int('mcs.spoofer.httpConnectTimeout')),
-            CURLOPT_HTTPHEADER     => [
-                'Accept: application/ld+json, application/json',
-            ],
+        $res      = \App\Libraries\Siec\KlientHttp::wykonaj($url, [
+            'timeout'        => max(1, \App\Libraries\OpcjeMcs::int('mcs.spoofer.httpTimeout')),
+            'polaczenie'     => max(1, \App\Libraries\OpcjeMcs::int('mcs.spoofer.httpConnectTimeout')),
+            'przekierowania' => 3,
+            'tls'            => $this->tlsVerifyPeer,
+            'user_agent'     => 'MCS-Spoofer/1.0',
+            'naglowki'       => ['Accept: application/ld+json, application/json'],
         ]);
-        $output   = curl_exec($ch);
-        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $errno    = curl_errno($ch);
-        $errstr   = curl_error($ch);
-        curl_close($ch);
+        $output   = $res['ok'] ? $res['body'] : false;
+        $httpCode = $res['http_code'];
+        $errno    = $res['errno'];
+        $errstr   = $res['ok'] ? '' : ($res['error'] === 'curl_exec failed' ? '' : $res['error']);
 
         if ($output === false) {
             return [

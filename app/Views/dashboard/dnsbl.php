@@ -7,7 +7,8 @@ $wiersze = is_array($wiersze ?? null) ? $wiersze : [];
 $lista   = (string) ($lista ?? '');
 $cidr    = (string) ($cidr ?? '');
 $blad    = $blad ?? null;
-$asAsn   = (int) ($asAsn ?? \App\Libraries\Siec\As198050Matcher::asn());
+$asAsn   = (int) ($asAsn ?? \App\Libraries\Siec\AsMatcher::asn());
+$pokazWyczysc = isset($pokazWyczysc) ? (bool) $pokazWyczysc : $lista !== '' || $cidr !== '';
 ?>
 
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
@@ -27,7 +28,7 @@ $asAsn   = (int) ($asAsn ?? \App\Libraries\Siec\As198050Matcher::asn());
 
 <?= $this->include('dashboard/_dnsbl_skaner') ?>
 
-<h2 class="h5 mt-5 mb-3">Skan cron (UCEPROTECT L1, SpamCop, DroneBL) — cache enrichment</h2>
+<h2 class="h5 mt-5 mb-3">Skan cykliczny (UCEPROTECT L1, SpamCop, DroneBL) — pamięć podręczna</h2>
 
 <?php if (! empty($blad)): ?>
     <div class="alert alert-danger border-0 shadow-sm rounded-3" role="alert"><?= esc((string) $blad) ?></div>
@@ -37,7 +38,7 @@ $asAsn   = (int) ($asAsn ?? \App\Libraries\Siec\As198050Matcher::asn());
     <div class="col-sm-6 col-lg-3">
         <div class="card border-0 shadow-sm rounded-3 h-100">
             <div class="card-body">
-                <div class="text-body-secondary small mb-1">Listed IP</div>
+                <div class="text-body-secondary small mb-1">IP na listach</div>
                 <div class="fs-3 fw-semibold"><?= (int) ($kpi['listed'] ?? 0) ?></div>
             </div>
         </div>
@@ -52,10 +53,11 @@ $asAsn   = (int) ($asAsn ?? \App\Libraries\Siec\As198050Matcher::asn());
     </div>
 </div>
 
-<form class="card border-0 shadow-sm rounded-3 mb-4" method="get" action="<?= site_url('dashboard/dnsbl') ?>">
+<form class="card border-0 shadow-sm rounded-3 mb-4 mcs-filter-card" method="get"
+      action="<?= site_url('dashboard/dnsbl') ?>" aria-label="Filtry DNSBL">
     <div class="card-body">
         <div class="row g-3 align-items-end">
-            <div class="col-md-4">
+            <div class="col-12 col-md-4">
                 <label class="form-label" for="dnsbl-lista">Lista</label>
                 <select class="form-select" id="dnsbl-lista" name="lista">
                     <option value="">Wszystkie</option>
@@ -69,9 +71,11 @@ $asAsn   = (int) ($asAsn ?? \App\Libraries\Siec\As198050Matcher::asn());
                 <input class="form-control font-monospace" id="dnsbl-cidr" type="text" name="cidr"
                        value="<?= esc($cidr) ?>" placeholder="np. 91.231.80.0/22">
             </div>
-            <div class="col-md-4 d-flex gap-2">
-                <button type="submit" class="btn btn-primary">Filtruj</button>
-                <a class="btn btn-outline-secondary" href="<?= site_url('dashboard/dnsbl') ?>">Wyczyść</a>
+            <div class="col-md-4">
+                <?= view('partials/_akcje_filtrow', [
+                    'wyczyscHref'  => site_url('dashboard/dnsbl'),
+                    'pokazWyczysc' => $pokazWyczysc,
+                ], ['saveData' => false]) ?>
             </div>
         </div>
     </div>
@@ -87,15 +91,18 @@ $asAsn   = (int) ($asAsn ?? \App\Libraries\Siec\As198050Matcher::asn());
                         <th scope="col">Listy</th>
                         <th scope="col">LMS</th>
                         <th scope="col">Zakres skanu</th>
-                        <th scope="col">Checked at</th>
+                        <th scope="col">Sprawdzono</th>
                         <th scope="col" class="pe-3">Spamhaus</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php if ($wiersze === []): ?>
                     <tr>
-                        <td colspan="6" class="text-body-secondary text-center py-4">
-                            Brak aktualnie listed IP w cache.
+                        <td colspan="6">
+                            <?= view('partials/_pusty_stan', [
+                                'tekst' => 'Brak adresów IP znajdujących się obecnie na listach.',
+                                'ikona' => 'bi-shield-check',
+                            ], ['saveData' => false]) ?>
                         </td>
                     </tr>
                 <?php else: ?>
@@ -125,8 +132,8 @@ $asAsn   = (int) ($asAsn ?? \App\Libraries\Siec\As198050Matcher::asn());
                                 <a class="btn btn-sm btn-outline-secondary"
                                    href="https://check.spamhaus.org/results/?query=<?= rawurlencode($ipW) ?>"
                                    target="_blank" rel="noopener noreferrer"
-                                   title="Spamhaus Check">
-                                    Check
+                                   title="Sprawdź w Spamhaus">
+                                    Sprawdź
                                 </a>
                             </td>
                         </tr>

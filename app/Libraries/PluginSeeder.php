@@ -48,27 +48,27 @@ class PluginSeeder
         [
             'zrodlo' => 'spoofer',
             'nazwa'  => 'CAIDA Spoofer',
-            'opis'   => 'Pomiary BCP38 (czy sieć przepuszcza spoofing). Publiczne API CAIDA, filtr ASN (domyślnie AS198050), prefiksy — poza badge hosta.',
+            'opis'   => 'Pomiary BCP38 (czy sieć przepuszcza spoofing). Publiczne API CAIDA, filtr ASN (domyślnie ASN z ustawień), prefiksy — poza badge hosta.',
         ],
         [
             'zrodlo' => 'speedtest',
             'nazwa'  => 'Speedtest',
-            'opis'   => 'Historia testów Speedtest Servers reporting (portal Ookla lub CSV). Filtr CIDR AS198050, agregaty /24 na /dashboard/speedtest (Ookla anonimizuje do *.0), poza indeksem badge.',
+            'opis'   => 'Historia testów Speedtest Servers reporting (portal Ookla lub CSV). Filtr prefiksów naszego AS, agregaty /24 na /dashboard/speedtest (Ookla anonimizuje do *.0), poza indeksem badge.',
         ],
         [
             'zrodlo' => 'wazuh',
             'nazwa'  => 'Wazuh',
-            'opis'   => 'Własna telemetria serwerów (Wazuh SIEM): IP klientów AS198050, które spamują lub atakują nasze serwery (SMTP/SSH/WWW). Eksport przez SSH forced command.',
+            'opis'   => 'Własna telemetria serwerów (Wazuh SIEM): IP klientów naszego AS, które spamują lub atakują nasze serwery (SMTP/SSH/WWW). Eksport przez SSH forced command.',
         ],
         [
             'zrodlo' => 'spamhaus',
             'nazwa'  => 'Spamhaus DROP',
-            'opis'   => 'Darmowe listy Spamhaus DROP, DROPv6 i ASN-DROP (JSON, raz na dobę), dopasowane lokalnie do as198050_cidry i ASN. Trafienie = incydent. Stan na /dashboard/spamhaus.',
+            'opis'   => 'Darmowe listy Spamhaus DROP, DROPv6 i ASN-DROP (JSON, raz na dobę), dopasowane lokalnie do as_cidry i ASN. Trafienie = incydent. Stan na /dashboard/spamhaus.',
         ],
         [
             'zrodlo' => 'threatfox',
             'nazwa'  => 'ThreatFox IOC',
-            'opis'   => 'IOC abuse.ch ThreatFox (get_iocs, ostatnie 1–7 dni, Auth-Key), dopasowane lokalnie do as198050_cidry. Tylko ioc_type ip/ip:port dają trafienie = incydent. Stan na /dashboard/threatfox.',
+            'opis'   => 'IOC abuse.ch ThreatFox (get_iocs, ostatnie 1–7 dni, Auth-Key), dopasowane lokalnie do as_cidry. Tylko ioc_type ip/ip:port dają trafienie = incydent. Stan na /dashboard/threatfox.',
         ],
         [
             'zrodlo' => 'blocklist_de',

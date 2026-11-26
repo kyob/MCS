@@ -15,10 +15,10 @@ $etykietaSt = match ($st) {
 };
 $szczegoly = trim((string) ($imp['blad_text'] ?? ''));
 if ($szczegoly === '' && ! empty($imp['id_wiadomosci'])) {
-    $szczegoly = 'msg: ' . (string) $imp['id_wiadomosci'];
+    $szczegoly = 'wiadomość: ' . (string) $imp['id_wiadomosci'];
 }
 if ($szczegoly === '' && ! empty($imp['checksum'])) {
-    $szczegoly = 'checksum: ' . substr((string) $imp['checksum'], 0, 16) . '…';
+    $szczegoly = 'suma kontrolna: ' . substr((string) $imp['checksum'], 0, 16) . '…';
 }
 $szczegolySkrot = $szczegoly !== '' && mb_strlen($szczegoly) > 80
     ? mb_substr($szczegoly, 0, 80) . '…'

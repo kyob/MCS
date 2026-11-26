@@ -13,7 +13,7 @@ $badgeWaga = static function (string $waga): string {
 };
 $listaTotal  = (int) ($listaTotal ?? 0);
 $pagerQuery  = ['okno', 'zrodlo', 'ip', 'waga', 'min_zrodel', 'kategoria', 'port', 'cidr', 'podsiec'];
-$asAsn       = (int) ($asAsn ?? \App\Libraries\Siec\As198050Matcher::asn());
+$asAsn       = (int) ($asAsn ?? \App\Libraries\Siec\AsMatcher::asn());
 ?>
 
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
@@ -60,7 +60,10 @@ $asAsn       = (int) ($asAsn ?? \App\Libraries\Siec\As198050Matcher::asn());
     <div class="card border-0 shadow-sm rounded-3">
         <div class="card-body pt-3">
             <?php if ($ostatnie === []): ?>
-                <p class="text-body-secondary mb-0">Brak incydentów w wybranym zakresie.</p>
+                <?= view('partials/_pusty_stan', [
+                    'tekst' => 'Brak incydentów w wybranym zakresie.',
+                    'ikona' => 'bi-shield-check',
+                ], ['saveData' => false]) ?>
             <?php else: ?>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -92,7 +95,7 @@ $asAsn       = (int) ($asAsn ?? \App\Libraries\Siec\As198050Matcher::asn());
                                     <?php if ($ipWiersz !== ''): ?>
                                         <a class="font-monospace text-decoration-none" href="<?= site_url('ip/' . $ipWiersz) ?>"><?= esc($ipWiersz) ?></a>
                                         <?php if (! empty($wiersz['nowe'])): ?>
-                                            <span class="badge text-bg-success ms-1" title="Pierwszy raz w MCS w ostatnich dniach">NEW</span>
+                                            <span class="badge text-bg-success ms-1" title="Pierwszy raz w MCS w ostatnich dniach">NOWE</span>
                                         <?php endif; ?>
                                     <?php else: ?>
                                         —

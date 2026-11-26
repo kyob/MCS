@@ -9,7 +9,7 @@ use McsPluginy\spoofer\Parser;
  */
 final class SpooferParserTest extends CIUnitTestCase
 {
-    public function testMapujeTylkoRodzineAs198050(): void
+    public function testMapujeTylkoRodzineAs(): void
     {
         $parser = new Parser();
         $mapped = $parser->mapujSesje([

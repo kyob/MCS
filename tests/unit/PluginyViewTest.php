@@ -132,7 +132,7 @@ final class PluginyViewTest extends CIUnitTestCase
         $this->assertStringContainsString('>Nazwa</th>', $html);
         $this->assertStringContainsString('>Import</th>', $html);
         $this->assertStringContainsString('>UI</th>', $html);
-        $this->assertStringContainsString('>Ostatni update</th>', $html);
+        $this->assertStringContainsString('>Ostatnia aktualizacja</th>', $html);
         $this->assertStringContainsString('>Status</th>', $html);
         $this->assertStringContainsString('>Akcje</th>', $html);
         $this->assertStringContainsString('>aktywny</button>', $html);
@@ -241,7 +241,10 @@ final class PluginyViewTest extends CIUnitTestCase
         ]);
 
         $this->assertStringContainsString('Historia importów', $html);
-        $this->assertStringContainsString('Filtruj', $html);
+        $this->assertStringContainsString('aria-label="Zastosuj filtry"', $html);
+        $this->assertStringContainsString('aria-label="Wyczyść filtry"', $html);
+        $this->assertStringNotContainsString('>Filtruj<', $html);
+        $this->assertStringNotContainsString('>Wyczyść<', $html);
         $this->assertStringContainsString('name="zrodlo"', $html);
         $this->assertStringContainsString('name="status"', $html);
         $this->assertStringContainsString('name="q"', $html);

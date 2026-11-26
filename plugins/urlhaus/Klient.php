@@ -11,12 +11,6 @@ final class Klient
 
     public const USER_AGENT = 'MCS/1.0 (+https://github.com/kyob/MCS)';
 
-    /** Twardy limit całego pobrania (s); zrzut ma ~20 MB, a abuse.ch potrafi oddawać ~250 KB/s. */
-    public const MAKS_CZAS = 600;
-
-    /** Poniżej tej prędkości (B/s) przez $timeout sekund transfer uznajemy za zawieszony. */
-    public const MIN_PREDKOSC = 1024;
-
     /** @var (callable(string, int): array{ok: bool, http_code: int, body: string, error: string})|null */
     private $http;
 
@@ -89,30 +83,22 @@ final class Klient
      */
     private function curl(string $url): array
     {
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => false,
-            CURLOPT_ENCODING       => '',
-            CURLOPT_CONNECTTIMEOUT  => min(15, $this->timeout),
-            CURLOPT_TIMEOUT         => max(self::MAKS_CZAS, $this->timeout),
-            CURLOPT_LOW_SPEED_LIMIT => self::MIN_PREDKOSC,
-            CURLOPT_LOW_SPEED_TIME  => $this->timeout,
-            CURLOPT_USERAGENT      => self::USER_AGENT,
-            CURLOPT_HTTPHEADER     => ['Accept: text/csv, text/plain'],
+        $res = \App\Libraries\Siec\KlientHttp::wykonaj($url, [
+            'timeout'    => max(\App\Libraries\Siec\KlientHttp::MAKS_CZAS_POBRANIA, $this->timeout),
+            'polaczenie' => min(15, $this->timeout),
+            'zastoj'     => $this->timeout,
+            'kompresja'  => true,
+            'user_agent' => self::USER_AGENT,
+            'naglowki'   => ['Accept: text/csv, text/plain'],
         ]);
-        $out  = curl_exec($ch);
-        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $err  = curl_error($ch);
-        curl_close($ch);
 
-        if ($out === false) {
-            return ['ok' => false, 'http_code' => $code, 'body' => '', 'error' => 'cURL: ' . $err];
+        if (! $res['ok']) {
+            return ['ok' => false, 'http_code' => $res['http_code'], 'body' => '', 'error' => 'cURL: ' . $res['error']];
         }
-        if ($code !== 200) {
-            return ['ok' => false, 'http_code' => $code, 'body' => '', 'error' => 'HTTP ' . $code];
+        if ($res['http_code'] !== 200) {
+            return ['ok' => false, 'http_code' => $res['http_code'], 'body' => '', 'error' => 'HTTP ' . $res['http_code']];
         }
 
-        return ['ok' => true, 'http_code' => 200, 'body' => (string) $out, 'error' => ''];
+        return ['ok' => true, 'http_code' => 200, 'body' => $res['body'], 'error' => ''];
     }
 }

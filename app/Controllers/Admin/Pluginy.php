@@ -110,6 +110,7 @@ class Pluginy extends BaseController
             'filtrQ'      => $q,
             'filtrOd'     => $od,
             'filtrDo'     => $do,
+            'pokazWyczysc' => $zrodlo !== '' || $status !== '' || $q !== '' || $od !== '' || $do !== '',
             'email'       => (string) session()->get('mcs_user_email'),
             'rola'        => (string) session()->get('mcs_user_rola'),
         ]);

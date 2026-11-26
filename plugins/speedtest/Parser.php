@@ -5,7 +5,7 @@ namespace McsPluginy\speedtest;
 /**
  * Parser eksportu CSV Speedtest Servers reporting (account.ookla.com/servers/reports).
  *
- * Czysty: bez filtra AS198050 (to robi SpeedtestSerwis). Dedup test_id w obrębie pliku
+ * Czysty: bez filtra naszego AS (to robi SpeedtestSerwis). Dedup test_id w obrębie pliku
  * — pierwszy wiersz wygrywa.
  */
 class Parser

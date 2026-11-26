@@ -17,7 +17,7 @@ $trend     = is_array($sk['trend'] ?? null) ? $sk['trend'] : [];
 $trwa      = $skan !== null && in_array($skan['status'], ['oczekuje', 'w_toku'], true);
 $gotowy    = $skan !== null && $skan['status'] === 'zakonczony';
 $urlBaza   = site_url('dashboard/dnsbl');
-$asAsn     = (int) ($asAsn ?? \App\Libraries\Siec\As198050Matcher::asn());
+$asAsn     = (int) ($asAsn ?? \App\Libraries\Siec\AsMatcher::asn());
 $statusPl  = [
     'ok' => 'OK', 'wylaczona_test' => 'wyłączona (test kontrolny)', 'przerwana' => 'przerwana (kod błędu)',
     'oczekuje' => 'oczekuje', 'w_toku' => 'w toku', 'zakonczony' => 'zakończony', 'blad' => 'błąd',
@@ -44,9 +44,9 @@ $statusPl  = [
                        pattern="[0-9./,; ]+" maxlength="400"
                        value="<?= esc((string) old('zakres', $skan['zakres'] ?? '')) ?>" placeholder="np. 91.231.70.0/23 albo 91.231.70.187">
                 <div class="form-text">
-                    Prefiksy z ustawień (as198050_cidry):
+                    Prefiksy z ustawień (as_cidry):
                     <span class="font-monospace"><?= esc(implode(', ', $prefiksy)) ?></span>.
-                    Wynik jest ważny 6 h (cache).
+                    Wynik jest przechowywany przez 6 godzin w pamięci podręcznej.
                     Limit: <?= (int) \App\Libraries\Dnsbl\LimitySkanuWww::maksIp() ?> IP na skan,
                     <?= (int) \App\Libraries\Dnsbl\LimitySkanuWww::limitDoba() ?> skanów z WWW na 24 h.
                 </div>
@@ -147,10 +147,10 @@ $statusPl  = [
     <?php if ($gotowy): ?>
         <?php
         $kafle = [
-            ['Total (IP)', (int) $skan['liczba_ip'], ''],
-            ['Clean', (int) $skan['czyste'], 'text-success'],
-            ['Blacklisted', (int) $skan['listowane'], (int) $skan['listowane'] > 0 ? 'text-danger' : ''],
-            ['Duration', number_format(((int) $skan['czas_ms']) / 1000, 1, ',', ' ') . ' s', ''],
+            ['Wszystkie IP', (int) $skan['liczba_ip'], ''],
+            ['Czyste', (int) $skan['czyste'], 'text-success'],
+            ['Na listach', (int) $skan['listowane'], (int) $skan['listowane'] > 0 ? 'text-danger' : ''],
+            ['Czas', number_format(((int) $skan['czas_ms']) / 1000, 1, ',', ' ') . ' s', ''],
             ['Błędy', (int) $skan['bledy'], (int) $skan['bledy'] > 0 ? 'text-warning' : ''],
         ];
         ?>
@@ -177,9 +177,9 @@ $statusPl  = [
                                 <th scope="col">Lista</th>
                                 <th scope="col">Strefa</th>
                                 <th scope="col">Status</th>
-                                <th scope="col" class="text-end">Listed</th>
+                                <th scope="col" class="text-end">Na listach</th>
                                 <th scope="col" class="text-end">Błędy</th>
-                                <th scope="col" class="pe-3">Request removal</th>
+                                <th scope="col" class="pe-3">Usunięcie z listy</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -210,7 +210,7 @@ $statusPl  = [
                                                href="<?= esc(\App\Libraries\Dnsbl\DnsblNarzedzia::bezpiecznyUrl(\App\Libraries\Dnsbl\DnsblNarzedzia::urlDelisting((string) $s['url'], (string) $t['ip'])), 'attr') ?>"
                                                target="_blank" rel="noopener noreferrer"
                                                title="<?= esc((string) ($t['txt'] ?? ''), 'attr') ?>">
-                                                Request removal <?= esc((string) $t['ip']) ?>
+                                                Zgłoś usunięcie <?= esc((string) $t['ip']) ?>
                                             </a>
                                         <?php endforeach; ?>
                                         <?php if (count($tr) > 10): ?><div class="text-body-secondary">+<?= count($tr) - 10 ?> więcej (szczegóły niżej)</div><?php endif; ?>
@@ -227,7 +227,7 @@ $statusPl  = [
         <?php if ($szcz !== null): ?>
             <?php
             $licz = $szcz['liczniki'];
-            $etykF = ['all' => 'All', 'listed' => 'Listed', 'clean' => 'Clean', 'bledy' => 'Błędy'];
+            $etykF = ['all' => 'Wszystkie', 'listed' => 'Na listach', 'clean' => 'Czyste', 'bledy' => 'Błędy'];
             $q = static fn (array $extra): string => $urlBaza . '?' . http_build_query(array_merge(['skan' => (int) $skan['id'], 'f' => $filtr], $extra));
             $stron = max(1, (int) ceil($szcz['razem'] / max(1, $naStrone)));
             ?>
@@ -252,21 +252,28 @@ $statusPl  = [
                             </thead>
                             <tbody>
                             <?php if ($szcz['wiersze'] === []): ?>
-                                <tr><td colspan="4" class="text-center text-body-secondary py-4">Brak pozycji dla filtra „<?= esc($etykF[$filtr] ?? $filtr) ?>”.</td></tr>
+                                <tr>
+                                    <td colspan="4">
+                                        <?= view('partials/_pusty_stan', [
+                                            'tekst' => 'Brak pozycji dla filtra „' . ($etykF[$filtr] ?? $filtr) . '”.',
+                                            'ikona' => 'bi-funnel',
+                                        ], ['saveData' => false]) ?>
+                                    </td>
+                                </tr>
                             <?php endif; ?>
                             <?php foreach ($szcz['wiersze'] as $w): ?>
                                 <tr>
                                     <td class="ps-3 font-monospace"><a href="<?= site_url('ip/' . rawurlencode((string) $w['ip'])) ?>"><?= esc((string) $w['ip']) ?></a></td>
                                     <td>
-                                        <?php if ($w['status'] === 'listed'): ?><span class="badge text-bg-danger">listed</span>
+                                        <?php if ($w['status'] === 'listed'): ?><span class="badge text-bg-danger">na liście</span>
                                         <?php elseif ($w['status'] === 'bledy'): ?><span class="badge text-bg-warning">błąd</span>
-                                        <?php else: ?><span class="badge text-bg-success">clean</span><?php endif; ?>
+                                        <?php else: ?><span class="badge text-bg-success">czysty</span><?php endif; ?>
                                     </td>
                                     <td class="small">
                                         <?php foreach ($w['listy'] as $l): ?>
                                             <a class="badge <?= $l['info'] ? 'text-bg-secondary' : 'text-bg-danger' ?> text-decoration-none me-1"
                                                href="<?= esc(\App\Libraries\Dnsbl\DnsblNarzedzia::bezpiecznyUrl((string) $l['url']), 'attr') ?>" target="_blank" rel="noopener noreferrer"
-                                               title="Request removal (<?= esc((string) $l['kody'], 'attr') ?>)"><?= esc((string) $l['kod']) ?></a>
+                                               title="Zgłoś usunięcie (<?= esc((string) $l['kody'], 'attr') ?>)"><?= esc((string) $l['kod']) ?></a>
                                         <?php endforeach; ?>
                                         <?php if ($w['listy'] === []): ?><span class="text-body-secondary">—</span><?php endif; ?>
                                     </td>
@@ -335,7 +342,7 @@ $statusPl  = [
         <summary class="small text-body-secondary">Ostatnie skany (<?= count($ostatnie) ?>)</summary>
         <div class="table-responsive mt-2">
             <table class="table table-sm small mb-0">
-                <thead><tr><th>#</th><th>Tryb</th><th>Zakres</th><th>Status</th><th>Listed</th><th>Nowe/zdjęte</th><th>Błędy</th><th>Koniec</th><th>Zlecił</th></tr></thead>
+                <thead><tr><th>#</th><th>Tryb</th><th>Zakres</th><th>Status</th><th>Na listach</th><th>Nowe/zdjęte</th><th>Błędy</th><th>Koniec</th><th>Zlecił</th></tr></thead>
                 <tbody>
                 <?php foreach ($ostatnie as $o): ?>
                     <tr>

@@ -17,7 +17,7 @@ $pagerQuery   = ['okno', 'zrodlo', 'ip', 'waga', 'min_zrodel', 'kategoria', 'por
 $kolejkaMinWaga = \App\Libraries\KolejkaDnia::minWaga();
 $kolejkaWagi    = array_slice(['low', 'medium', 'high', 'critical'], (int) array_search($kolejkaMinWaga, ['low', 'medium', 'high', 'critical'], true));
 $kolejkaGodzin  = (int) $okno * 24;
-$asAsn          = (int) ($asAsn ?? \App\Libraries\Siec\As198050Matcher::asn());
+$asAsn          = (int) ($asAsn ?? \App\Libraries\Siec\AsMatcher::asn());
 ?>
 
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
@@ -66,7 +66,11 @@ $asAsn          = (int) ($asAsn ?? \App\Libraries\Siec\As198050Matcher::asn());
     <div class="card border-0 shadow-sm rounded-3">
         <div class="card-body pt-3">
             <?php if ($topIp === []): ?>
-                <p class="text-body-secondary mb-0">Brak IP spełniających filtry w wybranym oknie.</p>
+                <?= view('partials/_pusty_stan', [
+                    'tekst' => 'Brak adresów IP spełniających filtry.',
+                    'opis'  => 'Zmień kryteria lub rozszerz okno czasu.',
+                    'ikona' => 'bi-filter-circle',
+                ], ['saveData' => false]) ?>
             <?php else: ?>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -96,7 +100,7 @@ $asAsn          = (int) ($asAsn ?? \App\Libraries\Siec\As198050Matcher::asn());
                                 <td>
                                     <a class="font-monospace text-decoration-none" href="<?= $urlIp ?>"><?= esc($ipWiersz) ?></a>
                                     <?php if (! empty($wiersz['nowe'])): ?>
-                                        <span class="badge text-bg-success ms-1" title="Pierwszy raz w MCS w ostatnich <?= (int) ($noweDni ?? 7) ?> dniach">NEW</span>
+                                            <span class="badge text-bg-success ms-1" title="Pierwszy raz w MCS w ostatnich <?= (int) ($noweDni ?? 7) ?> dniach">NOWE</span>
                                     <?php endif; ?>
                                     <?php if (! empty($revDnsWlaczone) && ! empty($wiersz['rev_dns'])): ?>
                                         <div class="small text-body-secondary font-monospace"><?= esc((string) $wiersz['rev_dns']) ?></div>
@@ -154,7 +158,7 @@ $asAsn          = (int) ($asAsn ?? \App\Libraries\Siec\As198050Matcher::asn());
                         <?php if (! empty($tylkoNowe)): ?>
                             <a href="<?= site_url('dashboard/kolejka') ?>">pokaż wszystkie</a>
                         <?php else: ?>
-                            <a href="<?= site_url('dashboard/kolejka') ?>?nowe=1">tylko NEW (<?= (int) ($noweDni ?? 7) ?> dni)</a>
+                            <a href="<?= site_url('dashboard/kolejka') ?>?nowe=1">tylko nowe (<?= (int) ($noweDni ?? 7) ?> dni)</a>
                         <?php endif; ?>
                     </p>
                     <?php if (! empty($pager) && $listaTotal > (int) ($listaNaStrone ?? 25)): ?>

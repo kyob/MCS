@@ -6,7 +6,7 @@ namespace McsPluginy\threatfox;
  * Czyste dopasowanie IOC ThreatFox (pojedyncze adresy IP) do prefiksów AS (bez DB i sieci).
  *
  * Trafienie tylko dla ioc_type ip / ip:port, gdy wyciągnięty IP należy do któregoś
- * z naszych prefiksów (mcs_ustawienia.as198050_cidry). Inne typy IOC i cudze IP — bez trafień.
+ * z naszych prefiksów (mcs_ustawienia.as_cidry). Inne typy IOC i cudze IP — bez trafień.
  * Różne rodziny adresów (v4/v6) nigdy się nie nakładają.
  */
 final class Dopasowanie
@@ -48,7 +48,7 @@ final class Dopasowanie
 
     /**
      * @param list<array<string, mixed>> $rekordy z Parser::parsuj (pole ip może być null)
-     * @param list<string>               $nasze   prefiksy AS (mcs_ustawienia.as198050_cidry)
+     * @param list<string>               $nasze   prefiksy AS (mcs_ustawienia.as_cidry)
      *
      * @return array<string, array<string, mixed>> klucz = ioc|nasz_prefiks; wartość = rekord + nasz_prefiks
      */

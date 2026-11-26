@@ -79,6 +79,27 @@ final class DashboardFiltry
     }
 
     /**
+     * Czy bieżący zestaw różni się od domyślnych filtrów z ustawień.
+     *
+     * @param array<string, mixed> $filtry
+     */
+    public function czyAktywne(array $filtry): bool
+    {
+        $domyslne = $this->domyslne();
+
+        foreach (['okno', 'zrodlo', 'minWaga', 'minZrodel', 'kategoria', 'port'] as $klucz) {
+            if (($filtry[$klucz] ?? null) !== ($domyslne[$klucz] ?? null)) {
+                return true;
+            }
+        }
+
+        return trim((string) ($filtry['ipSurowy'] ?? $filtry['ip'] ?? '')) !== ''
+            || trim((string) ($filtry['cidrSurowy'] ?? $filtry['cidr'] ?? '')) !== ''
+            || ! empty($filtry['bladIp'])
+            || ! empty($filtry['bladCidr']);
+    }
+
+    /**
      * GET (gdy jest) → sesja → domyślne z ustawień. GET zapisuje wybór w sesji.
      *
      * @param array<string, mixed> $get

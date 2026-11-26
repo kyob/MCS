@@ -159,21 +159,17 @@ class GreynoiseClient
             return $this->blad(0, 'Odrzucono adres egress (https + publiczny IP): ' . $blad);
         }
 
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => false,
-            CURLOPT_CONNECTTIMEOUT => min(10, $this->timeout),
-            CURLOPT_TIMEOUT        => $this->timeout,
-            CURLOPT_HTTPHEADER     => [
+        $res  = \App\Libraries\Siec\KlientHttp::wykonaj($url, [
+            'timeout'    => $this->timeout,
+            'polaczenie' => min(10, $this->timeout),
+            'naglowki'   => [
                 'key: ' . $this->apiKey,
                 'Accept: application/json',
             ],
         ]);
-        $out  = curl_exec($ch);
-        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $err  = curl_error($ch);
-        curl_close($ch);
+        $out  = $res['ok'] ? $res['body'] : false;
+        $code = $res['http_code'];
+        $err  = $res['error'];
 
         if ($out === false) {
             return ['ok' => false, 'http_code' => $code, 'data' => null, 'error' => 'cURL: ' . $err, 'raw_body' => ''];

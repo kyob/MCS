@@ -204,29 +204,14 @@ class IsmaliciousClient
             ];
         }
 
-        $ch = curl_init($url);
-        if ($ch === false) {
-            return [
-                'ok'        => false,
-                'http_code' => 0,
-                'data'      => null,
-                'error'     => 'curl_init failed',
-                'raw_body'  => '',
-            ];
-        }
-
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER     => $headerLines,
-            CURLOPT_CONNECTTIMEOUT => 10,
-            CURLOPT_TIMEOUT        => max(1, \App\Libraries\OpcjeMcs::int('mcs.ismalicious.httpTimeout')),
-            CURLOPT_FOLLOWLOCATION => false,
+        $res  = \App\Libraries\Siec\KlientHttp::wykonaj($url, [
+            'timeout'    => max(1, \App\Libraries\OpcjeMcs::int('mcs.ismalicious.httpTimeout')),
+            'polaczenie' => 10,
+            'naglowki'   => $headerLines,
         ]);
-
-        $body = curl_exec($ch);
-        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $err  = curl_error($ch);
-        curl_close($ch);
+        $body = $res['ok'] ? $res['body'] : false;
+        $code = $res['http_code'];
+        $err  = $res['ok'] ? '' : ($res['error'] === 'curl_exec failed' ? '' : $res['error']);
 
         if ($body === false) {
             return [

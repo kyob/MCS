@@ -1,7 +1,7 @@
 <?php
 
 use App\Libraries\Enrichment\SpeedtestSerwis;
-use App\Libraries\Siec\As198050Matcher;
+use App\Libraries\Siec\AsMatcher;
 use App\Libraries\Siec\CidrMatcher;
 use App\Models\EnrichmentSpeedtestModel;
 use CodeIgniter\Test\CIUnitTestCase;
@@ -499,7 +499,7 @@ final class SpeedtestSerwisTest extends CIUnitTestCase
 
     private function serwis(string $fixture, string $csvDir, ?PortalClient $portal = null): SpeedtestSerwis
     {
-        $matcher = new As198050Matcher(new CidrMatcher(), null);
+        $matcher = new AsMatcher(new CidrMatcher(), null);
 
         return new SpeedtestSerwis(
             new Parser(),

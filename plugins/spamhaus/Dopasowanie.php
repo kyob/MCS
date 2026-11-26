@@ -56,7 +56,7 @@ final class Dopasowanie
 
     /**
      * @param list<array{cidr: string, sblid?: string}> $wpisy  wpisy z drop_v4/drop_v6
-     * @param list<string>                              $nasze  prefiksy AS (mcs_ustawienia.as198050_cidry)
+     * @param list<string>                              $nasze  prefiksy AS (mcs_ustawienia.as_cidry)
      *
      * @return list<array{wpis: string, sblid: string, nasz_prefiks: string, zakres: string, podmiot: string}>
      */

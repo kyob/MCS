@@ -68,6 +68,8 @@ final class DashboardListyViewTest extends CIUnitTestCase
         $this->assertStringContainsString('dashboard/eksport.csv', $html);
         $this->assertStringContainsString('name="kategoria"', $html);
         $this->assertStringContainsString('dashboard/problematyczne-ip?wyczysc=1', $html);
+        $this->assertStringContainsString('aria-label="Zastosuj filtry"', $html);
+        $this->assertStringContainsString('aria-label="Wyczyść filtry"', $html);
         $this->assertMatchesRegularExpression('/action="[^"]*dashboard\/problematyczne-ip"/', $html);
         $this->assertStringContainsString('dropdown-item active', $html);
         $this->assertStringNotContainsString('Sprawdź szczegóły IP', $html);

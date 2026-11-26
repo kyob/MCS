@@ -157,47 +157,33 @@ class ApiClient
     {
         $useCert = ($this->bearerToken === '' || $this->forceClientCert) && $this->clientCertOk();
 
-        $ch = curl_init();
-        $options = [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            // Redirecty tylko po https (egress https wymuszony także po redirectach).
-            CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTPS,
-            CURLOPT_MAXREDIRS      => 5,
-            CURLOPT_SSL_VERIFYPEER => $this->tlsVerifyPeer,
-            CURLOPT_SSL_VERIFYHOST => $this->tlsVerifyPeer ? 2 : 0,
-            CURLOPT_USERAGENT      => 'MCS-CertN6/1.0 (n6 REST API)',
-            CURLOPT_URL            => $url,
-            CURLOPT_TIMEOUT        => max(1, \App\Libraries\OpcjeMcs::int('mcs.cert_n6.httpTimeout')),
-            CURLOPT_CONNECTTIMEOUT => max(1, \App\Libraries\OpcjeMcs::int('mcs.cert_n6.httpConnectTimeout')),
+        $opcje = [
+            'timeout'        => max(1, \App\Libraries\OpcjeMcs::int('mcs.cert_n6.httpTimeout')),
+            'polaczenie'     => max(1, \App\Libraries\OpcjeMcs::int('mcs.cert_n6.httpConnectTimeout')),
+            'przekierowania' => 5,
+            'tls'            => $this->tlsVerifyPeer,
+            'user_agent'     => 'MCS-CertN6/1.0 (n6 REST API)',
         ];
 
         if ($useCert) {
-            $options[CURLOPT_SSLCERT] = $this->clientCertFile;
-            $options[CURLOPT_SSLKEY]  = $this->clientKeyFile;
-            if ($this->clientCertPassword !== '') {
-                $options[CURLOPT_SSLCERTPASSWD] = $this->clientCertPassword;
-            }
+            $opcje['cert']       = $this->clientCertFile;
+            $opcje['cert_klucz'] = $this->clientKeyFile;
+            $opcje['cert_haslo'] = $this->clientCertPassword;
         }
 
         if ($this->caFile !== '' && is_readable($this->caFile)) {
-            $options[CURLOPT_CAINFO] = $this->caFile;
+            $opcje['ca'] = $this->caFile;
         }
 
-        $headers = [];
         if ($this->bearerToken !== '') {
-            $headers[] = 'Authorization: Bearer ' . $this->bearerToken;
-        }
-        if ($headers !== []) {
-            $options[CURLOPT_HTTPHEADER] = $headers;
+            $opcje['naglowki'] = ['Authorization: Bearer ' . $this->bearerToken];
         }
 
-        curl_setopt_array($ch, $options);
-        $output   = curl_exec($ch);
-        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $errno    = curl_errno($ch);
-        $errstr   = curl_error($ch);
-        curl_close($ch);
+        $res      = \App\Libraries\Siec\KlientHttp::wykonaj($url, $opcje);
+        $output   = $res['ok'] ? $res['body'] : false;
+        $httpCode = $res['http_code'];
+        $errno    = $res['errno'];
+        $errstr   = $res['ok'] ? '' : ($res['error'] === 'curl_exec failed' ? '' : $res['error']);
 
         if ($output === false) {
             return [

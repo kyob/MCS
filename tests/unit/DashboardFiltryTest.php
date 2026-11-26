@@ -53,6 +53,20 @@ final class DashboardFiltryTest extends CIUnitTestCase
         $this->assertNull($d['ip']);
     }
 
+    public function testCzyAktywnePorownujeZDomyslnymiZUstawien(): void
+    {
+        $filtry = $this->nowe([
+            DashboardFiltry::KLUCZ_OKNO => '30',
+            DashboardFiltry::KLUCZ_WAGA => 'high',
+        ]);
+        $domyslne = $filtry->domyslne();
+
+        $this->assertFalse($filtry->czyAktywne($domyslne));
+        $this->assertTrue($filtry->czyAktywne(array_merge($domyslne, ['okno' => 7])));
+        $this->assertTrue($filtry->czyAktywne(array_merge($domyslne, ['cidrSurowy' => '91.231.80.0/24'])));
+        $this->assertTrue($filtry->czyAktywne(array_merge($domyslne, ['ipSurowy' => 'nie-ip', 'bladIp' => true])));
+    }
+
     public function testDomyslneOdrzucaNiepoprawneWartosci(): void
     {
         $filtry = $this->nowe([

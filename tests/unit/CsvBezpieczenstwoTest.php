@@ -87,7 +87,7 @@ final class CsvBezpieczenstwoTest extends CIUnitTestCase
         ]);
         // matchowanie AS wyłączone — eksport bez filtra CIDR AS (domyślnie byłoby włączone)
         $this->db->table('mcs_ustawienia')->insert([
-            'klucz' => 'as198050_wlaczone', 'wartosc' => '0', 'updated_at' => '2026-11-24 10:00:00',
+            'klucz' => 'as_wlaczone', 'wartosc' => '0', 'updated_at' => '2026-11-24 10:00:00',
         ]);
 
         $teraz = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s');

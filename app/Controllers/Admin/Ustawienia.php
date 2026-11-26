@@ -5,21 +5,21 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Libraries\DashboardFiltry;
 use App\Libraries\OpcjeMcs;
-use App\Libraries\Siec\As198050Matcher;
+use App\Libraries\Siec\AsMatcher;
 use App\Libraries\Siec\CidrMatcher;
 use App\Libraries\Siec\RevDns;
 use App\Models\IncydentModel;
 use App\Models\UstawieniaModel;
 
 /**
- * Ustawienia MCS — m.in. matchowanie IP do AS198050 („nasze IP”).
+ * Ustawienia MCS — m.in. matchowanie IP do naszego AS („nasze IP”).
  */
 class Ustawienia extends BaseController
 {
     public function index()
     {
         $model   = model(UstawieniaModel::class);
-        $matcher = new As198050Matcher(null, $model);
+        $matcher = new AsMatcher(null, $model);
         $revDns  = new RevDns($model);
         $dash    = (new DashboardFiltry($model))->domyslne();
         $listy   = $this->listyFiltrow($dash);
@@ -33,8 +33,8 @@ class Ustawienia extends BaseController
             'blad'               => session()->getFlashdata('blad'),
             'asWlaczone'         => $matcher->jestWlaczone(),
             'asCidryTekst'       => $matcher->cidryJakoTekst(),
-            'asAsn'              => As198050Matcher::asn(),
-            'asDomyslneCidry'    => As198050Matcher::DOMYSLNE_CIDRY,
+            'asAsn'              => AsMatcher::asn(),
+            'asDomyslneCidry'    => AsMatcher::DOMYSLNE_CIDRY,
             'revDnsWlaczone'     => $revDns->jestWlaczone(),
             'dashboardOkno'      => $dash['okno'],
             'dashboardZrodlo'    => $dash['zrodlo'],
@@ -49,8 +49,8 @@ class Ustawienia extends BaseController
 
     public function zapisz()
     {
-        $wlaczone    = $this->request->getPost('as198050_wlaczone') === '1';
-        $cidryRaw    = (string) $this->request->getPost('as198050_cidry');
+        $wlaczone    = $this->request->getPost('as_wlaczone') === '1';
+        $cidryRaw    = (string) $this->request->getPost('as_cidry');
         $revDnsWlacz = $this->request->getPost('pokazuj_rev_dns') === '1';
 
         $cidr    = new CidrMatcher();
@@ -67,8 +67,8 @@ class Ustawienia extends BaseController
         }
 
         $model = model(UstawieniaModel::class);
-        $ok1   = $model->ustaw(As198050Matcher::KLUCZ_WLACZONE, $wlaczone ? '1' : '0');
-        $ok2   = $model->ustaw(As198050Matcher::KLUCZ_CIDRY, implode("\n", $lista));
+        $ok1   = $model->ustaw(AsMatcher::KLUCZ_WLACZONE, $wlaczone ? '1' : '0');
+        $ok2   = $model->ustaw(AsMatcher::KLUCZ_CIDRY, implode("\n", $lista));
         $ok3   = $model->ustaw(RevDns::KLUCZ_WLACZONE, $revDnsWlacz ? '1' : '0');
 
         $dashLib = new DashboardFiltry($model);
@@ -89,7 +89,7 @@ class Ustawienia extends BaseController
         }
 
         $ile = count($lista);
-        $asn = As198050Matcher::asn();
+        $asn = AsMatcher::asn();
         $czesci = [];
         $czesci[] = $wlaczone
             ? "AS{$asn} włączone ({$ile} prefiks(ów))"
@@ -111,8 +111,8 @@ class Ustawienia extends BaseController
     {
         $model = model(UstawieniaModel::class);
         $ok    = $model->ustaw(
-            As198050Matcher::KLUCZ_CIDRY,
-            implode("\n", As198050Matcher::DOMYSLNE_CIDRY),
+            AsMatcher::KLUCZ_CIDRY,
+            implode("\n", AsMatcher::DOMYSLNE_CIDRY),
         );
 
         if (! $ok) {
@@ -124,7 +124,7 @@ class Ustawienia extends BaseController
 
         return redirect()->to('/admin/ustawienia')->with(
             'komunikat',
-            'Przywrócono domyślne prefiksy AS' . As198050Matcher::asn() . ' (RIPE). Sprawdź listę i kliknij „Zapisz ustawienia”, jeśli zmieniasz też przełącznik.',
+            'Przywrócono domyślne prefiksy AS' . AsMatcher::asn() . ' (RIPE). Sprawdź listę i kliknij „Zapisz ustawienia”, jeśli zmieniasz też przełącznik.',
         );
     }
 

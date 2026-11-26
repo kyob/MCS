@@ -26,8 +26,8 @@ final class BlocklistDeSerwisTest extends CIUnitTestCase
         $this->zapytania = 0;
         $this->utworzTabele();
         $this->db->table('mcs_ustawienia')->insertBatch([
-            ['klucz' => 'as198050_wlaczone', 'wartosc' => '1', 'updated_at' => '2026-01-01T00:00:00+00:00'],
-            ['klucz' => 'as198050_cidry', 'wartosc' => '91.231.80.0/22', 'updated_at' => '2026-01-01T00:00:00+00:00'],
+            ['klucz' => 'as_wlaczone', 'wartosc' => '1', 'updated_at' => '2026-01-01T00:00:00+00:00'],
+            ['klucz' => 'as_cidry', 'wartosc' => '91.231.80.0/22', 'updated_at' => '2026-01-01T00:00:00+00:00'],
         ]);
         $this->ustawEnv('mcs.blocklistDe.listy', 'ssh,strongips');
     }
@@ -82,7 +82,7 @@ final class BlocklistDeSerwisTest extends CIUnitTestCase
         $this->assertSame(1, $this->db->table('mcs_incydenty')->countAllResults());
     }
 
-    public function testNiestabilnaTrescINiezgodneMd5NieZapisujeIncydentu(): void
+    public function testNiestabilnaTrescINiezgodneMd5ZapisujeZUwaga(): void
     {
         $n      = 0;
         $klient = new Klient(function (string $url) use (&$n): array {
@@ -92,18 +92,18 @@ final class BlocklistDeSerwisTest extends CIUnitTestCase
             }
             $n++;
 
-            return ['ok' => true, 'http_code' => 200, 'body' => $n . ".2.3.4\n", 'error' => ''];
+            return ['ok' => true, 'http_code' => 200, 'body' => "91.231.80.9\n" . $n . ".2.3.4\n", 'error' => ''];
         });
         $wynik = (new Serwis($klient, null, null, null, null, 1_700_000_000))->uruchom();
 
-        $this->assertSame('blad', $wynik['status']);
-        $this->assertStringContainsString('md5', strtolower($wynik['msg']));
-        $this->assertSame(0, $this->db->table('mcs_incydenty')->countAllResults());
+        $this->assertSame('ok', $wynik['status'], $wynik['msg']);
+        $this->assertStringContainsString('MD5 starsze niż lista', $wynik['msg']);
+        $this->assertSame(1, $this->db->table('mcs_incydenty')->countAllResults());
     }
 
     public function testBrakPrefiksowNieSiegaPoHttp(): void
     {
-        $this->db->table('mcs_ustawienia')->where('klucz', 'as198050_cidry')->update(['wartosc' => '']);
+        $this->db->table('mcs_ustawienia')->where('klucz', 'as_cidry')->update(['wartosc' => '']);
         $przed = $this->zapytania;
         $wynik = $this->serwis(['ssh' => "91.231.80.9\n", 'strongips' => ''])->uruchom();
 

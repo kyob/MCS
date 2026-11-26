@@ -11,7 +11,7 @@ use CodeIgniter\CLI\CLI;
  *
  *   php spark mcs:digest
  *   php spark mcs:digest --godziny=6
- *   php spark mcs:digest --tylko-as198050
+ *   php spark mcs:digest --tylko-as
  *   php spark mcs:digest --json
  *
  * Cron (przykład co godzinę):
@@ -22,12 +22,35 @@ class McsDigest extends BaseCommand
     protected $group       = 'MCS';
     protected $name        = 'mcs:digest';
     protected $description = 'Digest high|critical dla IP z watchlisty (INFO, bez blokad).';
-    protected $usage       = 'mcs:digest [--godziny=24] [--tylko-as198050] [--json]';
+    protected $usage       = 'mcs:digest [--godziny=24] [--tylko-as] [--json]';
     protected $options     = [
-        '--godziny'         => 'Okno w godzinach (1–168, domyślnie 24)',
-        '--tylko-as198050'  => 'Tylko IP z watchlisty należące do AS198050',
-        '--json'            => 'Wypisz wynik jako JSON',
+        '--godziny'  => 'Okno w godzinach (1–168, domyślnie 24)',
+        '--tylko-as' => 'Tylko IP z watchlisty należące do naszego AS (ASN z ustawień)',
+        '--json'     => 'Wypisz wynik jako JSON',
     ];
+
+    /**
+     * `--tylko-as` albo dawne `--tylko-as<ASN>` (np. --tylko-as198050) — numer w nazwie
+     * nie ma znaczenia, filtr zawsze używa prefiksów z ustawień.
+     *
+     * @param array<string, mixed> $opcje klucze opcji CLI bez `--`
+     * @param list<mixed>          $argv
+     */
+    public static function czyTylkoAs(array $opcje, array $argv = []): bool
+    {
+        foreach (array_keys($opcje) as $nazwa) {
+            if (preg_match('/^tylko-as\d*$/', (string) $nazwa) === 1) {
+                return true;
+            }
+        }
+        foreach ($argv as $arg) {
+            if (is_string($arg) && preg_match('/^--tylko-as\d*(=.*)?$/', $arg) === 1) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     public function run(array $params)
     {
@@ -48,7 +71,7 @@ class McsDigest extends BaseCommand
             $godziny = 24;
         }
 
-        $tylkoAs = CLI::getOption('tylko-as198050') !== null;
+        $tylkoAs = self::czyTylkoAs(CLI::getOptions(), $_SERVER['argv'] ?? []);
         $json    = CLI::getOption('json') !== null;
 
         $serwis = new DigestSerwis();

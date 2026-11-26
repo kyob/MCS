@@ -40,8 +40,8 @@ final class UrlhausSerwisTest extends CIUnitTestCase
         $this->db->query("CREATE TABLE {$p('mcs_obserwacje')} (id INTEGER PRIMARY KEY AUTOINCREMENT, incydent_id INTEGER NOT NULL,
             import_id INTEGER NULL, zaobserwowano_at TEXT NOT NULL, payload_json TEXT NULL, id_w_zrodle TEXT NULL)");
         $this->db->table('mcs_ustawienia')->insertBatch([
-            ['klucz' => 'as198050_wlaczone', 'wartosc' => '1', 'updated_at' => '2026-01-01T00:00:00+00:00'],
-            ['klucz' => 'as198050_cidry', 'wartosc' => "91.231.80.0/22\n2a0f:1700::/29", 'updated_at' => '2026-01-01T00:00:00+00:00'],
+            ['klucz' => 'as_wlaczone', 'wartosc' => '1', 'updated_at' => '2026-01-01T00:00:00+00:00'],
+            ['klucz' => 'as_cidry', 'wartosc' => "91.231.80.0/22\n2a0f:1700::/29", 'updated_at' => '2026-01-01T00:00:00+00:00'],
         ]);
         $_ENV['mcs.urlhaus.authKey'] = self::KLUCZ;
         $_SERVER['mcs.urlhaus.authKey'] = self::KLUCZ;

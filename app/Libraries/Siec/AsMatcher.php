@@ -5,20 +5,20 @@ namespace App\Libraries\Siec;
 use App\Models\UstawieniaModel;
 
 /**
- * Matchowanie adresów do przestrzeni AS198050 (Alfa-System / „nasze IP”).
+ * Matchowanie adresów do przestrzeni naszego AS („nasze IP”); ASN z opcji mcs.as.asn.
  *
  * Prefiksy i przełącznik z mcs_ustawienia; opcjonalny fallback .env:
- * mcs.as198050.cidry, mcs.as198050.wlaczone.
+ * mcs.as.cidry, mcs.as.wlaczone.
  */
-final class As198050Matcher
+final class AsMatcher
 {
-    public const ASN = 198050;
+    public const DOMYSLNY_ASN = 198050;
 
-    public const KLUCZ_WLACZONE = 'as198050_wlaczone';
+    public const KLUCZ_WLACZONE = 'as_wlaczone';
 
-    public const KLUCZ_CIDRY = 'as198050_cidry';
+    public const KLUCZ_CIDRY = 'as_cidry';
 
-    /** Prefiksy ogłoszone przez AS198050 (RIPE, stan 2026-09) — seed / fallback. */
+    /** Prefiksy ogłoszone przez DOMYSLNY_ASN (RIPE, stan 2026-09) — seed / fallback. */
     public const DOMYSLNE_CIDRY = [
         '5.253.230.0/24',
         '64.46.124.0/24',
@@ -48,11 +48,11 @@ final class As198050Matcher
     }
 
     /**
-     * ASN globalny (opcja mcs.as198050.asn: DB → .env → 198050).
+     * ASN globalny (opcja mcs.as.asn: DB → .env → 198050).
      */
     public static function asn(): int
     {
-        return \App\Libraries\OpcjeMcs::int('mcs.as198050.asn');
+        return \App\Libraries\OpcjeMcs::int('mcs.as.asn');
     }
 
     public function jestWlaczone(): bool
@@ -73,7 +73,7 @@ final class As198050Matcher
             }
         }
 
-        $env = env('mcs.as198050.wlaczone', null);
+        $env = env('mcs.as.wlaczone', env('mcs.as198050.wlaczone'));
         if ($env !== null && $env !== '') {
             return $this->cacheWlaczone = filter_var($env, FILTER_VALIDATE_BOOLEAN);
         }
@@ -105,7 +105,7 @@ final class As198050Matcher
             }
         }
 
-        $envRaw = trim((string) env('mcs.as198050.cidry', ''));
+        $envRaw = trim((string) env('mcs.as.cidry', env('mcs.as198050.cidry', '')));
         if ($envRaw !== '') {
             return $this->cacheCidry = $this->cidr->parsujListe($envRaw);
         }
@@ -132,7 +132,7 @@ final class As198050Matcher
     }
 
     /**
-     * Czy IP należy do skonfigurowanej przestrzeni AS198050.
+     * Czy IP należy do skonfigurowanej przestrzeni naszego AS.
      * Gdy matchowanie wyłączone — zawsze false (nie oznaczamy jako „nasze”).
      */
     public function czyNaszeIp(string $ip): bool

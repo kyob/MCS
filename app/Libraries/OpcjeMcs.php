@@ -51,8 +51,9 @@ final class OpcjeMcs
         $d = [];
 
         // --- Sieć / AS ---
-        $d['mcs.as198050.asn'] = [
+        $d['mcs.as.asn'] = [
             'grupa' => 'Sieć / AS', 'etykieta' => 'ASN globalny („nasze IP”, domyślny dla pluginów)', 'typ' => 'asn', 'domyslna' => '198050',
+            'env_dawny' => 'mcs.as198050.asn',
         ];
         $d['mcs.revDns.cacheTtl'] = [
             'grupa' => 'Sieć / AS', 'etykieta' => 'Reverse DNS — cache TTL (s)', 'typ' => 'int', 'domyslna' => '3600', 'min' => 60, 'max' => 7 * self::DOBA,
@@ -376,6 +377,9 @@ final class OpcjeMcs
         }
 
         $env = env($klucz);
+        if ($env === null && isset($def['env_dawny'])) {
+            $env = env($def['env_dawny']);
+        }
         if ($env !== null) {
             if (is_bool($env)) {
                 $env = $env ? '1' : '';

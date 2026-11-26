@@ -3,7 +3,7 @@
 namespace App\Libraries\Enrichment;
 
 use App\Libraries\PluginOpisPolaczenia;
-use App\Libraries\Siec\As198050Matcher;
+use App\Libraries\Siec\AsMatcher;
 use App\Models\EnrichmentSpeedtestModel;
 use McsPluginy\speedtest\Parser;
 use McsPluginy\speedtest\PortalClient;
@@ -32,7 +32,7 @@ class SpeedtestSerwis
 
     private Parser $parser;
     private EnrichmentSpeedtestModel $model;
-    private As198050Matcher $matcher;
+    private AsMatcher $matcher;
     private PortalClient $portal;
     private string $fixturePath;
     private string $csvDir;
@@ -43,14 +43,14 @@ class SpeedtestSerwis
     public function __construct(
         ?Parser $parser = null,
         ?EnrichmentSpeedtestModel $model = null,
-        ?As198050Matcher $matcher = null,
+        ?AsMatcher $matcher = null,
         ?string $fixturePath = null,
         ?string $csvDir = null,
         ?PortalClient $portal = null,
     ) {
         $this->parser      = $parser ?? new Parser();
         $this->model       = $model ?? model(EnrichmentSpeedtestModel::class);
-        $this->matcher     = $matcher ?? new As198050Matcher();
+        $this->matcher     = $matcher ?? new AsMatcher();
         $this->fixturePath = $fixturePath ?? trim((string) env('mcs.speedtest.fixturePath', ''));
         $this->csvDir      = rtrim($csvDir ?? trim((string) env('mcs.speedtest.csvDir', '')), '/');
         $this->portal      = $portal ?? PortalClient::fromEnv();

@@ -15,7 +15,7 @@ use App\Libraries\CzasUi;
 use App\Libraries\LimitForce;
 use App\Libraries\OpcjeMcs;
 use App\Libraries\ProblemyIp;
-use App\Libraries\Siec\As198050Matcher;
+use App\Libraries\Siec\AsMatcher;
 use App\Libraries\Siec\RevDns;
 use App\Models\IncydentModel;
 
@@ -151,7 +151,7 @@ class Ip extends BaseController
         $agregat   = (new ProblemyIp())->zbuduj($ip, $incydenty);
         $ipNowe    = isset($model->ipNowe([$ip], OpcjeMcs::int('mcs.nowe.dni'))[$ip]);
 
-        $matcher         = new As198050Matcher();
+        $matcher         = new AsMatcher();
         $asMatchWlaczone = $matcher->jestWlaczone();
         $naszeIp         = $asMatchWlaczone && $matcher->czyNaszeIp($ip);
 

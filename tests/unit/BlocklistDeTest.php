@@ -90,7 +90,7 @@ final class BlocklistDeTest extends CIUnitTestCase
         $this->assertSame(2, $pobraniaTxt);
     }
 
-    public function testZmieniajacaSieTrescINiezgodneMd5JestBledem(): void
+    public function testZmieniajacaSieTrescINiezgodneMd5JestPrzyjetaJakoStare(): void
     {
         $n      = 0;
         $klient = new Klient(function (string $url) use (&$n): array {
@@ -104,9 +104,9 @@ final class BlocklistDeTest extends CIUnitTestCase
 
         $wynik = $klient->pobierz(['mail']);
 
-        $this->assertFalse($wynik['ok']);
-        $this->assertStringContainsString('mail.txt.md5', $wynik['blad']);
-        $this->assertSame([], $wynik['md5_stare']);
+        $this->assertTrue($wynik['ok'], $wynik['blad']);
+        $this->assertSame(['3.2.3.4'], $wynik['listy']['mail']);
+        $this->assertSame(['mail'], $wynik['md5_stare']);
         $this->assertSame(3, $n);
     }
 

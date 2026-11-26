@@ -17,7 +17,7 @@ use RuntimeException;
  * Plugin źródła CAIDA Spoofer — pomiary BCP38 (czy sieć przepuszcza spoofing).
  *
  * Publiczne API, bez klucza. Import wyłącznie sesji monitorowanego ASN
- * (domyślnie AS198050). Prefiksy /24 i /40 zapisywane jako IP sieci (dashboard),
+ * (domyślnie ASN z ustawień). Prefiksy /24 i /40 zapisywane jako IP sieci (dashboard),
  * pełny prefiks w tytule/payload (nie badge hosta).
  *
  * Tryby pobierz():
@@ -364,7 +364,7 @@ class Plugin implements SourcePluginInterface
             return (int) $explicit;
         }
 
-        return \App\Libraries\Siec\As198050Matcher::asn();
+        return \App\Libraries\Siec\AsMatcher::asn();
     }
 
     private function timestampAfter(): ?string

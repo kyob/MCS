@@ -95,6 +95,8 @@ final class SpeedtestDashboardViewTest extends CIUnitTestCase
         ]);
 
         $this->assertStringContainsString('Speedtest', $html);
+        $this->assertStringContainsString('aria-label="Zastosuj filtry"', $html);
+        $this->assertStringNotContainsString('aria-label="Wyczyść filtry"', $html);
         $this->assertStringContainsString('Agregaty /24', $html);
         $this->assertStringContainsString('91.231.80.0/24', $html);
         $this->assertStringContainsString('Unikalne /24·/48', $html);
@@ -114,11 +116,13 @@ final class SpeedtestDashboardViewTest extends CIUnitTestCase
         $this->assertStringContainsString('Wysycenie portu', $html);
         $this->assertStringContainsString('Najcięższe testy', $html);
         $this->assertStringContainsString('sat-1', $html);
-        $this->assertStringContainsString('Sieci /24 z peakami', $html);
+        $this->assertStringContainsString('Sieci /24 ze szczytami', $html);
         $this->assertStringContainsString('Ookla anonimizuje', $html);
         $this->assertStringContainsString('Servers reporting', $html);
+        $this->assertStringContainsString('Progi określają pomiary wysycenia', $html);
+        $this->assertStringContainsString('bi-info-circle', $html);
         $this->assertStringContainsString('IPv6', $html);
-        $this->assertStringContainsString('Down max', $html);
+        $this->assertStringContainsString('Pob. maks.', $html);
         $this->assertStringNotContainsString('min_upload_mbbs', $html);
         $this->assertStringNotContainsString('panel-speedtest', $html);
     }

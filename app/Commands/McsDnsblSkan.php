@@ -8,9 +8,9 @@ use CodeIgniter\CLI\BaseCommand;
 use CodeIgniter\CLI\CLI;
 
 /**
- * Skan DNSBL IPv4 AS198050 przez lokalny unbound (plugin dnsbl, E1).
+ * Skan DNSBL IPv4 naszego AS przez lokalny unbound (plugin dnsbl, E1).
  *
- *   php spark mcs:dnsbl-skan                         # wszystkie prefiksy IPv4 z as198050_cidry
+ *   php spark mcs:dnsbl-skan                         # wszystkie prefiksy IPv4 z as_cidry
  *   php spark mcs:dnsbl-skan --cidr=91.231.70.0/23
  *   php spark mcs:dnsbl-skan --cidr=91.231.70.0/23 --strefa=spamcop
  *   php spark mcs:dnsbl-skan --cidr=91.231.70.0/23 --dry-run
@@ -20,10 +20,10 @@ class McsDnsblSkan extends BaseCommand
 {
     protected $group       = 'MCS';
     protected $name        = 'mcs:dnsbl-skan';
-    protected $description = 'Skan DNSBL IPv4 z as198050_cidry (lokalny unbound; incydenty tylko dla nowych listingów stref o wysokiej wadze).';
+    protected $description = 'Skan DNSBL IPv4 z as_cidry (lokalny unbound; incydenty tylko dla nowych listingów stref o wysokiej wadze).';
     protected $usage       = 'mcs:dnsbl-skan [--cidr=] [--strefa=] [--dry-run] [--skan-id=]';
     protected $options     = [
-        '--cidr'    => 'IP/CIDR (lista po przecinku), /21–/32, tylko z as198050_cidry. Brak = całe AS.',
+        '--cidr'    => 'IP/CIDR (lista po przecinku), /21–/32, tylko z as_cidry. Brak = całe AS.',
         '--strefa'  => 'Kod strefy z mcs_dnsbl_strefy (np. spamcop)',
         '--dry-run' => 'Tylko plan i testy kontrolne stref, bez zapytań o IP i bez zapisu',
         '--skan-id' => 'Wykonaj istniejący skan (status oczekuje) — używane przez WWW',
@@ -61,7 +61,7 @@ class McsDnsblSkan extends BaseCommand
 
         $prefiksy = Skaner::prefiksyAs();
         if ($prefiksy === []) {
-            CLI::error('[dnsbl-skan] puste as198050_cidry (IPv4).');
+            CLI::error('[dnsbl-skan] puste as_cidry (IPv4).');
 
             return EXIT_ERROR;
         }

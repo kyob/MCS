@@ -36,18 +36,18 @@
 
             <div class="form-check form-switch mb-3">
                 <input class="form-check-input" type="checkbox" role="switch"
-                       name="as198050_wlaczone" value="1" id="as198050_wlaczone"
+                       name="as_wlaczone" value="1" id="as_wlaczone"
                     <?= ! empty($asWlaczone) ? 'checked' : '' ?>>
-                <label class="form-check-label" for="as198050_wlaczone">
+                <label class="form-check-label" for="as_wlaczone">
                     Włącz matchowanie do AS<?= (int) $asAsn ?>
                 </label>
             </div>
 
             <div>
-                <label class="form-label" for="as198050_cidry">Prefiksy CIDR, jeden na linię</label>
-                <textarea class="form-control font-monospace" id="as198050_cidry" name="as198050_cidry"
+                <label class="form-label" for="as_cidry">Prefiksy CIDR, jeden na linię</label>
+                <textarea class="form-control font-monospace" id="as_cidry" name="as_cidry"
                           rows="12" spellcheck="false"
-                          placeholder="np.&#10;91.231.80.0/22&#10;176.97.24.0/21&#10;2a0f:1700::/29"><?= esc((string) old('as198050_cidry', $asCidryTekst, false)) ?></textarea>
+                          placeholder="np.&#10;91.231.80.0/22&#10;176.97.24.0/21&#10;2a0f:1700::/29"><?= esc((string) old('as_cidry', $asCidryTekst, false)) ?></textarea>
             </div>
         </div>
     </div>
@@ -96,7 +96,7 @@
         </div>
         <div class="card-body">
             <p class="card-text text-body-secondary">
-                Na pierwsze wejście i po kliknięciu <strong>Wyczyść</strong>.
+                Używane przy pierwszym wejściu i po wyczyszczeniu filtrów.
             </p>
 
             <div class="row g-3">

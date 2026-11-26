@@ -1,7 +1,7 @@
 <?php
 
 use App\Libraries\KolejkaDnia;
-use App\Libraries\Siec\As198050Matcher;
+use App\Libraries\Siec\AsMatcher;
 use App\Libraries\Siec\CidrMatcher;
 use App\Models\UstawieniaModel;
 use CodeIgniter\Test\CIUnitTestCase;
@@ -42,13 +42,13 @@ final class KolejkaDniaTest extends CIUnitTestCase
         $model = $this->createMock(UstawieniaModel::class);
         $model->method('pobierz')->willReturnCallback(static function (string $klucz): ?string {
             return match ($klucz) {
-                As198050Matcher::KLUCZ_WLACZONE => '1',
-                As198050Matcher::KLUCZ_CIDRY    => "91.231.80.0/22\n176.97.24.0/21",
+                AsMatcher::KLUCZ_WLACZONE => '1',
+                AsMatcher::KLUCZ_CIDRY    => "91.231.80.0/22\n176.97.24.0/21",
                 default                         => null,
             };
         });
 
-        $matcher   = new As198050Matcher(new CidrMatcher(), $model);
+        $matcher   = new AsMatcher(new CidrMatcher(), $model);
         $zSesji    = $matcher->filtrAkceptujIp('91.231.80.0/22');
         $dlaKolejki = $matcher->filtrAkceptujIp(null);
 

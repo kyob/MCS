@@ -83,38 +83,28 @@ class DropKlient
      */
     private function curl(string $url): array
     {
-        $retryAfter = 0;
-        $ch         = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            // Redirecty tylko po https (egress https wymuszony także po redirectach).
-            CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTPS,
-            CURLOPT_MAXREDIRS      => 3,
-            CURLOPT_CONNECTTIMEOUT => min(15, $this->timeout),
-            CURLOPT_TIMEOUT        => $this->timeout,
-            CURLOPT_USERAGENT      => self::userAgent(),
-            CURLOPT_HTTPHEADER     => ['Accept: application/json, text/plain'],
-            CURLOPT_HEADERFUNCTION => static function ($ch, string $linia) use (&$retryAfter): int {
-                if (stripos($linia, 'retry-after:') === 0) {
-                    $retryAfter = (int) trim(substr($linia, 12));
-                }
-
-                return strlen($linia);
-            },
+        $res = \App\Libraries\Siec\KlientHttp::wykonaj($url, [
+            'timeout'        => max(\App\Libraries\Siec\KlientHttp::MAKS_CZAS_POBRANIA, $this->timeout),
+            'polaczenie'     => min(15, $this->timeout),
+            'zastoj'         => $this->timeout,
+            'przekierowania' => 3,
+            'user_agent'     => self::userAgent(),
+            'naglowki'       => ['Accept: application/json, text/plain'],
         ]);
-        $out  = curl_exec($ch);
-        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $err  = curl_error($ch);
-        curl_close($ch);
 
-        if ($out === false) {
-            return ['ok' => false, 'http_code' => $code, 'body' => '', 'error' => 'cURL: ' . $err, 'retry_after' => 0];
+        if (! $res['ok']) {
+            return ['ok' => false, 'http_code' => $res['http_code'], 'body' => '', 'error' => 'cURL: ' . $res['error'], 'retry_after' => 0];
         }
-        if ($code !== 200) {
-            return ['ok' => false, 'http_code' => $code, 'body' => '', 'error' => 'HTTP ' . $code, 'retry_after' => $retryAfter];
+        if ($res['http_code'] !== 200) {
+            return [
+                'ok'          => false,
+                'http_code'   => $res['http_code'],
+                'body'        => '',
+                'error'       => 'HTTP ' . $res['http_code'],
+                'retry_after' => \App\Libraries\Siec\KlientHttp::retryAfter($res['naglowki']),
+            ];
         }
 
-        return ['ok' => true, 'http_code' => $code, 'body' => (string) $out, 'error' => '', 'retry_after' => 0];
+        return ['ok' => true, 'http_code' => $res['http_code'], 'body' => $res['body'], 'error' => '', 'retry_after' => 0];
     }
 }

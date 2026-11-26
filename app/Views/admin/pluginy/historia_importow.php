@@ -1,6 +1,16 @@
 <?= $this->extend('layouts/mcs') ?>
 <?= $this->section('content') ?>
 
+<?php
+$pokazWyczysc = isset($pokazWyczysc)
+    ? (bool) $pokazWyczysc
+    : trim((string) ($filtrZrodlo ?? '')) !== ''
+        || trim((string) ($filtrStatus ?? '')) !== ''
+        || trim((string) ($filtrQ ?? '')) !== ''
+        || trim((string) ($filtrOd ?? '')) !== ''
+        || trim((string) ($filtrDo ?? '')) !== '';
+?>
+
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
     <div>
         <nav aria-label="Okruszki" class="mb-2">
@@ -18,7 +28,7 @@
     </a>
 </div>
 
-<div class="card border-0 shadow-sm rounded-3 mb-4">
+<div class="card border-0 shadow-sm rounded-3 mb-4 mcs-filter-card">
     <div class="card-body">
         <form class="row g-3 align-items-end" method="get"
               action="<?= site_url('admin/pluginy/historia-importow') ?>"
@@ -66,16 +76,16 @@
                        value="<?= esc((string) ($filtrDo ?? ''), 'attr') ?>">
             </div>
             <div class="col-12 col-md">
-                <label class="form-label mb-1" for="filtr-q">Szczegóły / msg</label>
+                <label class="form-label mb-1" for="filtr-q">Szczegóły / wiadomość</label>
                 <input type="search" class="form-control" id="filtr-q" name="q"
-                       placeholder="blad_text, id wiadomości, checksum…"
+                       placeholder="błąd, identyfikator wiadomości, suma kontrolna…"
                        value="<?= esc((string) ($filtrQ ?? ''), 'attr') ?>">
             </div>
-            <div class="col-auto d-flex flex-wrap gap-2">
-                <button type="submit" class="btn btn-primary">Filtruj</button>
-                <a href="<?= site_url('admin/pluginy/historia-importow') ?>" class="btn btn-outline-secondary">
-                    Wyczyść
-                </a>
+            <div class="col-12 col-md-auto">
+                <?= view('partials/_akcje_filtrow', [
+                    'wyczyscHref'  => site_url('admin/pluginy/historia-importow'),
+                    'pokazWyczysc' => $pokazWyczysc,
+                ], ['saveData' => false]) ?>
             </div>
         </form>
     </div>
@@ -85,7 +95,11 @@
     <div class="card border-0 shadow-sm rounded-3">
         <div class="card-body pt-3">
             <?php if (empty($importy)): ?>
-                <p class="text-body-secondary mb-0">Brak przebiegów spełniających kryteria.</p>
+                <?= view('partials/_pusty_stan', [
+                    'tekst' => 'Brak przebiegów spełniających kryteria.',
+                    'opis'  => 'Zmień filtry, aby rozszerzyć wyniki.',
+                    'ikona' => 'bi-clock-history',
+                ], ['saveData' => false]) ?>
             <?php else: ?>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
