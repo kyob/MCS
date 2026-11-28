@@ -1,5 +1,6 @@
 <?php
 
+use App\Libraries\Siec\AsMatcher;
 use CodeIgniter\Test\CIUnitTestCase;
 use McsPluginy\spamhaus\Dopasowanie;
 use McsPluginy\spamhaus\DropParser;
@@ -54,10 +55,10 @@ final class SpamhausDropTest extends CIUnitTestCase
 
     public function testAsn(): void
     {
-        $wpisy = [['asn' => 245], ['asn' => 198050, 'asname' => 'X'], ['asn' => 'AS4242']];
-        $this->assertSame('X', Dopasowanie::dopasujAsn($wpisy, 198050)['asname'] ?? null);
-        $this->assertNotNull(Dopasowanie::dopasujAsn($wpisy, 4242));
-        $this->assertNull(Dopasowanie::dopasujAsn($wpisy, 19805));
+        $wpisy = [['asn' => 64500], ['asn' => AsMatcher::DOMYSLNY_ASN, 'asname' => 'X'], ['asn' => 'AS64501']];
+        $this->assertSame('X', Dopasowanie::dopasujAsn($wpisy, AsMatcher::DOMYSLNY_ASN)['asname'] ?? null);
+        $this->assertNotNull(Dopasowanie::dopasujAsn($wpisy, 64501));
+        $this->assertNull(Dopasowanie::dopasujAsn($wpisy, 64503));
     }
 
     public function testParserMetadane(): void

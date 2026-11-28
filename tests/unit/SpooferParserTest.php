@@ -1,5 +1,6 @@
 <?php
 
+use App\Libraries\Siec\AsMatcher;
 use CodeIgniter\Test\CIUnitTestCase;
 use McsPluginy\spoofer\ApiClient;
 use McsPluginy\spoofer\Parser;
@@ -17,11 +18,11 @@ final class SpooferParserTest extends CIUnitTestCase
             'client4'     => '91.231.70.0/24',
             'client6'     => '2a00:c020:8000::/40',
             'timestamp'   => '2026-09-07T06:46:56+00:00',
-            'asn4'        => '198050',
-            'asn6'        => '51175',
+            'asn4'        => (string) AsMatcher::DOMYSLNY_ASN,
+            'asn6'        => '64500',
             'routedspoof' => 'blocked',
             'routedspoof6'=> 'received',
-        ], 198050);
+        ], AsMatcher::DOMYSLNY_ASN);
 
         $this->assertCount(1, $mapped);
         $this->assertSame('ip', $mapped[0]['podmiot_typ']);
@@ -40,10 +41,10 @@ final class SpooferParserTest extends CIUnitTestCase
         $this->assertSame([], $parser->mapujSesje([
             'session'     => 54306,
             'client4'     => '84.247.77.0/24',
-            'asn4'        => '12310',
+            'asn4'        => '64501',
             'timestamp'   => '2016-02-09T14:49:10+00:00',
             'routedspoof' => 'received',
-        ], 198050));
+        ], AsMatcher::DOMYSLNY_ASN));
     }
 
     public function testMapujeReceivedJakoAbuse(): void
@@ -52,10 +53,10 @@ final class SpooferParserTest extends CIUnitTestCase
         $mapped = $parser->mapujSesje([
             'session'     => 2230001,
             'client4'     => '5.253.230.0/24',
-            'asn4'        => 198050,
+            'asn4'        => AsMatcher::DOMYSLNY_ASN,
             'timestamp'   => '2026-09-01T13:12:32+00:00',
             'routedspoof' => 'received',
-        ], 198050);
+        ], AsMatcher::DOMYSLNY_ASN);
 
         $this->assertCount(1, $mapped);
         $this->assertSame('abuse', $mapped[0]['kategoria']);
@@ -71,10 +72,10 @@ final class SpooferParserTest extends CIUnitTestCase
         $mapped = $parser->mapujSesje([
             'session'      => 2226472,
             'client6'      => '2a0f:1700::/40',
-            'asn6'         => '198050',
+            'asn6'         => (string) AsMatcher::DOMYSLNY_ASN,
             'timestamp'    => '2026-09-03T07:43:26+00:00',
             'routedspoof6' => 'blocked',
-        ], 198050);
+        ], AsMatcher::DOMYSLNY_ASN);
 
         $this->assertCount(1, $mapped);
         $this->assertSame('v6', $mapped[0]['ip_wersja']);
@@ -92,7 +93,7 @@ final class SpooferParserTest extends CIUnitTestCase
         $sessions = $parser->parsujJson((string) file_get_contents($sciezka));
         $this->assertCount(5, $sessions);
 
-        $mapped = $parser->mapujListe($sessions, 198050);
+        $mapped = $parser->mapujListe($sessions, AsMatcher::DOMYSLNY_ASN);
         $this->assertCount(4, $mapped);
         $klucze = array_column($mapped, 'klucz_dedupu');
         $this->assertContains('session|2232992|v4', $klucze);
@@ -110,13 +111,13 @@ final class SpooferParserTest extends CIUnitTestCase
                 [
                     'session'     => 1,
                     'client4'     => '91.231.70.0/24',
-                    'asn4'        => '198050',
+                    'asn4'        => (string) AsMatcher::DOMYSLNY_ASN,
                     'timestamp'   => '2026-09-14T18:19:47+00:00',
                     'routedspoof' => 'blocked',
                 ],
             ],
             'hydra:view' => [
-                'hydra:next' => '/sessions?asn=198050&page=2',
+                'hydra:next' => '/sessions?asn=' . AsMatcher::DOMYSLNY_ASN . '&page=2',
             ],
         ], JSON_THROW_ON_ERROR);
         $page2 = json_encode([
@@ -124,7 +125,7 @@ final class SpooferParserTest extends CIUnitTestCase
                 [
                     'session'     => 2,
                     'client4'     => '5.253.230.0/24',
-                    'asn4'        => '198050',
+                    'asn4'        => (string) AsMatcher::DOMYSLNY_ASN,
                     'timestamp'   => '2026-09-01T13:12:32+00:00',
                     'routedspoof' => 'received',
                 ],
@@ -147,13 +148,13 @@ final class SpooferParserTest extends CIUnitTestCase
             },
         );
 
-        $res = $client->fetchSessions(198050);
+        $res = $client->fetchSessions(AsMatcher::DOMYSLNY_ASN);
         $this->assertTrue($res['ok']);
         $this->assertCount(2, $res['sessions']);
         $this->assertSame(1, $res['sessions'][0]['session']);
         $this->assertCount(2, $seen);
         $this->assertStringContainsString('/sessions?', $seen[0]);
-        $this->assertStringContainsString('asn=198050', $seen[0]);
+        $this->assertStringContainsString('asn=' . AsMatcher::DOMYSLNY_ASN, $seen[0]);
         $this->assertStringContainsString('page=2', $seen[1]);
     }
 
@@ -161,7 +162,7 @@ final class SpooferParserTest extends CIUnitTestCase
     {
         $plugin = new \McsPluginy\spoofer\Plugin();
         $this->assertSame('spoofer', $plugin->zrodlo());
-        $this->assertSame(198050, $plugin->resolveAsn());
+        $this->assertSame(AsMatcher::DOMYSLNY_ASN, $plugin->resolveAsn());
 
         $opis = $plugin->opisPolaczenia();
         $this->assertSame('http', $opis['tryb_aktywny']);
@@ -178,7 +179,7 @@ final class SpooferParserTest extends CIUnitTestCase
             }
         }
         $this->assertNotNull($asnPozycja);
-        $this->assertSame('198050', $asnPozycja['wartosc']);
+        $this->assertSame((string) AsMatcher::DOMYSLNY_ASN, $asnPozycja['wartosc']);
     }
 
     public function testHydraNextNaObcyHostJestOdrzucony(): void
@@ -199,7 +200,7 @@ final class SpooferParserTest extends CIUnitTestCase
             },
         );
 
-        $w = $client->fetchSessions(198050);
+        $w = $client->fetchSessions(AsMatcher::DOMYSLNY_ASN);
 
         $this->assertFalse($w['ok']);
         $this->assertStringContainsString('inny host', $w['error']);
@@ -224,7 +225,7 @@ final class SpooferParserTest extends CIUnitTestCase
             },
         );
 
-        $w = $client->fetchSessions(198050);
+        $w = $client->fetchSessions(AsMatcher::DOMYSLNY_ASN);
 
         $this->assertTrue($w['ok']);
         $this->assertCount(3, $zapytania);

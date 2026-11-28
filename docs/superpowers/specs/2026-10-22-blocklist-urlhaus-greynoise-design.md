@@ -22,7 +22,7 @@ Trzy źródła na istniejącym kontrakcie `SourcePluginInterface`. Dwa zasilają
 - Cron `mcs:pobierz` zostaje co 15 minut. Importer sam pomija przebieg i zwraca `komunikatPominiecia()`, tak jak Spamhaus. `PobierzSerwis` zapisuje wtedy status `pominiety`.
 - Wyjątek z `pobierz()` albo `health_ok=false` oznacza błąd. Udane pobranie i zero adresów w prefiksach to sukces: komunikat w stylu „0 trafień w prefiksach”.
 - Filtr AS wyłączony albo pusta lista prefiksów: przebieg kończy się błędem „brak prefiksów AS”, bez nowych incydentów. Całej listy świata nie wciągamy do indeksu.
-- Adres należy do sieci, gdy `As198050Matcher::czyNaszeIp()` zwraca prawdę (IPv4 i IPv6).
+- Adres należy do sieci, gdy `AsMatcher::czyNaszeIp()` zwraca prawdę (IPv4 i IPv6).
 - Sekrety wyłącznie w `.env`. Komunikat health, historia importu i log nie zawierają klucza ani pełnego URL-a z kluczem.
 - Testy jednostkowe czytają fixture z repo. Żywe HTTP jest wyłączone w testach.
 - Po wdrożeniu zaktualizować `plugins/README.md`, `.env.example` i oczekiwaną listę w `tests/database/PluginSeederTest.php`.

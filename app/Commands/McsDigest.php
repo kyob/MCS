@@ -30,7 +30,7 @@ class McsDigest extends BaseCommand
     ];
 
     /**
-     * `--tylko-as` albo dawne `--tylko-as<ASN>` (np. --tylko-as198050) — numer w nazwie
+     * `--tylko-as` albo dawne `--tylko-as<ASN>` (np. --tylko-as64496) — numer w nazwie
      * nie ma znaczenia, filtr zawsze używa prefiksów z ustawień.
      *
      * @param array<string, mixed> $opcje klucze opcji CLI bez `--`

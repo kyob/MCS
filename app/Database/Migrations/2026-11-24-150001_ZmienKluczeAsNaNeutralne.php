@@ -11,13 +11,13 @@ use CodeIgniter\Database\Migration;
 class ZmienKluczeAsNaNeutralne extends Migration
 {
     private const ZMIANY = [
-        'as198050_cidry'    => 'as_cidry',
         'as198050_wlaczone' => 'as_wlaczone',
         'mcs.as198050.asn'  => 'mcs.as.asn',
     ];
 
     public function up()
     {
+        // Dawna lista CIDR pozostaje przypisana do AS198050.
         foreach (self::ZMIANY as $stary => $nowy) {
             $this->przenies($stary, $nowy);
         }
@@ -25,8 +25,23 @@ class ZmienKluczeAsNaNeutralne extends Migration
 
     public function down()
     {
-        foreach (self::ZMIANY as $stary => $nowy) {
-            $this->przenies($nowy, $stary);
+        $this->db->transStart();
+        foreach (['as198050_cidry' => 'as_cidry'] + self::ZMIANY as $stary => $nowy) {
+            $tabela = $this->db->table('mcs_ustawienia');
+            $wiersz = $tabela->where('klucz', $nowy)->get()->getRowArray();
+            if ($wiersz === null) {
+                continue;
+            }
+
+            $wiersz['klucz'] = $stary;
+            $tabela->upsert($wiersz);
+            // Zachowaj jawną listę także dla ponownej aktualizacji z alternatywnym ASN.
+            if ($nowy !== 'as_cidry') {
+                $tabela->where('klucz', $nowy)->delete();
+            }
+        }
+        if (! $this->db->transComplete()) {
+            throw new \RuntimeException('Nie udało się przywrócić starszych kluczy AS.');
         }
     }
 

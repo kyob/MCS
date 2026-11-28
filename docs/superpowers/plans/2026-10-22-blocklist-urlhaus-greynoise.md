@@ -4,7 +4,7 @@
 
 **Goal:** Dodać importery `blocklist_de` i `urlhaus` (incydenty w kolejce i badge) oraz enrichment `greynoise` poza badge.
 
-**Architecture:** Oba importery mają własny harmonogram (min. 1 h) w `mcs_ustawienia`, pobierają HTTPS, filtrują `As198050Matcher::czyNaszeIp()` i zapisują przez `IncydentZapis`. URLhaus bierze tylko host będący adresem IP. GreyNoise to lookup na `/ip/{ip}` ze cache 7 dni; cron nie woła API.
+**Architecture:** Oba importery mają własny harmonogram (min. 1 h) w `mcs_ustawienia`, pobierają HTTPS, filtrują `AsMatcher::czyNaszeIp()` i zapisują przez `IncydentZapis`. URLhaus bierze tylko host będący adresem IP. GreyNoise to lookup na `/ip/{ip}` ze cache 7 dni; cron nie woła API.
 
 **Tech Stack:** PHP 8.2, CodeIgniter 4.7, PostgreSQL, PHPUnit.
 

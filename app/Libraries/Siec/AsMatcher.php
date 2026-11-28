@@ -12,13 +12,16 @@ use App\Models\UstawieniaModel;
  */
 final class AsMatcher
 {
-    public const DOMYSLNY_ASN = 198050;
+    /** ASN dokumentacyjny z RFC 5398 — przykład, nie numer operatora. */
+    public const DOMYSLNY_ASN = 64496;
 
     public const KLUCZ_WLACZONE = 'as_wlaczone';
 
     public const KLUCZ_CIDRY = 'as_cidry';
 
-    /** Prefiksy ogłoszone przez DOMYSLNY_ASN (RIPE, stan 2026-09) — seed / fallback. */
+    private const ASN_LISTY_RIPE = 198050;
+
+    /** Prefiksy AS198050 (RIPE, stan 2026-09). */
     public const DOMYSLNE_CIDRY = [
         '5.253.230.0/24',
         '64.46.124.0/24',
@@ -48,11 +51,17 @@ final class AsMatcher
     }
 
     /**
-     * ASN globalny (opcja mcs.as.asn: DB → .env → 198050).
+     * ASN globalny (opcja mcs.as.asn: DB → .env → DOMYSLNY_ASN).
      */
     public static function asn(): int
     {
         return \App\Libraries\OpcjeMcs::int('mcs.as.asn');
+    }
+
+    /** @return list<string> */
+    public static function domyslneCidry(int $asn): array
+    {
+        return $asn === self::ASN_LISTY_RIPE ? self::DOMYSLNE_CIDRY : [];
     }
 
     public function jestWlaczone(): bool
@@ -90,27 +99,31 @@ final class AsMatcher
             return $this->cacheCidry;
         }
 
+        $asn = self::asn();
         $model = $this->ustawienia ?? $this->sprobujModel();
         if ($model !== null) {
             try {
                 $raw = $model->pobierz(self::KLUCZ_CIDRY);
-                if ($raw !== null && trim($raw) !== '') {
-                    return $this->cacheCidry = $this->cidr->parsujListe($raw);
+                if ($raw === null && $asn === self::ASN_LISTY_RIPE) {
+                    $raw = $model->pobierz('as198050_cidry');
                 }
-                if ($raw !== null && trim($raw) === '') {
-                    return $this->cacheCidry = [];
+                if ($raw !== null) {
+                    return $this->cacheCidry = $this->cidr->parsujListe($raw);
                 }
             } catch (\Throwable) {
                 // fallback poniżej
             }
         }
 
-        $envRaw = trim((string) env('mcs.as.cidry', env('mcs.as198050.cidry', '')));
-        if ($envRaw !== '') {
-            return $this->cacheCidry = $this->cidr->parsujListe($envRaw);
+        $envRaw = env('mcs.as.cidry');
+        if ($envRaw === null && $asn === self::ASN_LISTY_RIPE) {
+            $envRaw = env('mcs.as198050.cidry');
+        }
+        if (trim((string) $envRaw) !== '') {
+            return $this->cacheCidry = $this->cidr->parsujListe((string) $envRaw);
         }
 
-        return $this->cacheCidry = self::DOMYSLNE_CIDRY;
+        return $this->cacheCidry = self::domyslneCidry($asn);
     }
 
     /**

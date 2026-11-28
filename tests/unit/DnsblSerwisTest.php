@@ -9,6 +9,7 @@ use App\Libraries\WagaV1;
 use App\Models\DnsblWierszeModel;
 use App\Models\EnrichmentDnsblModel;
 use App\Models\EnrichmentLmsModel;
+use App\Models\UstawieniaModel;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 
@@ -161,12 +162,16 @@ final class DnsblSerwisTest extends CIUnitTestCase
 
     private function serwisFixture(): DnsblSerwis
     {
+        $ustawienia = $this->createStub(UstawieniaModel::class);
+        $ustawienia->method('pobierz')->willReturnCallback(
+            static fn (string $klucz) => $klucz === AsMatcher::KLUCZ_CIDRY ? '5.253.230.0/24' : null,
+        );
         return new DnsblSerwis(
             new DnsblClient(['spamcop' => 'bl.spamcop.net'], static fn () => []),
             model(EnrichmentDnsblModel::class),
             model(DnsblWierszeModel::class),
             model(EnrichmentLmsModel::class),
-            new AsMatcher(new CidrMatcher()),
+            new AsMatcher(null, $ustawienia),
             new CidrMatcher(),
             new IncydentZapis($this->db),
             new WagaV1(),

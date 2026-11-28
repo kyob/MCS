@@ -1,5 +1,6 @@
 <?php
 
+use App\Libraries\Siec\AsMatcher;
 use CodeIgniter\Test\CIUnitTestCase;
 
 /**
@@ -92,7 +93,7 @@ final class LayoutNavTest extends CIUnitTestCase
             'rola'       => $rola,
             'komunikat'  => null,
             'blad'       => null,
-            'asAsn'      => 198050,
+            'asAsn'      => AsMatcher::DOMYSLNY_ASN,
             'lista'      => [],
         ]);
     }

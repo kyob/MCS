@@ -386,7 +386,7 @@ class ApiClient
             return [];
         }
 
-        // Dokumentacja bywa { "asn": 13335 }; live API bywa [198050, ...]
+        // Odpowiedź bywa obiektem { "asn": 64496 } albo listą numerów.
         if (isset($result['asn']) && ! array_is_list($result)) {
             $n = (int) $result['asn'];
 

@@ -26,6 +26,7 @@ class EtykietyUi
         'wazuh'              => 'Wazuh',
         'spamhaus'           => 'Spamhaus DROP',
         'threatfox'          => 'ThreatFox',
+        'botnet_cl'          => 'botnet.cl',
     ];
 
     /** @var array<string, string> */

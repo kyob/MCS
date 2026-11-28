@@ -1,5 +1,6 @@
 <?php
 
+use App\Libraries\Siec\AsMatcher;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 use McsPluginy\spamhaus\DropKlient;
@@ -56,7 +57,7 @@ final class SpamhausSerwisTest extends CIUnitTestCase
         $this->db->query("CREATE TABLE {$p('mcs_obserwacje')} (id INTEGER PRIMARY KEY AUTOINCREMENT, incydent_id INTEGER NOT NULL,
             import_id INTEGER NULL, zaobserwowano_at TEXT NOT NULL, payload_json TEXT NULL, id_w_zrodle TEXT NULL)");
 
-        $this->ustawPliki([['cidr' => '1.10.16.0/20', 'sblid' => 'SBL1']], [['cidr' => '2001:678:254::/48', 'sblid' => 'SBL2']], [['asn' => 245]]);
+        $this->ustawPliki([['cidr' => '1.10.16.0/20', 'sblid' => 'SBL1']], [['cidr' => '2001:678:254::/48', 'sblid' => 'SBL2']], [['asn' => 64500]]);
     }
 
     protected function tearDown(): void
@@ -122,7 +123,7 @@ final class SpamhausSerwisTest extends CIUnitTestCase
         $this->ustawPliki(
             [['cidr' => '91.231.81.0/24', 'sblid' => 'SBL9']],
             [['cidr' => '2001:678:254::/48', 'sblid' => 'SBL2']],
-            [['asn' => 245]],
+            [['asn' => 64500]],
         );
 
         $w = $this->serwis()->uruchom();
@@ -144,7 +145,7 @@ final class SpamhausSerwisTest extends CIUnitTestCase
         $this->assertSame(2, $this->db->table('mcs_obserwacje')->countAllResults());
 
         // wpis znika z DROP → trafienie zdjęte, wynik czysto
-        $this->ustawPliki([['cidr' => '1.10.16.0/20', 'sblid' => 'SBL1']], [['cidr' => '2001:678:254::/48']], [['asn' => 245]]);
+        $this->ustawPliki([['cidr' => '1.10.16.0/20', 'sblid' => 'SBL1']], [['cidr' => '2001:678:254::/48']], [['asn' => 64500]]);
         $this->teraz += 25 * 3600 + 3600;
         $w3 = $this->serwis()->uruchom();
         $this->assertSame(1, $w3['zdjete']);
@@ -154,7 +155,7 @@ final class SpamhausSerwisTest extends CIUnitTestCase
 
     public function testTrafienieAsn(): void
     {
-        $this->ustawPliki([['cidr' => '1.10.16.0/20']], [['cidr' => '2001:678:254::/48']], [['asn' => 198050, 'asname' => 'ALFA']]);
+        $this->ustawPliki([['cidr' => '1.10.16.0/20']], [['cidr' => '2001:678:254::/48']], [['asn' => AsMatcher::DOMYSLNY_ASN, 'asname' => 'ALFA']]);
 
         $w = $this->serwis()->uruchom();
 
@@ -179,7 +180,7 @@ final class SpamhausSerwisTest extends CIUnitTestCase
             new \App\Libraries\ImportKoperta(null, $this->db),
             fn (): int => $this->teraz,
             static fn (): array => ['91.231.80.0/22', '2a0f:1700::/29'],
-            static fn (): int => 198050,
+            static fn (): int => AsMatcher::DOMYSLNY_ASN,
             24,
             static fn (): int => 0,
         );

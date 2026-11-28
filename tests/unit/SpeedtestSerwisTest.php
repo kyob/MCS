@@ -2,8 +2,8 @@
 
 use App\Libraries\Enrichment\SpeedtestSerwis;
 use App\Libraries\Siec\AsMatcher;
-use App\Libraries\Siec\CidrMatcher;
 use App\Models\EnrichmentSpeedtestModel;
+use App\Models\UstawieniaModel;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 use McsPluginy\speedtest\Parser;
@@ -499,7 +499,11 @@ final class SpeedtestSerwisTest extends CIUnitTestCase
 
     private function serwis(string $fixture, string $csvDir, ?PortalClient $portal = null): SpeedtestSerwis
     {
-        $matcher = new AsMatcher(new CidrMatcher(), null);
+        $ustawienia = $this->createStub(UstawieniaModel::class);
+        $ustawienia->method('pobierz')->willReturnCallback(
+            static fn (string $klucz) => $klucz === AsMatcher::KLUCZ_CIDRY ? '91.231.80.0/22' : null,
+        );
+        $matcher = new AsMatcher(null, $ustawienia);
 
         return new SpeedtestSerwis(
             new Parser(),

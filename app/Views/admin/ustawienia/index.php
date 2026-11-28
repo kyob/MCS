@@ -47,7 +47,7 @@
                 <label class="form-label" for="as_cidry">Prefiksy CIDR, jeden na linię</label>
                 <textarea class="form-control font-monospace" id="as_cidry" name="as_cidry"
                           rows="12" spellcheck="false"
-                          placeholder="np.&#10;91.231.80.0/22&#10;176.97.24.0/21&#10;2a0f:1700::/29"><?= esc((string) old('as_cidry', $asCidryTekst, false)) ?></textarea>
+                          placeholder="np.&#10;192.0.2.0/24&#10;2001:db8::/32"><?= esc((string) old('as_cidry', $asCidryTekst, false)) ?></textarea>
             </div>
         </div>
     </div>
@@ -168,6 +168,7 @@
     </div>
 </form>
 
+<?php if ($asDomyslneCidry !== []): ?>
 <form method="post" action="<?= site_url('admin/ustawienia/przywroc-domyslne') ?>" class="mb-4"
       onsubmit="return confirm('Przywrócić domyślne prefiksy AS<?= (int) $asAsn ?>? Obecna lista zostanie nadpisana.');">
     <?= csrf_field() ?>
@@ -177,5 +178,8 @@
         Przywróć domyślne prefiksy
     </button>
 </form>
+<?php else: ?>
+<p>Brak domyślnych prefiksów dla AS<?= (int) $asAsn ?>. Prefiksy możesz wpisać ręcznie.</p>
+<?php endif; ?>
 
 <?= $this->endSection() ?>

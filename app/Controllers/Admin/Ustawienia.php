@@ -19,6 +19,7 @@ class Ustawienia extends BaseController
     public function index()
     {
         $model   = model(UstawieniaModel::class);
+        $asn     = AsMatcher::asn();
         $matcher = new AsMatcher(null, $model);
         $revDns  = new RevDns($model);
         $dash    = (new DashboardFiltry($model))->domyslne();
@@ -33,8 +34,8 @@ class Ustawienia extends BaseController
             'blad'               => session()->getFlashdata('blad'),
             'asWlaczone'         => $matcher->jestWlaczone(),
             'asCidryTekst'       => $matcher->cidryJakoTekst(),
-            'asAsn'              => AsMatcher::asn(),
-            'asDomyslneCidry'    => AsMatcher::DOMYSLNE_CIDRY,
+            'asAsn'              => $asn,
+            'asDomyslneCidry'    => AsMatcher::domyslneCidry($asn),
             'revDnsWlaczone'     => $revDns->jestWlaczone(),
             'dashboardOkno'      => $dash['okno'],
             'dashboardZrodlo'    => $dash['zrodlo'],
@@ -103,17 +104,19 @@ class Ustawienia extends BaseController
         );
     }
 
-    /**
-     * Przywraca listę prefiksów do seeda RIPE (nie zmienia przełącznika włącz/wyłącz
-     * poza formularzem — ustawia wartości i zapisuje).
-     */
     public function przywrocDomyslne()
     {
+        $asn = AsMatcher::asn();
+        $cidry = AsMatcher::domyslneCidry($asn);
+        if ($cidry === []) {
+            return redirect()->to('/admin/ustawienia')->with(
+                'blad',
+                "Brak domyślnych prefiksów dla AS{$asn}. Zachowano ustawienia. Wpisz prefiksy ręcznie.",
+            );
+        }
+
         $model = model(UstawieniaModel::class);
-        $ok    = $model->ustaw(
-            AsMatcher::KLUCZ_CIDRY,
-            implode("\n", AsMatcher::DOMYSLNE_CIDRY),
-        );
+        $ok = $model->ustaw(AsMatcher::KLUCZ_CIDRY, implode("\n", $cidry));
 
         if (! $ok) {
             return redirect()->to('/admin/ustawienia')->with(
@@ -124,7 +127,7 @@ class Ustawienia extends BaseController
 
         return redirect()->to('/admin/ustawienia')->with(
             'komunikat',
-            'Przywrócono domyślne prefiksy AS' . AsMatcher::asn() . ' (RIPE). Sprawdź listę i kliknij „Zapisz ustawienia”, jeśli zmieniasz też przełącznik.',
+            "Przywrócono domyślne prefiksy AS{$asn} (RIPE). Sprawdź listę i kliknij „Zapisz ustawienia”, jeśli zmieniasz też przełącznik.",
         );
     }
 

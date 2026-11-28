@@ -28,7 +28,7 @@ final class CertN6ParserTest extends CIUnitTestCase
             'adip'       => 'x.x.70.38',
             'address'    => [
                 ['ip' => '198.51.100.10', 'asn' => 64500, 'cc' => 'PL'],
-                ['ip' => '203.0.113.9', 'asn' => 1, 'cc' => 'US'],
+                ['ip' => '203.0.113.9', 'asn' => 64511, 'cc' => 'US'],
             ],
             'name_details' => [
                 'phrase' => [

@@ -1,5 +1,6 @@
 <?php
 
+use App\Libraries\Siec\AsMatcher;
 use CodeIgniter\Test\CIUnitTestCase;
 
 /**
@@ -14,7 +15,7 @@ final class SpeedtestDashboardViewTest extends CIUnitTestCase
             'navAktywny' => 'speedtest',
             'email'      => 'op@example.com',
             'rola'       => 'operator',
-            'asAsn'      => 198050,
+            'asAsn'      => AsMatcher::DOMYSLNY_ASN,
             'flashBlad'  => null,
             'flashOk'    => null,
             'filtry'     => [
@@ -112,7 +113,7 @@ final class SpeedtestDashboardViewTest extends CIUnitTestCase
         $this->assertStringContainsString('name="tylko_as"', $html);
         $this->assertStringContainsString('name="wszystkie"', $html);
         $this->assertStringContainsString('Pokaż wszystkie pomiary', $html);
-        $this->assertStringContainsString('AS198050', $html);
+        $this->assertStringContainsString('AS' . AsMatcher::DOMYSLNY_ASN, $html);
         $this->assertStringContainsString('Wysycenie portu', $html);
         $this->assertStringContainsString('Najcięższe testy', $html);
         $this->assertStringContainsString('sat-1', $html);
@@ -134,7 +135,7 @@ final class SpeedtestDashboardViewTest extends CIUnitTestCase
             'navAktywny' => 'speedtest',
             'email'      => 'op@example.com',
             'rola'       => 'operator',
-            'asAsn'      => 198050,
+            'asAsn'      => AsMatcher::DOMYSLNY_ASN,
             'flashBlad'  => null,
             'flashOk'    => null,
             'filtry'     => [
@@ -190,7 +191,7 @@ final class SpeedtestDashboardViewTest extends CIUnitTestCase
             'navAktywny' => 'speedtest',
             'email'      => 'op@example.com',
             'rola'       => 'operator',
-            'asAsn'      => 198050,
+            'asAsn'      => AsMatcher::DOMYSLNY_ASN,
             'flashBlad'  => null,
             'flashOk'    => null,
             'filtry'     => [

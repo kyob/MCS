@@ -15,9 +15,9 @@ final class McsDigestOpcjeTest extends CIUnitTestCase
 
     public function testDawneNazwyZNumeremAsDzialaja(): void
     {
-        $this->assertTrue(McsDigest::czyTylkoAs(['tylko-as198050' => null]));
-        $this->assertTrue(McsDigest::czyTylkoAs(['tylko-as52079' => null]));
-        $this->assertTrue(McsDigest::czyTylkoAs([], ['spark', 'mcs:digest', '--godziny=6', '--tylko-as52079']));
+        $this->assertTrue(McsDigest::czyTylkoAs(['tylko-as64496' => null]));
+        $this->assertTrue(McsDigest::czyTylkoAs(['tylko-as64500' => null]));
+        $this->assertTrue(McsDigest::czyTylkoAs([], ['spark', 'mcs:digest', '--godziny=6', '--tylko-as64500']));
     }
 
     public function testBezFlagiFiltrWylaczony(): void

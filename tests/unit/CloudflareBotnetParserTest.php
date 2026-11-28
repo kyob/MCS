@@ -1,5 +1,6 @@
 <?php
 
+use App\Libraries\Siec\AsMatcher;
 use CodeIgniter\Test\CIUnitTestCase;
 use McsPluginy\cloudflare_botnet\ApiClient;
 use McsPluginy\cloudflare_botnet\Parser;
@@ -82,8 +83,8 @@ final class CloudflareBotnetParserTest extends CIUnitTestCase
         $this->assertSame([], $client->normalizeEntries(null));
         $this->assertSame([], $client->normalizeEntries(0));
         $this->assertSame([], $client->normalizeEntries([]));
-        $this->assertSame([198050], $client->normalizeAsnList([198050]));
-        $this->assertSame([13335], $client->normalizeAsnList(['asn' => 13335]));
+        $this->assertSame([AsMatcher::DOMYSLNY_ASN], $client->normalizeAsnList([AsMatcher::DOMYSLNY_ASN]));
+        $this->assertSame([64502], $client->normalizeAsnList(['asn' => 64502]));
     }
 
     public function testApiClientFetchFullReportZMockiem(): void
@@ -120,12 +121,12 @@ final class CloudflareBotnetParserTest extends CIUnitTestCase
             },
         );
 
-        $res = $client->fetchFullReport(198050);
+        $res = $client->fetchFullReport(AsMatcher::DOMYSLNY_ASN);
         $this->assertTrue($res['ok']);
         $this->assertCount(1, $res['entries']);
         $this->assertSame('198.51.100.1/32', $res['entries'][0]['cidr']);
         $this->assertIsString($seenUrl);
-        $this->assertStringContainsString('/botnet_feed/asn/198050/full_report', (string) $seenUrl);
+        $this->assertStringContainsString('/botnet_feed/asn/' . AsMatcher::DOMYSLNY_ASN . '/full_report', (string) $seenUrl);
         $this->assertSame('test-token', $seenToken);
     }
 }

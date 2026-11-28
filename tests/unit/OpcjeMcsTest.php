@@ -80,7 +80,7 @@ final class OpcjeMcsTest extends CIUnitTestCase
     public function testDomyslneRownePoprzednimHardkodom(): void
     {
         $oczekiwane = [
-            'mcs.as.asn'                      => 198050,
+            'mcs.as.asn'                      => AsMatcher::DOMYSLNY_ASN,
             'mcs.revDns.cacheTtl'                   => 3600,
             'mcs.revDns.timeoutMs'                  => 300,
             'mcs.api.rateLimit'                     => 60,
@@ -235,7 +235,7 @@ final class OpcjeMcsTest extends CIUnitTestCase
         $this->assertFalse(OpcjeMcs::waliduj('mcs.badge.maxIpsBatch', '10.5')['ok']);
         $this->assertFalse(OpcjeMcs::waliduj('mcs.badge.maxIpsBatch', '')['ok']);
 
-        $this->assertSame('198050', OpcjeMcs::waliduj('mcs.as.asn', 'AS198050')['wartosc']);
+        $this->assertSame((string) AsMatcher::DOMYSLNY_ASN, OpcjeMcs::waliduj('mcs.as.asn', 'AS' . AsMatcher::DOMYSLNY_ASN)['wartosc']);
         $this->assertFalse(OpcjeMcs::waliduj('mcs.as.asn', '0')['ok']);
         $this->assertFalse(OpcjeMcs::waliduj('mcs.as.asn', '4294967296')['ok']);
         $this->assertFalse(OpcjeMcs::waliduj('mcs.as.asn', '')['ok']);

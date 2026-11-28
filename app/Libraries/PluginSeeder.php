@@ -71,6 +71,11 @@ class PluginSeeder
             'opis'   => 'IOC abuse.ch ThreatFox (get_iocs, ostatnie 1–7 dni, Auth-Key), dopasowane lokalnie do as_cidry. Tylko ioc_type ip/ip:port dają trafienie = incydent. Stan na /dashboard/threatfox.',
         ],
         [
+            'zrodlo' => 'botnet_cl',
+            'nazwa'  => 'botnet.cl',
+            'opis'   => 'Obserwacje ataków z publicznej strony botnet.cl/asn/{ASN}. ASN z ustawień MCS. Prefiks ataku nachodzący na as_cidry = incydent. Raz na godzinę.',
+        ],
+        [
             'zrodlo' => 'blocklist_de',
             'nazwa'  => 'blocklist.de',
             'opis'   => 'Listy ataków z 48 h (ssh, mail, bruteforcelogin, bots, strongips). Trafienie w prefiksach AS = incydent. Poza all.txt.',

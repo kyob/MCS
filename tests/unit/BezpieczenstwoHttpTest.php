@@ -1,6 +1,7 @@
 <?php
 
 use App\Filters\McsSecureHeaders;
+use App\Libraries\Siec\AsMatcher;
 use CodeIgniter\HTTP\Response;
 use CodeIgniter\Router\RouteCollection;
 use CodeIgniter\Test\CIUnitTestCase;
@@ -59,7 +60,7 @@ final class BezpieczenstwoHttpTest extends CIUnitTestCase
             'rola'       => 'operator',
             'komunikat'  => null,
             'blad'       => null,
-            'asAsn'      => 198050,
+            'asAsn'      => AsMatcher::DOMYSLNY_ASN,
             'lista'      => [],
         ]);
 

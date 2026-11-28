@@ -1,5 +1,6 @@
 <?php
 
+use App\Libraries\Siec\AsMatcher;
 use CodeIgniter\Test\CIUnitTestCase;
 
 /**
@@ -16,7 +17,7 @@ final class WatchlistaViewTest extends CIUnitTestCase
             'rola'       => 'admin',
             'komunikat'  => null,
             'blad'       => null,
-            'asAsn'      => 198050,
+            'asAsn'      => AsMatcher::DOMYSLNY_ASN,
             'lista'      => [
                 [
                     'ip'           => '198.51.100.10',

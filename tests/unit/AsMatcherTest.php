@@ -48,7 +48,7 @@ final class AsMatcherTest extends CIUnitTestCase
     {
         $this->assertContains('91.231.80.0/22', AsMatcher::DOMYSLNE_CIDRY);
         $this->assertContains('2a0f:1700::/29', AsMatcher::DOMYSLNE_CIDRY);
-        $this->assertSame(198050, AsMatcher::DOMYSLNY_ASN);
+        $this->assertSame(64496, AsMatcher::DOMYSLNY_ASN);
     }
 
     public function testCidryIpv4PominIpv6(): void

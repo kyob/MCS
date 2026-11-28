@@ -127,7 +127,7 @@ class Plugin implements SourcePluginInterface
     {
         $plik   = trim((string) env('mcs.cloudflare_botnet.fixturePath', ''));
         $client = $this->apiClient ?? ApiClient::fromEnv();
-        $asn    = self::asnDoOpisu();
+        $asn    = $this->resolveAsn();
         $tokOk  = $client->hasToken();
 
         return PluginOpisPolaczenia::plikIKanal(
@@ -195,7 +195,7 @@ class Plugin implements SourcePluginInterface
             throw new RuntimeException('Cloudflare Botnet: ' . $resolved['error']);
         }
 
-        $asn  = $this->resolveAsn($client);
+        $asn  = $this->resolveAsn();
         $tryb = strtolower(trim((string) env('mcs.cloudflare_botnet.mode', 'full_report')));
         if ($tryb !== 'day_report') {
             $tryb = 'full_report';
@@ -378,16 +378,6 @@ class Plugin implements SourcePluginInterface
         return 1;
     }
 
-    /**
-     * ASN do opisu w UI bez zapytania do API (jawny albo globalny).
-     */
-    private static function asnDoOpisu(): string
-    {
-        $explicit = \App\Libraries\OpcjeMcs::tekst('mcs.cloudflare_botnet.asn');
-
-        return $explicit !== '' ? $explicit : (string) \App\Libraries\Siec\AsMatcher::asn();
-    }
-
     public function resolveAsn(?ApiClient $client = null): int
     {
         $explicit = \App\Libraries\OpcjeMcs::tekst('mcs.cloudflare_botnet.asn');
@@ -395,13 +385,6 @@ class Plugin implements SourcePluginInterface
             return (int) $explicit;
         }
 
-        $client = $client ?? $this->apiClient ?? ApiClient::fromEnv();
-        $listed = $client->listRegisteredAsns();
-        if ($listed['ok'] && $listed['asns'] !== []) {
-            return $listed['asns'][0];
-        }
-
-        // Domyślnie ASN globalny (mcs.as.asn).
         return \App\Libraries\Siec\AsMatcher::asn();
     }
 
@@ -420,7 +403,7 @@ class Plugin implements SourcePluginInterface
 
         return 'konfiguracja: API Bearer gotowe (jeszcze bez przebiegu); account='
             . $client->getAccountId()
-            . ' asn=' . self::asnDoOpisu();
+            . ' asn=' . $this->resolveAsn();
     }
 
     private function aktualizujHealth(bool $ok, string $msg): void

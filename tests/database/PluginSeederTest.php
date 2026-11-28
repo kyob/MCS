@@ -46,11 +46,11 @@ final class PluginSeederTest extends CIUnitTestCase
         $wynik = (new PluginSeeder())->zapisz();
 
         $this->assertSame(
-            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'lms_mapowanie', 'ismalicious', 'spamrats', 'dnsbl', 'spoofer', 'speedtest', 'wazuh', 'spamhaus', 'threatfox', 'blocklist_de', 'urlhaus', 'greynoise'],
+            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'lms_mapowanie', 'ismalicious', 'spamrats', 'dnsbl', 'spoofer', 'speedtest', 'wazuh', 'spamhaus', 'threatfox', 'botnet_cl', 'blocklist_de', 'urlhaus', 'greynoise'],
             $wynik['nowe'],
         );
         $this->assertSame([], $wynik['juz_byly']);
-        $this->seeNumRecords(19, 'mcs_pluginy', []);
+        $this->seeNumRecords(20, 'mcs_pluginy', []);
         $this->seeInDatabase('mcs_pluginy', [
             'zrodlo'            => 'shadowserver',
             'nazwa'             => 'Shadowserver',
@@ -118,11 +118,11 @@ final class PluginSeederTest extends CIUnitTestCase
 
         $this->assertSame([], $wynik['nowe']);
         $this->assertSame(
-            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'lms_mapowanie', 'ismalicious', 'spamrats', 'dnsbl', 'spoofer', 'speedtest', 'wazuh', 'spamhaus', 'threatfox', 'blocklist_de', 'urlhaus', 'greynoise'],
+            ['shadowserver', 'play', 'snds', 'mojecert', 'cert_n6', 'wanguard', 'cloudflare_botnet', 'lms_mapowanie', 'ismalicious', 'spamrats', 'dnsbl', 'spoofer', 'speedtest', 'wazuh', 'spamhaus', 'threatfox', 'botnet_cl', 'blocklist_de', 'urlhaus', 'greynoise'],
             $wynik['juz_byly'],
         );
         $this->assertContains('play', $wynik['opis_zaktualizowany']);
-        $this->seeNumRecords(19, 'mcs_pluginy', []);
+        $this->seeNumRecords(20, 'mcs_pluginy', []);
         $this->seeInDatabase('mcs_pluginy', [
             'zrodlo'            => 'play',
             'import_wstrzymany' => 0,

@@ -1,5 +1,6 @@
 <?php
 
+use App\Libraries\Siec\AsMatcher;
 use CodeIgniter\Test\CIUnitTestCase;
 
 /**
@@ -153,7 +154,7 @@ final class DashboardListyViewTest extends CIUnitTestCase
 
         $this->assertStringContainsString('name="podsiec"', $html);
         $this->assertStringContainsString('AS65001', $html);
-        $this->assertStringNotContainsString('AS198050', $html);
+        $this->assertStringNotContainsString('AS' . AsMatcher::DOMYSLNY_ASN, $html);
         $this->assertStringContainsString('name="cidr"', $html);
         $this->assertStringContainsString('Podsieć', $html);
         $this->assertStringContainsString('id="filtr-cidr"', $html);

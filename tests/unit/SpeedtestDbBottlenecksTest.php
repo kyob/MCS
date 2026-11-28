@@ -2,9 +2,9 @@
 
 use App\Libraries\Enrichment\SpeedtestSerwis;
 use App\Libraries\Siec\AsMatcher;
-use App\Libraries\Siec\CidrMatcher;
 use App\Models\EnrichmentSpeedtestModel;
 use CodeIgniter\Events\Events;
+use App\Models\UstawieniaModel;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 use McsPluginy\speedtest\Parser;
@@ -278,10 +278,14 @@ final class SpeedtestDbBottlenecksTest extends CIUnitTestCase
 
     private function serwis(): SpeedtestSerwis
     {
+        $ustawienia = $this->createStub(UstawieniaModel::class);
+        $ustawienia->method('pobierz')->willReturnCallback(
+            static fn (string $klucz) => $klucz === AsMatcher::KLUCZ_CIDRY ? '91.231.80.0/22' : null,
+        );
         return new SpeedtestSerwis(
             new Parser(),
             model(EnrichmentSpeedtestModel::class),
-            new AsMatcher(new CidrMatcher(), null),
+            new AsMatcher(null, $ustawienia),
             '',
             '',
             new PortalClient('', ''),

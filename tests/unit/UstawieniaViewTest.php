@@ -1,5 +1,6 @@
 <?php
 
+use App\Libraries\Siec\AsMatcher;
 use CodeIgniter\Test\CIUnitTestCase;
 
 /**
@@ -18,7 +19,7 @@ final class UstawieniaViewTest extends CIUnitTestCase
             'blad'            => null,
             'asWlaczone'      => true,
             'asCidryTekst'    => "91.231.80.0/22\n",
-            'asAsn'           => 198050,
+            'asAsn'           => AsMatcher::DOMYSLNY_ASN,
             'asDomyslneCidry' => ['91.231.80.0/22'],
             'revDnsWlaczone'  => false,
         ]);
@@ -40,11 +41,13 @@ final class UstawieniaViewTest extends CIUnitTestCase
             'blad'            => null,
             'asWlaczone'      => false,
             'asCidryTekst'    => '',
-            'asAsn'           => 198050,
+            'asAsn'           => AsMatcher::DOMYSLNY_ASN,
             'asDomyslneCidry' => [],
             'revDnsWlaczone'  => true,
         ]);
 
+        $this->assertStringContainsString('Brak domyślnych prefiksów dla AS' . AsMatcher::DOMYSLNY_ASN, $html);
+        $this->assertStringNotContainsString('ustawienia/przywroc-domyslne', $html);
         $this->assertMatchesRegularExpression(
             '/name="pokazuj_rev_dns"[^>]*checked|checked[^>]*name="pokazuj_rev_dns"/',
             $html,
@@ -62,7 +65,7 @@ final class UstawieniaViewTest extends CIUnitTestCase
             'blad'               => null,
             'asWlaczone'         => false,
             'asCidryTekst'       => '',
-            'asAsn'              => 198050,
+            'asAsn'              => AsMatcher::DOMYSLNY_ASN,
             'asDomyslneCidry'    => [],
             'revDnsWlaczone'     => false,
             'dashboardOkno'      => 14,
@@ -106,7 +109,7 @@ final class UstawieniaViewTest extends CIUnitTestCase
                 'blad'            => 'Niepoprawne CIDR: zly-cidr-123',
                 'asWlaczone'      => true,
                 'asCidryTekst'    => '10.0.0.0/8', // wartość z DB — ma być zastąpiona przez old
-                'asAsn'           => 198050,
+                'asAsn'           => AsMatcher::DOMYSLNY_ASN,
                 'asDomyslneCidry' => ['91.231.80.0/22'],
                 'revDnsWlaczone'  => false,
             ]);
@@ -138,7 +141,7 @@ final class UstawieniaViewTest extends CIUnitTestCase
                 'blad'            => null,
                 'asWlaczone'      => true,
                 'asCidryTekst'    => "10.0.0.0/8\n",
-                'asAsn'           => 198050,
+                'asAsn'           => AsMatcher::DOMYSLNY_ASN,
                 'asDomyslneCidry' => [],
                 'revDnsWlaczone'  => false,
             ]);
